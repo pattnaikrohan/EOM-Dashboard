@@ -123,8 +123,8 @@ h1, h2, h3, h4, h5, h6 {
   display: flex;
   align-items: center;
   padding: 0 1.5rem;
-  background: #FFFFFF;
-  border-bottom: 1px solid #E5E7EB;
+  background: #FDFBF7;
+  border-bottom: 1px solid #EFECE5;
   gap: 1rem;
 }
 
@@ -301,12 +301,14 @@ h1, h2, h3, h4, h5, h6 {
 /* ── TOPBAR ────────────────────────────────────────── */
 .topbar {
   height: 64px;
-  border-bottom: 1px solid #E5E7EB;
+  border-bottom: 1px solid #EFECE5;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 2.5rem;
-  background: #FFFFFF;
+  background: rgba(253, 251, 247, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   position: sticky;
   top: 0;
   z-index: 100;

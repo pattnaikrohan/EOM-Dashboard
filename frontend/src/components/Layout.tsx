@@ -202,9 +202,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     <button
                       onClick={() => setBranchFilterOpen(!branchFilterOpen)}
                       style={{
-                        background: globalBranches.length > 0 ? 'linear-gradient(135deg, #0ea5e9, #0284c7)' : '#f8fafc',
+                        background: globalBranches.length > 0 ? 'linear-gradient(135deg, #0ea5e9, #0284c7)' : '#F5F3EC',
                         color: globalBranches.length > 0 ? '#ffffff' : '#475569',
-                        border: globalBranches.length > 0 ? '1px solid transparent' : '1px solid #e2e8f0',
+                        border: globalBranches.length > 0 ? '1px solid transparent' : '1px solid #EAE5DE',
                         padding: '0.45rem 1rem',
                         borderRadius: '10px',
                         fontSize: '0.75rem',
@@ -280,9 +280,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     <button
                       onClick={() => setDeptFilterOpen(!deptFilterOpen)}
                       style={{
-                        background: globalDepartments.length > 0 ? 'linear-gradient(135deg, #0ea5e9, #0284c7)' : '#f8fafc',
+                        background: globalDepartments.length > 0 ? 'linear-gradient(135deg, #0ea5e9, #0284c7)' : '#F5F3EC',
                         color: globalDepartments.length > 0 ? '#ffffff' : '#475569',
-                        border: globalDepartments.length > 0 ? '1px solid transparent' : '1px solid #e2e8f0',
+                        border: globalDepartments.length > 0 ? '1px solid transparent' : '1px solid #EAE5DE',
                         padding: '0.45rem 1rem',
                         borderRadius: '10px',
                         fontSize: '0.75rem',
@@ -357,9 +357,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   <button
                     onClick={() => setFilterOpen(!filterOpen)}
                     style={{
-                      background: globalFlags.length > 0 ? 'linear-gradient(135deg, #0ea5e9, #0284c7)' : '#f8fafc',
+                      background: globalFlags.length > 0 ? 'linear-gradient(135deg, #0ea5e9, #0284c7)' : '#F5F3EC',
                       color: globalFlags.length > 0 ? '#ffffff' : '#475569',
-                      border: globalFlags.length > 0 ? '1px solid transparent' : '1px solid #e2e8f0',
+                      border: globalFlags.length > 0 ? '1px solid transparent' : '1px solid #EAE5DE',
                       padding: '0.45rem 1rem',
                       borderRadius: '10px',
                       fontSize: '0.75rem',
