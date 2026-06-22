@@ -107,7 +107,7 @@ h1, h2, h3, h4, h5, h6 {
   width: 280px;
   min-width: 280px;
   background: #ffffff;
-  /* Removed border-right to eliminate the partition in the header */
+  border-right: 1px solid var(--border-base);
   display: flex;
   flex-direction: column;
   position: sticky;
@@ -118,25 +118,13 @@ h1, h2, h3, h4, h5, h6 {
   z-index: 200;
 }
 
-/* Draw the right border ONLY below the header so it doesn't partition the top bar */
-.sidebar::after {
-  content: '';
-  position: absolute;
-  top: 72px;
-  bottom: 0;
-  right: 0;
-  width: 1px;
-  background: var(--border-base);
-  z-index: 10;
-}
-
 .sidebar__brand {
   height: 72px;
   display: flex;
   align-items: center;
   padding: 0 1.5rem;
-  background: linear-gradient(90deg, #e6ded5 0%, #efeae1 100%);
-  border-bottom: 1px solid var(--border-base);
+  background: #0f172a;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   gap: 1rem;
 }
 
@@ -160,7 +148,7 @@ h1, h2, h3, h4, h5, h6 {
   font-size: 0.85rem;
   font-weight: 900;
   letter-spacing: 0.12em;
-  background: linear-gradient(135deg, #0f172a 0%, #2563eb 100%);
+  background: linear-gradient(135deg, #ffffff 0%, #60a5fa 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -276,18 +264,18 @@ h1, h2, h3, h4, h5, h6 {
 /* ── TOPBAR ────────────────────────────────────────── */
 .topbar {
   height: 72px;
-  border-bottom: 1px solid var(--border-base);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 2.5rem;
-  background: linear-gradient(90deg, rgba(239, 234, 225, 0.9) 0%, rgba(252, 251, 249, 0.85) 100%);
+  background: #0f172a;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   position: sticky;
   top: 0;
   z-index: 100;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.2);
 }
 
 .topbar::after {

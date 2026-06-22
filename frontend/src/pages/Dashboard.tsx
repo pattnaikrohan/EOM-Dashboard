@@ -4,7 +4,7 @@
 import { useNavigate } from 'react-router-dom';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
-  PieChart, Pie, Cell, Legend as ReLegend
+  PieChart, Pie, Cell, Legend as ReLegend, Label
 } from 'recharts';
 import { ArrowUpRight, Upload } from 'lucide-react';
 import { useData } from '../context/DataContext';
@@ -115,6 +115,8 @@ export default function Dashboard() {
       value: flag_distribution[f] || 0,
     }));
 
+  const totalFlags = flagPieData.reduce((sum, item) => sum + item.value, 0);
+
   return (
     <div className="fade-in">
       {/* Header */}
@@ -185,20 +187,32 @@ export default function Dashboard() {
               <Pie
                 data={flagPieData}
                 cx="50%" cy="45%"
-                innerRadius={70}
-                outerRadius={110}
-                paddingAngle={4}
+                innerRadius={85}
+                outerRadius={120}
+                paddingAngle={6}
+                cornerRadius={8}
                 dataKey="value"
                 animationDuration={1500}
+                stroke="none"
               >
+                <Label
+                  content={({ viewBox: { cx, cy } }: any) => {
+                    return (
+                      <text x={cx} y={cy} textAnchor="middle" dominantBaseline="central">
+                        <tspan x={cx} dy="-0.1em" fontSize="2.5rem" fontWeight="900" fill="#0f172a">{totalFlags}</tspan>
+                        <tspan x={cx} dy="2em" fontSize="0.75rem" fontWeight="800" fill="#64748b" style={{ textTransform: 'uppercase', letterSpacing: '0.1em' }}>FLAGS</tspan>
+                      </text>
+                    );
+                  }}
+                />
                 {flagPieData.map((_entry, index) => (
                   <Cell
                     key={`cell-${index}`}
                     fill={PIE_COLORS[FLAG_PRIORITY.filter(f => f !== 'CLEAN').indexOf(flagPieData[index]?.name)] || '#ccc'}
                     stroke="#ffffff"
-                    strokeWidth={4}
+                    strokeWidth={3}
                     filter="url(#pieShadow)"
-                    style={{ outline: 'none' }}
+                    style={{ outline: 'none', transition: 'all 0.3s ease' }}
                   />
                 ))}
               </Pie>
