@@ -75,6 +75,18 @@ export default function KPICards({ kpi }: KPICardsProps) {
               <strong style={{ display: 'block', marginBottom: '0.5rem', color: '#0f172a' }}>How is this calculated?</strong>
               {selectedCard.description}
             </div>
+
+            {kpi.total_jobs > 0 && (
+              <div style={{ marginTop: '1.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.85rem', fontWeight: 600, color: '#475569' }}>
+                  <span>Percentage of Total Jobs</span>
+                  <span style={{ color: '#0f172a' }}>{((selectedCard.value / kpi.total_jobs) * 100).toFixed(1)}%</span>
+                </div>
+                <div style={{ height: '8px', background: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
+                  <div style={{ width: `${(selectedCard.value / kpi.total_jobs) * 100}%`, height: '100%', background: '#2563EB', borderRadius: '4px', transition: 'width 1s ease' }} />
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

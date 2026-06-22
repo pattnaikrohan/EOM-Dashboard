@@ -92,7 +92,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <aside className="sidebar">
         {/* Brand */}
         <div className="sidebar__brand" style={{ justifyContent: 'center' }}>
-          <img src={logo} alt="EOM Dashboard" style={{ height: '40px', objectFit: 'contain' }} />
+          <img src={logo} alt="EOM Dashboard" style={{ height: '28px', objectFit: 'contain' }} />
         </div>
 
         {/* Navigation */}

@@ -119,12 +119,12 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .sidebar__brand {
-  height: 72px;
+  height: 64px;
   display: flex;
   align-items: center;
   padding: 0 1.5rem;
-  background: #ffffff;
-  border-bottom: 1px solid var(--border-base);
+  background: #FFFFFF;
+  border-bottom: 1px solid #E5E7EB;
   gap: 1rem;
 }
 
@@ -263,19 +263,16 @@ h1, h2, h3, h4, h5, h6 {
 
 /* ── TOPBAR ────────────────────────────────────────── */
 .topbar {
-  height: 72px;
-  border-bottom: 1px solid var(--border-base);
+  height: 64px;
+  border-bottom: 1px solid #E5E7EB;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 2.5rem;
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: #FFFFFF;
   position: sticky;
   top: 0;
   z-index: 100;
-  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.05);
 }
 
 .topbar::after {
@@ -302,14 +299,10 @@ h1, h2, h3, h4, h5, h6 {
 
 .topbar__title {
   font-size: 1.15rem;
-  font-weight: 900;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.2em;
-  background: linear-gradient(135deg, #0f172a 0%, #0369a1 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  opacity: 0.95;
+  letter-spacing: 0.15em;
+  color: #0F172A;
   margin-left: 0.5rem;
 }
 
