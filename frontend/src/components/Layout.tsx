@@ -1,20 +1,19 @@
 /**
  * Layout — Sidebar + Topbar shell matching incident-management design.
  */
-import { useLocation, Link, useNavigate } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import { useState, useRef, useEffect, useMemo } from 'react';
 import {
-  LayoutDashboard, Users, Upload, Settings, ChevronRight,
-  Shield, Bell, FileSpreadsheet, AlertTriangle, TrendingDown, Filter, ChevronDown, Building
+  LayoutDashboard, Upload, Settings, ChevronRight,
+  Bell, FileSpreadsheet, AlertTriangle, TrendingDown, Filter, ChevronDown, Building
 } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { FLAG_PRIORITY, FLAG_COLOURS } from '../utils/constants';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
-  const navigate = useNavigate();
   const { 
-    loaded, operators, branch, period, 
+    loaded, operators, period, 
     globalFlags, setGlobalFlags,
     globalBranches, setGlobalBranches, availableBranches,
     globalDepartments, setGlobalDepartments, availableDepartments

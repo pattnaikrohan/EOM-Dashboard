@@ -9,7 +9,6 @@ import { getOperatorDetail } from '../services/api';
 import type { OperatorDetail, Job } from '../services/api';
 import KPICards from '../components/KPICards';
 import JobTable from '../components/JobTable';
-import FlagBadge from '../components/FlagBadge';
 import { FLAG_COLOURS, FLAG_PRIORITY, formatCurrency } from '../utils/constants';
 
 export default function OperatorView() {
