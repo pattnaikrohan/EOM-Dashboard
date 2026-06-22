@@ -468,17 +468,17 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             )}
             <button
               style={{
-                background: 'rgba(255, 255, 255, 0.1)',
-                border: '1px solid rgba(255, 255, 255, 0.15)',
+                background: 'rgba(0, 0, 0, 0.05)',
+                border: '1px solid rgba(0, 0, 0, 0.1)',
                 cursor: 'pointer',
                 padding: '0.45rem',
                 borderRadius: '10px',
-                color: '#ffffff',
+                color: '#475569',
                 display: 'flex',
                 transition: 'all 0.15s',
               }}
-              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)')}
-              onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)')}
+              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(0, 0, 0, 0.1)')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'rgba(0, 0, 0, 0.05)')}
               title="Notifications"
             >
               <Bell size={18} />
