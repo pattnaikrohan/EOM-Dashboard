@@ -2,7 +2,7 @@
  * API Configuration and Constants
  */
 
-export const API_BASE = 'http://localhost:8000/api';
+export const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
 export const FLAG_COLOURS: Record<string, { colour: string; hex: string; bg: string; border: string; text: string; className: string }> = {
   'LOSS':            { colour: 'Red',    hex: '#FF4C4C', bg: 'rgba(255,76,76,0.12)',   border: 'rgba(255,76,76,0.2)',   text: '#dc2626', className: 'flag-badge--loss' },
