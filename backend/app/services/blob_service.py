@@ -58,3 +58,18 @@ def download_parsed_data() -> dict | None:
     except Exception as e:
         logger.error(f"Error downloading from Blob Storage: {e}")
         return None
+
+def delete_parsed_data() -> bool:
+    """Delete the parsed JSON dictionary from Azure Blob Storage."""
+    blob_client = get_blob_client()
+    if not blob_client:
+        return False
+        
+    try:
+        if blob_client.exists():
+            blob_client.delete_blob()
+            logger.info(f"Successfully deleted {BLOB_NAME} from Blob Storage.")
+        return True
+    except Exception as e:
+        logger.error(f"Error deleting from Blob Storage: {e}")
+        return False

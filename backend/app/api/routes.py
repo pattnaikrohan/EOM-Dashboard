@@ -4,7 +4,7 @@ API Routes for the EOM Review Agent (Flask version).
 from flask import Blueprint, request, jsonify
 from app.services.parser import parse_excel
 from app.services.data_store import data_store
-from app.services.blob_service import upload_parsed_data
+from app.services.blob_service import upload_parsed_data, delete_parsed_data
 
 blueprint = Blueprint('api', __name__)
 
@@ -22,18 +22,35 @@ def upload_file():
     except Exception as e:
         return jsonify({"error": f"Failed to parse file: {str(e)}"}), 400
 
-    data_store.load(parsed)
+    data_store.load(parsed, merge=True)
     
-    # Persist the parsed data to Azure Blob Storage
-    upload_parsed_data(parsed)
+    # We must construct a dictionary representing the merged state to upload to blob storage!
+    merged_parsed = {
+        "branch": data_store.branch,
+        "period": data_store.period,
+        "operators": data_store.operators,
+        "jobs": data_store.jobs
+    }
+    
+    # Persist the merged data to Azure Blob Storage
+    upload_parsed_data(merged_parsed)
 
     return jsonify({
         "success": True,
-        "message": f"Loaded {len(parsed['jobs'])} jobs from {len(parsed['operators'])} operators",
-        "branch": parsed["branch"],
-        "period": parsed["period"],
-        "total_jobs": len(parsed["jobs"]),
-        "operators": parsed["operators"],
+        "message": f"Loaded {len(data_store.jobs)} jobs from {len(data_store.operators)} operators",
+        "branch": data_store.branch,
+        "period": data_store.period,
+        "total_jobs": len(data_store.jobs),
+        "operators": data_store.operators,
+    })
+
+@blueprint.route("/clear", methods=["POST"])
+def clear_data():
+    data_store.clear()
+    delete_parsed_data()
+    return jsonify({
+        "success": True,
+        "message": "All data cleared successfully."
     })
 
 @blueprint.route("/dashboard", methods=["GET"])

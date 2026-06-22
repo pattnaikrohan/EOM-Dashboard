@@ -5,10 +5,11 @@ import { useLocation, Link } from 'react-router-dom';
 import { useState, useRef, useEffect, useMemo } from 'react';
 import {
   LayoutDashboard, Upload, Settings, ChevronRight,
-  Bell, FileSpreadsheet, AlertTriangle, TrendingDown, Filter, ChevronDown, Building
+  Bell, FileSpreadsheet, AlertTriangle, TrendingDown, Filter, ChevronDown, Building, Trash2
 } from 'lucide-react';
 import { useData } from '../context/DataContext';
-import { FLAG_PRIORITY, FLAG_COLOURS } from '../utils/constants';
+import { FLAG_PRIORITY, FLAG_COLOURS, API_BASE } from '../utils/constants';
+import logo from '../assets/logo.png';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
@@ -90,14 +91,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       {/* ── LEFT SIDEBAR ──────────────────────────────── */}
       <aside className="sidebar">
         {/* Brand */}
-        <div className="sidebar__brand">
-          <div className="sidebar__brand-icon">
-            <FileSpreadsheet size={16} color="#fff" />
-          </div>
-          <div className="sidebar__brand-text">
-            <div className="sidebar__brand-title">EOM Agent</div>
-            <div className="sidebar__brand-sub">AAW Project Logistics</div>
-          </div>
+        <div className="sidebar__brand" style={{ justifyContent: 'center' }}>
+          <img src={logo} alt="EOM Dashboard" style={{ height: '40px', objectFit: 'contain' }} />
         </div>
 
         {/* Navigation */}
@@ -164,6 +159,21 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <Settings size={18} color="#94a3b8" />
               <span>Settings & Legend</span>
             </Link>
+
+            <button
+              onClick={() => {
+                if (window.confirm("Are you sure you want to permanently clear all loaded data? This cannot be undone.")) {
+                  fetch(`${API_BASE}/clear`, { method: 'POST' })
+                    .then(() => window.location.href = '/')
+                    .catch(e => alert("Failed to clear data: " + e));
+                }
+              }}
+              className="sidebar__nav-item"
+              style={{ width: 'calc(100% - 1.2rem)', color: '#ef4444', marginTop: '0.5rem', textAlign: 'left' }}
+            >
+              <Trash2 size={18} color="#ef4444" />
+              <span>Clear Data</span>
+            </button>
           </div>
         </nav>
 
@@ -180,6 +190,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         {/* Topbar */}
         <header className="topbar">
           <div className="topbar__left">
+            <h1 className="topbar__title" style={{ margin: 0 }}>EOM Dashboard</h1>
           </div>
           <div className="topbar__right">
             {loaded && (

@@ -23,12 +23,32 @@ class DataStore:
     def is_loaded(self) -> bool:
         return self._loaded
 
-    def load(self, parsed: dict):
-        """Load parsed data from the Excel parser."""
-        self.branch = parsed.get("branch", "")
-        self.period = parsed.get("period", "")
-        self.operators = parsed.get("operators", [])
-        self.jobs = parsed.get("jobs", [])
+    def load(self, parsed: dict, merge: bool = False):
+        """Load parsed data from the Excel parser. If merge is True, combine with existing data."""
+        if merge and self._loaded:
+            # Combine branches and periods by taking unique comma-separated values
+            existing_branches = set(b.strip() for b in self.branch.split(",") if b.strip())
+            new_branch = parsed.get("branch", "")
+            if new_branch and new_branch not in existing_branches:
+                self.branch = f"{self.branch}, {new_branch}" if self.branch else new_branch
+                
+            existing_periods = set(p.strip() for p in self.period.split(",") if p.strip())
+            new_period = parsed.get("period", "")
+            if new_period and new_period not in existing_periods:
+                self.period = f"{self.period}, {new_period}" if self.period else new_period
+                
+            self.operators = list(set(self.operators + parsed.get("operators", [])))
+            
+            # Deduplicate jobs by job_number
+            existing_jobs = {j["job_number"]: j for j in self.jobs}
+            for j in parsed.get("jobs", []):
+                existing_jobs[j["job_number"]] = j
+            self.jobs = list(existing_jobs.values())
+        else:
+            self.branch = parsed.get("branch", "")
+            self.period = parsed.get("period", "")
+            self.operators = parsed.get("operators", [])
+            self.jobs = parsed.get("jobs", [])
         
         self.available_branches = sorted(list(set(j.get("branch", "") for j in self.jobs if j.get("branch"))))
         self.available_departments = sorted(list(set(j.get("department", "") for j in self.jobs if j.get("department"))))
