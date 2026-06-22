@@ -186,6 +186,43 @@ h1, h2, h3, h4, h5, h6 {
   display: block;
 }
 
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #f8fafc;
+  padding: 0.25rem 0.5rem 0.25rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.filter-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.filter-select {
+  background: transparent;
+  border: none;
+  color: #0f172a;
+  font-size: 0.85rem;
+  font-weight: 600;
+  outline: none;
+  cursor: pointer;
+  padding-right: 0.5rem;
+}
+
+.filter-select option {
+  background: #ffffff;
+  color: #0f172a;
+}
+
 .sidebar__nav-item {
   display: flex;
   align-items: center;
