@@ -135,7 +135,7 @@ h1, h2, h3, h4, h5, h6 {
   display: flex;
   align-items: center;
   padding: 0 1.5rem;
-  background: rgba(255, 255, 255, 0.95);
+  background: linear-gradient(90deg, #e6ded5 0%, #efeae1 100%);
   border-bottom: 1px solid var(--border-base);
   gap: 1rem;
 }
@@ -281,7 +281,7 @@ h1, h2, h3, h4, h5, h6 {
   align-items: center;
   justify-content: space-between;
   padding: 0 2.5rem;
-  background: rgba(255, 255, 255, 0.85);
+  background: linear-gradient(90deg, rgba(239, 234, 225, 0.9) 0%, rgba(252, 251, 249, 0.85) 100%);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   position: sticky;
