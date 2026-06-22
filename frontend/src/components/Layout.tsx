@@ -191,9 +191,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     <button
                       onClick={() => setBranchFilterOpen(!branchFilterOpen)}
                       style={{
-                        background: globalBranches.length > 0 ? 'linear-gradient(135deg, #0ea5e9, #0284c7)' : 'rgba(255, 255, 255, 0.1)',
-                        color: '#ffffff',
-                        border: '1px solid rgba(255, 255, 255, 0.15)',
+                        background: globalBranches.length > 0 ? 'linear-gradient(135deg, #0ea5e9, #0284c7)' : 'rgba(0, 0, 0, 0.04)',
+                        color: globalBranches.length > 0 ? '#ffffff' : '#0f172a',
+                        border: globalBranches.length > 0 ? '1px solid transparent' : '1px solid rgba(0, 0, 0, 0.08)',
                         padding: '0.45rem 1rem',
                         borderRadius: '10px',
                         fontSize: '0.75rem',
@@ -269,9 +269,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     <button
                       onClick={() => setDeptFilterOpen(!deptFilterOpen)}
                       style={{
-                        background: globalDepartments.length > 0 ? 'linear-gradient(135deg, #0ea5e9, #0284c7)' : 'rgba(255, 255, 255, 0.1)',
-                        color: '#ffffff',
-                        border: '1px solid rgba(255, 255, 255, 0.15)',
+                        background: globalDepartments.length > 0 ? 'linear-gradient(135deg, #0ea5e9, #0284c7)' : 'rgba(0, 0, 0, 0.04)',
+                        color: globalDepartments.length > 0 ? '#ffffff' : '#0f172a',
+                        border: globalDepartments.length > 0 ? '1px solid transparent' : '1px solid rgba(0, 0, 0, 0.08)',
                         padding: '0.45rem 1rem',
                         borderRadius: '10px',
                         fontSize: '0.75rem',
@@ -346,9 +346,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   <button
                     onClick={() => setFilterOpen(!filterOpen)}
                     style={{
-                      background: globalFlags.length > 0 ? 'linear-gradient(135deg, #0ea5e9, #0284c7)' : 'rgba(255, 255, 255, 0.1)',
-                      color: '#ffffff',
-                      border: '1px solid rgba(255, 255, 255, 0.15)',
+                      background: globalFlags.length > 0 ? 'linear-gradient(135deg, #0ea5e9, #0284c7)' : 'rgba(0, 0, 0, 0.04)',
+                      color: globalFlags.length > 0 ? '#ffffff' : '#0f172a',
+                      border: globalFlags.length > 0 ? '1px solid transparent' : '1px solid rgba(0, 0, 0, 0.08)',
                       padding: '0.45rem 1rem',
                       borderRadius: '10px',
                       fontSize: '0.75rem',
@@ -457,17 +457,17 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             )}
             <button
               style={{
-                background: 'rgba(255, 255, 255, 0.1)',
-                border: '1px solid rgba(255, 255, 255, 0.15)',
+                background: 'rgba(0, 0, 0, 0.04)',
+                border: '1px solid rgba(0, 0, 0, 0.08)',
                 cursor: 'pointer',
                 padding: '0.45rem',
                 borderRadius: '10px',
-                color: '#ffffff',
+                color: '#475569',
                 display: 'flex',
                 transition: 'all 0.15s',
               }}
-              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)')}
-              onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)')}
+              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(0, 0, 0, 0.08)')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'rgba(0, 0, 0, 0.04)')}
               title="Notifications"
             >
               <Bell size={18} />
