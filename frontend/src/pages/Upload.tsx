@@ -1,0 +1,135 @@
+/**
+ * Upload Page — Drag-and-drop file upload.
+ */
+import { useCallback } from 'react';
+import { useDropzone } from 'react-dropzone';
+import { Upload as UploadIcon, FileSpreadsheet, CheckCircle, AlertCircle } from 'lucide-react';
+import { useData } from '../context/DataContext';
+import { useNavigate } from 'react-router-dom';
+
+export default function UploadPage() {
+  const { handleUpload, loading, error, loaded, branch, period } = useData();
+  const navigate = useNavigate();
+
+  const onDrop = useCallback(async (acceptedFiles: File[]) => {
+    if (acceptedFiles.length > 0) {
+      await handleUpload(acceptedFiles[0]);
+      navigate('/');
+    }
+  }, [handleUpload, navigate]);
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: {
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
+      'application/vnd.ms-excel': ['.xls'],
+    },
+    maxFiles: 1,
+  });
+
+  return (
+    <div className="fade-in">
+      <div className="page-header">
+        <div className="page-header__overline">Data Management</div>
+        <h1 className="page-header__title">Upload CargoWise Export</h1>
+        <p className="page-header__subtitle">
+          Upload your weekly CargoWise export or WIP Review file to populate the dashboard
+        </p>
+      </div>
+
+      <div
+        {...getRootProps()}
+        className={`upload-zone ${isDragActive ? 'upload-zone--active' : ''}`}
+        style={{ maxWidth: 640, margin: '0 auto' }}
+      >
+        <input {...getInputProps()} />
+        <div className="upload-zone__icon">
+          {loading ? (
+            <div style={{
+              width: 28, height: 28, borderRadius: '50%',
+              border: '3px solid rgba(59,130,246,0.2)', borderTopColor: '#3b82f6',
+              animation: 'spin 1s linear infinite'
+            }} />
+          ) : (
+            <UploadIcon size={28} />
+          )}
+        </div>
+        {loading ? (
+          <>
+            <div className="upload-zone__title">Processing file...</div>
+            <p className="upload-zone__text">Parsing data and computing flags</p>
+          </>
+        ) : (
+          <>
+            <div className="upload-zone__title">
+              {isDragActive ? 'Drop your file here' : 'Drag & drop your Excel file'}
+            </div>
+            <p className="upload-zone__text">or click to browse</p>
+            <p className="upload-zone__formats">
+              Supports .xlsx — CargoWise exports and WIP Review files
+            </p>
+          </>
+        )}
+      </div>
+
+      {/* Error */}
+      {error && (
+        <div className="card fade-in" style={{ maxWidth: 640, margin: '1.5rem auto 0', borderColor: 'rgba(239,68,68,0.2)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#dc2626' }}>
+            <AlertCircle size={20} />
+            <div>
+              <div style={{ fontWeight: 700, fontSize: '0.875rem' }}>Upload Failed</div>
+              <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '0.25rem' }}>{error}</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Success status */}
+      {loaded && (
+        <div className="card fade-in" style={{ maxWidth: 640, margin: '1.5rem auto 0', borderColor: 'rgba(16,185,129,0.2)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#059669' }}>
+            <CheckCircle size={20} />
+            <div>
+              <div style={{ fontWeight: 700, fontSize: '0.875rem' }}>Data Loaded Successfully</div>
+              <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '0.25rem' }}>
+                Branch: {branch} · Period: {period}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Supported formats info */}
+      <div className="card" style={{ maxWidth: 640, margin: '2rem auto 0' }}>
+        <h3 style={{ fontSize: '0.875rem', fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <FileSpreadsheet size={16} color="#3b82f6" />
+          Supported File Formats
+        </h3>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          {[
+            { name: 'CargoWise Export', desc: 'Raw Shipment Profile sheet from CargoWise Job Management' },
+            { name: 'WIP Review File', desc: 'Pre-processed WIP Review with per-operator sheets and flags' },
+          ].map(fmt => (
+            <div key={fmt.name} style={{
+              display: 'flex', alignItems: 'flex-start', gap: '0.75rem',
+              padding: '0.75rem', borderRadius: '10px', background: 'var(--bg-subtle)',
+              border: '1px solid var(--border-base)',
+            }}>
+              <div style={{
+                width: 8, height: 8, borderRadius: '50%', background: '#3b82f6',
+                marginTop: '0.35rem', flexShrink: 0,
+              }} />
+              <div>
+                <div style={{ fontSize: '0.8125rem', fontWeight: 600 }}>{fmt.name}</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--fg-muted)' }}>{fmt.desc}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+    </div>
+  );
+}
