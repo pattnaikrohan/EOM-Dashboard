@@ -115,7 +115,7 @@ export default function Dashboard() {
       value: flag_distribution[f] || 0,
     }));
 
-  const totalFlags = flagPieData.reduce((sum, item) => sum + item.value, 0);
+  const flaggedJobsCount = kpi.total_jobs - kpi.clean_jobs;
 
   return (
     <div className="fade-in">
@@ -179,11 +179,6 @@ export default function Dashboard() {
           </h3>
           <ResponsiveContainer width="100%" height={320}>
             <PieChart margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
-              <defs>
-                <filter id="pieShadow" x="-20%" y="-20%" width="140%" height="140%">
-                  <feDropShadow dx="0" dy="8" stdDeviation="12" floodColor="#000000" floodOpacity="0.15"/>
-                </filter>
-              </defs>
               <Pie
                 data={flagPieData}
                 cx="50%" cy="45%"
@@ -199,8 +194,8 @@ export default function Dashboard() {
                   content={({ viewBox: { cx, cy } }: any) => {
                     return (
                       <text x={cx} y={cy} textAnchor="middle" dominantBaseline="central">
-                        <tspan x={cx} dy="-0.1em" fontSize="2.5rem" fontWeight="900" fill="#0f172a">{totalFlags}</tspan>
-                        <tspan x={cx} dy="2em" fontSize="0.75rem" fontWeight="800" fill="#64748b" style={{ textTransform: 'uppercase', letterSpacing: '0.1em' }}>FLAGS</tspan>
+                        <tspan x={cx} dy="-0.1em" fontSize="2.5rem" fontWeight="900" fill="#0f172a">{flaggedJobsCount}</tspan>
+                        <tspan x={cx} dy="2em" fontSize="0.75rem" fontWeight="800" fill="#64748b" style={{ textTransform: 'uppercase', letterSpacing: '0.1em' }}>FLAGGED JOBS</tspan>
                       </text>
                     );
                   }}
@@ -210,8 +205,7 @@ export default function Dashboard() {
                     key={`cell-${index}`}
                     fill={PIE_COLORS[FLAG_PRIORITY.filter(f => f !== 'CLEAN').indexOf(flagPieData[index]?.name)] || '#ccc'}
                     stroke="#ffffff"
-                    strokeWidth={3}
-                    filter="url(#pieShadow)"
+                    strokeWidth={4}
                     style={{ outline: 'none', transition: 'all 0.3s ease' }}
                   />
                 ))}
