@@ -4,6 +4,7 @@ API Routes for the EOM Review Agent (Flask version).
 from flask import Blueprint, request, jsonify
 from app.services.parser import parse_excel
 from app.services.data_store import data_store
+from app.services.blob_service import upload_parsed_data
 
 blueprint = Blueprint('api', __name__)
 
@@ -22,6 +23,9 @@ def upload_file():
         return jsonify({"error": f"Failed to parse file: {str(e)}"}), 400
 
     data_store.load(parsed)
+    
+    # Persist the parsed data to Azure Blob Storage
+    upload_parsed_data(parsed)
 
     return jsonify({
         "success": True,
