@@ -4,7 +4,7 @@
 import { useNavigate } from 'react-router-dom';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
-  PieChart, Pie, Cell, Legend as ReLegend, Label
+  PieChart, Pie, Cell, Label
 } from 'recharts';
 import { ArrowUpRight, Upload } from 'lucide-react';
 import { useData } from '../context/DataContext';
@@ -69,20 +69,6 @@ const CustomPieTooltip = ({ active, payload }: any) => {
     );
   }
   return null;
-};
-
-const renderCustomLegend = (props: any) => {
-  const { payload } = props;
-  return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '10px 16px', marginTop: '16px', padding: '0 10px' }}>
-      {payload.map((entry: any, index: number) => (
-        <div key={`item-${index}`} style={{ display: 'flex', alignItems: 'center', fontSize: '0.75rem', fontWeight: 800, color: '#475569' }}>
-          <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: entry.color, marginRight: '6px', flexShrink: 0 }}></span>
-          <span style={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>{entry.value}</span>
-        </div>
-      ))}
-    </div>
-  );
 };
 
 export default function Dashboard() {
@@ -186,51 +172,72 @@ export default function Dashboard() {
           </ResponsiveContainer>
         </div>
 
-        {/* Flag Distribution Pie */}
+        {/* Flag Distribution Pie + Legend */}
         <div className="card">
           <h3 style={{ fontSize: '0.875rem', fontWeight: 700, marginBottom: '1rem' }}>
             Flag Distribution
           </h3>
-          <ResponsiveContainer width="100%" height={320}>
-            <PieChart margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
-              <Pie
-                data={flagPieData}
-                cx="50%" cy="45%"
-                innerRadius={85}
-                outerRadius={120}
-                paddingAngle={6}
-                cornerRadius={8}
-                dataKey="value"
-                animationDuration={1500}
-                stroke="none"
-              >
-                <Label
-                  content={({ viewBox: { cx, cy } }: any) => {
-                    return (
-                      <text x={cx} y={cy} textAnchor="middle" dominantBaseline="central">
-                        <tspan x={cx} dy="-0.1em" fontSize="2.5rem" fontWeight="900" fill="#0f172a">{flaggedJobsCount}</tspan>
-                        <tspan x={cx} dy="2em" fontSize="0.75rem" fontWeight="800" fill="#64748b" style={{ textTransform: 'uppercase', letterSpacing: '0.1em' }}>FLAGGED JOBS</tspan>
-                      </text>
-                    );
-                  }}
-                />
-                {flagPieData.map((_entry, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={PIE_COLORS[FLAG_PRIORITY.filter(f => f !== 'CLEAN').indexOf(flagPieData[index]?.name)] || '#ccc'}
-                    stroke="#ffffff"
-                    strokeWidth={4}
-                    style={{ outline: 'none', transition: 'all 0.3s ease' }}
-                  />
-                ))}
-              </Pie>
-              <Tooltip content={<CustomPieTooltip />} />
-              <ReLegend
-                verticalAlign="bottom"
-                content={renderCustomLegend}
-              />
-            </PieChart>
-          </ResponsiveContainer>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0' }}>
+            {/* Donut Chart */}
+            <div style={{ flex: '1 1 55%', minWidth: 0 }}>
+              <ResponsiveContainer width="100%" height={260}>
+                <PieChart margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                  <Pie
+                    data={flagPieData}
+                    cx="50%" cy="50%"
+                    innerRadius={70}
+                    outerRadius={100}
+                    paddingAngle={4}
+                    cornerRadius={6}
+                    dataKey="value"
+                    animationDuration={1500}
+                    stroke="none"
+                  >
+                    <Label
+                      content={({ viewBox: { cx, cy } }: any) => (
+                        <text x={cx} y={cy} textAnchor="middle" dominantBaseline="central">
+                          <tspan x={cx} dy="-0.1em" fontSize="2rem" fontWeight="900" fill="#0f172a">{flaggedJobsCount}</tspan>
+                          <tspan x={cx} dy="1.8em" fontSize="0.6rem" fontWeight="800" fill="#64748b" letterSpacing="0.1em">FLAGGED</tspan>
+                        </text>
+                      )}
+                    />
+                    {flagPieData.map((_entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={PIE_COLORS[FLAG_PRIORITY.filter(f => f !== 'CLEAN').indexOf(flagPieData[index]?.name)] || '#ccc'}
+                        stroke="#ffffff"
+                        strokeWidth={3}
+                        style={{ outline: 'none', transition: 'all 0.3s ease' }}
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip content={<CustomPieTooltip />} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Compact Legend */}
+            <div style={{ flex: '1 1 45%', display: 'flex', flexDirection: 'column', gap: '6px', paddingRight: '8px' }}>
+              {flagPieData.map((entry, index) => {
+                const color = PIE_COLORS[FLAG_PRIORITY.filter(f => f !== 'CLEAN').indexOf(entry.name)] || '#ccc';
+                const totalFlagged = flagPieData.reduce((s, e) => s + e.value, 0);
+                const pct = totalFlagged > 0 ? ((entry.value / totalFlagged) * 100).toFixed(0) : '0';
+                return (
+                  <div key={`legend-${index}`} style={{
+                    display: 'flex', alignItems: 'center', gap: '8px',
+                    padding: '6px 10px', borderRadius: '8px',
+                    background: '#f8fafc', border: '1px solid #f1f5f9',
+                    transition: 'all 0.15s',
+                  }}>
+                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: color, flexShrink: 0 }} />
+                    <span style={{ flex: 1, fontSize: '0.7rem', fontWeight: 600, color: '#334155', lineHeight: 1.2 }}>{entry.name}</span>
+                    <span style={{ fontSize: '0.7rem', fontWeight: 800, color: '#0f172a', minWidth: '24px', textAlign: 'right' }}>{entry.value}</span>
+                    <span style={{ fontSize: '0.65rem', fontWeight: 600, color: '#94a3b8', minWidth: '28px', textAlign: 'right' }}>{pct}%</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </div>
 
