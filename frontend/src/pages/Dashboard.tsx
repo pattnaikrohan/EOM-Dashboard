@@ -71,6 +71,20 @@ const CustomPieTooltip = ({ active, payload }: any) => {
   return null;
 };
 
+const renderCustomLegend = (props: any) => {
+  const { payload } = props;
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '10px 16px', marginTop: '16px', padding: '0 10px' }}>
+      {payload.map((entry: any, index: number) => (
+        <div key={`item-${index}`} style={{ display: 'flex', alignItems: 'center', fontSize: '0.75rem', fontWeight: 800, color: '#475569' }}>
+          <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: entry.color, marginRight: '6px', flexShrink: 0 }}></span>
+          <span style={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>{entry.value}</span>
+        </div>
+      ))}
+    </div>
+  );
+};
+
 export default function Dashboard() {
   const { loaded, dashboard, branch, period } = useData();
   const navigate = useNavigate();
@@ -213,8 +227,7 @@ export default function Dashboard() {
               <Tooltip content={<CustomPieTooltip />} />
               <ReLegend
                 verticalAlign="bottom"
-                iconType="circle"
-                wrapperStyle={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', paddingTop: '10px' }}
+                content={renderCustomLegend}
               />
             </PieChart>
           </ResponsiveContainer>
