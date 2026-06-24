@@ -5,20 +5,35 @@
 export const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
 export const FLAG_COLOURS: Record<string, { colour: string; hex: string; bg: string; border: string; text: string; className: string }> = {
-  'LOSS':            { colour: 'Red',    hex: '#FF4C4C', bg: 'rgba(255,76,76,0.12)',   border: 'rgba(255,76,76,0.2)',   text: '#dc2626', className: 'flag-badge--loss' },
-  'WIP':             { colour: 'Orange', hex: '#FFB347', bg: 'rgba(255,179,71,0.12)',  border: 'rgba(255,179,71,0.2)',  text: '#d97706', className: 'flag-badge--wip' },
-  'JFC':             { colour: 'Purple', hex: '#C084FC', bg: 'rgba(192,132,252,0.12)', border: 'rgba(192,132,252,0.2)', text: '#7c3aed', className: 'flag-badge--jfc' },
-  'MARGIN <5%':      { colour: 'Yellow', hex: '#FFF176', bg: 'rgba(255,241,118,0.15)', border: 'rgba(255,241,118,0.3)', text: '#b45309', className: 'flag-badge--margin' },
-  'ZERO REV >3M':    { colour: 'Pink',   hex: '#FDA4AF', bg: 'rgba(253,164,175,0.12)', border: 'rgba(253,164,175,0.2)', text: '#be185d', className: 'flag-badge--zero-rev' },
-  'JFC OPPORTUNITY': { colour: 'Blue',   hex: '#93C5FD', bg: 'rgba(147,197,253,0.12)', border: 'rgba(147,197,253,0.2)', text: '#1d4ed8', className: 'flag-badge--jfc-opp' },
-  'ACCRUAL CHECK':   { colour: 'Amber',  hex: '#F59E0B', bg: 'rgba(245,158,11,0.12)',  border: 'rgba(245,158,11,0.2)',  text: '#b45309', className: 'flag-badge--accrual' },
-  'CMP OPPORTUNITY': { colour: 'Green',  hex: '#6EE7B7', bg: 'rgba(110,231,183,0.12)', border: 'rgba(110,231,183,0.2)', text: '#047857', className: 'flag-badge--cmp-opp' },
-  'CLEAN':           { colour: 'White',  hex: '#E2E8F0', bg: 'rgba(226,232,240,0.3)',  border: 'rgba(226,232,240,0.5)', text: '#64748b', className: 'flag-badge--clean' },
+  'EXPORTS Jobs pending invoicing':   { colour: 'Blue',   hex: '#3B82F6', bg: 'rgba(59,130,246,0.12)',   border: 'rgba(59,130,246,0.2)',   text: '#1d4ed8', className: 'flag-badge--exports' },
+  'IMPORTS B Jobs pending invoicing': { colour: 'Indigo', hex: '#6366F1', bg: 'rgba(99,102,241,0.12)',   border: 'rgba(99,102,241,0.2)',   text: '#4338ca', className: 'flag-badge--imports-b' },
+  'IMPORTS S Jobs pending invoicing': { colour: 'Cyan',   hex: '#06B6D4', bg: 'rgba(6,182,212,0.12)',    border: 'rgba(6,182,212,0.2)',    text: '#0e7490', className: 'flag-badge--imports-s' },
+  'Unbilled Jobs with PROFIT':        { colour: 'Emerald',hex: '#10B981', bg: 'rgba(16,185,129,0.12)',   border: 'rgba(16,185,129,0.2)',   text: '#047857', className: 'flag-badge--unbilled-profit' },
+  'Unbilled Jobs with LOSS':          { colour: 'Red',    hex: '#EF4444', bg: 'rgba(239,68,68,0.12)',    border: 'rgba(239,68,68,0.2)',    text: '#b91c1c', className: 'flag-badge--unbilled-loss' },
+  'Jobs with WIPs':                   { colour: 'Orange', hex: '#F97316', bg: 'rgba(249,115,22,0.12)',   border: 'rgba(249,115,22,0.2)',   text: '#c2410c', className: 'flag-badge--wips' },
+  'Billed Jobs with LOSS':            { colour: 'Rose',   hex: '#F43F5E', bg: 'rgba(244,63,94,0.12)',    border: 'rgba(244,63,94,0.2)',    text: '#be123c', className: 'flag-badge--billed-loss' },
+  'Billed Jobs with LOW MARGIN':      { colour: 'Yellow', hex: '#EAB308', bg: 'rgba(234,179,8,0.15)',    border: 'rgba(234,179,8,0.3)',    text: '#a16207', className: 'flag-badge--low-margin' },
+  'Billed Jobs — EXTREME Profit':     { colour: 'Green',  hex: '#22C55E', bg: 'rgba(34,197,94,0.12)',    border: 'rgba(34,197,94,0.2)',    text: '#15803d', className: 'flag-badge--extreme-profit' },
+  'Jobs at INV Status':               { colour: 'Slate',  hex: '#64748B', bg: 'rgba(100,116,139,0.12)',  border: 'rgba(100,116,139,0.2)',  text: '#334155', className: 'flag-badge--inv-status' },
+  'Jobs at CMP — Ready to CLOSE':     { colour: 'Teal',   hex: '#14B8A6', bg: 'rgba(20,184,166,0.12)',   border: 'rgba(20,184,166,0.2)',   text: '#0f766e', className: 'flag-badge--ready-close' },
+  'Jobs with Aged Accruals':          { colour: 'Amber',  hex: '#F59E0B', bg: 'rgba(245,158,11,0.12)',   border: 'rgba(245,158,11,0.2)',   text: '#b45309', className: 'flag-badge--aged-accruals' },
+  'CLEAN':                            { colour: 'White',  hex: '#E2E8F0', bg: 'rgba(226,232,240,0.3)',   border: 'rgba(226,232,240,0.5)',  text: '#64748b', className: 'flag-badge--clean' },
 };
 
 export const FLAG_PRIORITY = [
-  'LOSS', 'WIP', 'JFC', 'MARGIN <5%', 'ZERO REV >3M',
-  'JFC OPPORTUNITY', 'ACCRUAL CHECK', 'CMP OPPORTUNITY', 'CLEAN',
+  'EXPORTS Jobs pending invoicing',
+  'IMPORTS B Jobs pending invoicing',
+  'IMPORTS S Jobs pending invoicing',
+  'Unbilled Jobs with PROFIT',
+  'Unbilled Jobs with LOSS',
+  'Jobs with WIPs',
+  'Billed Jobs with LOSS',
+  'Billed Jobs with LOW MARGIN',
+  'Billed Jobs — EXTREME Profit',
+  'Jobs at INV Status',
+  'Jobs at CMP — Ready to CLOSE',
+  'Jobs with Aged Accruals',
+  'CLEAN',
 ];
 
 export const STATUS_COLOURS: Record<string, string> = {

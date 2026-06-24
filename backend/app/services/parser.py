@@ -184,7 +184,7 @@ def parse_wip_review(file_bytes: bytes) -> dict:
             if flags_str:
                 job["flags"] = [f.strip() for f in flags_str.split(",") if f.strip()]
             else:
-                job["flags"] = get_flags(job)
+                job["flags"] = get_flags(job, period)
             
             job["primary_flag"] = priority_flag(job["flags"])
             job["ops_section"] = get_ops_section(job)
@@ -312,7 +312,7 @@ def parse_cargowise_export(file_bytes: bytes) -> dict:
         if job["revenue"] != 0:
             job["margin_pct"] = round((job["profit_loss"] / job["revenue"]) * 100, 2)
         
-        job["flags"] = get_flags(job)
+        job["flags"] = get_flags(job, period if 'period' in locals() else "")
         job["primary_flag"] = priority_flag(job["flags"])
         job["ops_section"] = get_ops_section(job)
         
