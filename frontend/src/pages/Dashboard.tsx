@@ -4,7 +4,7 @@
 import { useNavigate } from 'react-router-dom';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
-  PieChart, Pie, Cell, Label
+  PieChart, Pie, Cell, Label, Legend as ReLegend
 } from 'recharts';
 import { ArrowUpRight, Upload } from 'lucide-react';
 import { useData } from '../context/DataContext';
