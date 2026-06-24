@@ -10,19 +10,27 @@ blueprint = Blueprint('api', __name__)
 
 @blueprint.route("/upload", methods=["POST"])
 def upload_file():
-    if 'file' not in request.files:
-        return jsonify({"error": "No file part"}), 400
-    file = request.files['file']
-    if not file.filename or not file.filename.endswith((".xlsx", ".xls")):
-        return jsonify({"error": "Please upload an .xlsx file"}), 400
+    if 'files' not in request.files:
+        return jsonify({"error": "No files uploaded"}), 400
+        
+    uploaded_files = request.files.getlist('files')
+    if not uploaded_files or len(uploaded_files) == 0:
+        return jsonify({"error": "No files selected"}), 400
+        
+    data_store.clear()
+    
+    for file in uploaded_files:
+        if not file.filename or not file.filename.endswith((".xlsx", ".xls")):
+            continue
+            
+        contents = file.read()
+        try:
+            parsed = parse_excel(contents, file.filename)
+            data_store.load(parsed, merge=True)
+        except Exception as e:
+            print(f"Failed to parse {file.filename}: {e}")
+            # Continue processing other files even if one fails
 
-    contents = file.read()
-    try:
-        parsed = parse_excel(contents, file.filename)
-    except Exception as e:
-        return jsonify({"error": f"Failed to parse file: {str(e)}"}), 400
-
-    data_store.load(parsed, merge=True)
     
     # We must construct a dictionary representing the merged state to upload to blob storage!
     merged_parsed = {

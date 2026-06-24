@@ -115,9 +115,9 @@ export interface LegendItem {
 }
 
 // ── API Functions ─────────────────────────────────────────────────────────────
-export async function uploadFile(file: File): Promise<UploadResponse> {
+export async function uploadFiles(files: File[]): Promise<UploadResponse> {
   const formData = new FormData();
-  formData.append('file', file);
+  files.forEach(file => formData.append('files', file));
   const { data } = await api.post('/upload', formData);
   return data;
 }

@@ -4,7 +4,7 @@
 import { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import type { DashboardData, OperatorSummary, StatusResponse } from '../services/api';
-import { uploadFile, getDashboard, getStatus } from '../services/api';
+import { uploadFiles, getDashboard, getStatus } from '../services/api';
 
 interface DataState {
   loaded: boolean;
@@ -22,7 +22,7 @@ interface DataState {
 }
 
 interface DataContextType extends DataState {
-  handleUpload: (file: File) => Promise<void>;
+  handleUpload: (files: File[]) => Promise<void>;
   refreshDashboard: () => Promise<void>;
   checkStatus: () => Promise<void>;
   setGlobalFlags: (flags: string[]) => void;
@@ -60,10 +60,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setState(prev => ({ ...prev, globalDepartments: departments }));
   }, []);
 
-  const handleUpload = useCallback(async (file: File) => {
+  const handleUpload = useCallback(async (files: File[]) => {
     setState(prev => ({ ...prev, loading: true, error: '' }));
     try {
-      const result = await uploadFile(file);
+      const result = await uploadFiles(files);
       if (result.success) {
         const dash = await getDashboard();
         setState(prev => ({

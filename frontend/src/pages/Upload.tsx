@@ -13,7 +13,7 @@ export default function UploadPage() {
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
-      await handleUpload(acceptedFiles[0]);
+      await handleUpload(acceptedFiles);
       navigate('/');
     }
   }, [handleUpload, navigate]);
@@ -24,7 +24,6 @@ export default function UploadPage() {
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
       'application/vnd.ms-excel': ['.xls'],
     },
-    maxFiles: 1,
   });
 
   return (
@@ -56,15 +55,15 @@ export default function UploadPage() {
         </div>
         {loading ? (
           <>
-            <div className="upload-zone__title">Processing file...</div>
-            <p className="upload-zone__text">Parsing data and computing flags</p>
+            <div className="upload-zone__title">Processing files...</div>
+            <p className="upload-zone__text">Parsing data and computing flags for all files</p>
           </>
         ) : (
           <>
             <div className="upload-zone__title">
-              {isDragActive ? 'Drop your file here' : 'Drag & drop your Excel file'}
+              {isDragActive ? 'Drop your files here' : 'Drag & drop your Excel files'}
             </div>
-            <p className="upload-zone__text">or click to browse</p>
+            <p className="upload-zone__text">or click to browse multiple files</p>
             <p className="upload-zone__formats">
               Supports .xlsx — CargoWise exports and WIP Review files
             </p>
