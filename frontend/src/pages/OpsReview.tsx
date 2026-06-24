@@ -6,6 +6,7 @@ import { ChevronRight, AlertTriangle } from 'lucide-react';
 import { getOpsReview } from '../services/api';
 import type { Job } from '../services/api';
 import JobTable from '../components/JobTable';
+import { FLAG_PRIORITY, FLAG_COLOURS } from '../utils/constants';
 
 export default function OpsReview() {
   const [sections, setSections] = useState<Record<string, Job[]>>({});
@@ -19,12 +20,24 @@ export default function OpsReview() {
     setLoading(true);
     getOpsReview()
       .then(data => {
-        setSections(data.sections);
+        const fullSections: Record<string, Job[]> = {};
+        
+        // Define all possible ops sections to ensure they are always visible
+        const allPossibleSections = [
+          'B-Jobs',
+          'Unacceptable Department Codes',
+          ...FLAG_PRIORITY.filter(f => !['CLEAN', 'Jobs at INV Status', 'Jobs at CMP — Ready to CLOSE'].includes(f))
+        ];
+
+        allPossibleSections.forEach(s => { fullSections[s] = []; });
+        Object.keys(data.sections).forEach(s => { fullSections[s] = data.sections[s]; });
+
+        setSections(fullSections);
         setTotal(data.total);
         setBranch(data.branch);
         setPeriod(data.period);
         const exp: Record<string, boolean> = {};
-        Object.keys(data.sections).forEach(s => { exp[s] = true; });
+        Object.keys(fullSections).forEach(s => { exp[s] = true; });
         setExpanded(exp);
       })
       .catch(console.error)
@@ -44,13 +57,9 @@ export default function OpsReview() {
   const sectionNames = Object.keys(sections);
 
   const sectionColours: Record<string, string> = {
-    'JFC': '#C084FC',
-    'RDD <5%': '#F59E0B',
     'B-Jobs': '#94a3b8',
     'Unacceptable Department Codes': '#ef4444',
-    'JFC Opportunity': '#93C5FD',
-    'Loss': '#FF4C4C',
-    'Margin <5%': '#FFF176',
+    // We can fall back to the flag colors for the rest
   };
 
   return (
@@ -83,7 +92,8 @@ export default function OpsReview() {
         sectionNames.map(name => {
           const jobs = sections[name];
           const isOpen = expanded[name] ?? true;
-          const colour = sectionColours[name] || '#6366f1';
+          // Use flag color if available, otherwise section color, otherwise default
+          const colour = FLAG_COLOURS[name]?.hex || sectionColours[name] || '#6366f1';
 
           return (
             <div key={name} className="card" style={{ borderLeftColor: colour, borderLeftWidth: 3 }}>
