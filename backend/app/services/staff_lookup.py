@@ -1,0 +1,71 @@
+"""
+Staff and Branch Lookup Tables extracted from Staff Listing.xlsx.
+Maps operator codes (e.g. LT7) to full names (e.g. Leonardo Tutaan)
+and branch codes (e.g. SY1) to branch names (e.g. Sydney).
+"""
+
+OPERATOR_NAMES = {
+    'ASI': 'AAW Sydney Import LCL', 'AF2': 'Abby Feng', 'AH1': 'Adam Hughes',
+    'ADL': 'ADL - Branch Account', 'AKL': 'AKL - Branch Account', 'AD1': 'Alberto DiMaggio',
+    'AC6': 'Aleeta Carnelio', 'AMN': 'Alex McNairn', 'AM1': 'Alexa Murrin',
+    'AC8': 'Alfred Chen', 'AW2': 'Alicia Welch', 'AM2': 'Andy May',
+    'AD2': 'Anh Dang', 'AF': 'Anna Thompson', 'AC5': 'Anthony Cull',
+    'AC7': 'Aubrey Contreras', 'AAA': 'Auditor', 'BR5': 'Beata Ratowska',
+    'BS': 'Blake Strangwick', 'HOY': 'BLL - Branch Account', 'BLL': 'BLL - Branch Account',
+    'BNE': 'BNE - Branch Account', 'BL3': 'Brett Leal', 'BM1': 'Briannon Mott',
+    'CM3': 'Callum Mohr', 'CS2': 'Caroline Solotuchin', 'CC4': 'Catherine Cruz',
+    'CBR': 'CBR - Branch Account', 'CC3': 'Cedrick Cruz', 'CG7': 'Chamila Gunetilleke',
+    'CF2': 'Charito Falcon', 'AAB': 'Claire Brotherton', 'CE': 'Clinton Eckersall',
+    'CZ1': 'Conzentus Admin', 'C01': 'Cozentus1', 'C02': 'Cozentus2',
+    'C03': 'Cozentus3', 'C04': 'Cozentus4', 'DS7': 'Daisyrie Silerio',
+    'DK1': 'Damira Kadiric', 'DW': 'Daniel Wang', 'DB1': 'Darren Bennett',
+    'DG7': 'Dave Anthony Gomez', 'DL2': 'David Laurie', 'DP5': 'David Peake',
+    'DC2': 'Davina Cameron', 'DW7': 'Deneal Whitehouse', 'DF1': 'Diana Zambrano Fino',
+    'ET1': 'Elicit Technology 1', 'ET2': 'Elicit Technology 2', 'EA2': 'Elizalde Aragon',
+    'EY1': 'Ellie Yeom', 'EQ1': 'Emma Qian', 'EC2': 'Esther Cheng',
+    'FC4': 'Fernanda C Sarzi', 'FS1': 'Francis Su', 'FJ1': 'Francy Javela',
+    'FRE': 'FRE - Branch Account', 'FF1': 'Freightify Admin', 'GK': 'Gareth Knight',
+    'GB1': 'Gerald Bucio', 'JL2': 'Ginalyn Lu', 'GM1': 'Grace Mendoza',
+    'HW1': 'Hellen Wang', 'HR1': 'Herschelle Rafinian', 'IB1': 'Iesha Bridle',
+    'IW1': 'Ivy Wong', 'JK1': 'James Kurz', 'JO1': 'Janine Ocillos',
+    'JP0': 'Jason Pretorius', 'JG7': 'Jennifer Garces', 'JD': 'Jessica Doyle',
+    'JK2': 'Jessica Kawana', 'JP': 'Jiri Pelc', 'JM8': 'Jitu Mogre',
+    'JDM': 'Joe Di Monaco', 'JE1': 'John Eid', 'JZ1': 'John Zhang',
+    'JC3': 'Josephine Chan', 'JI1': 'Josievil Intan', 'JJ2': 'Judy Jiang',
+    'JN8': 'Julie Neoh', 'JZ2': 'Julie Zhu', 'JG1': 'Justine Kimberly Gacura',
+    'KN1': 'Kai Nguyen', 'KD1': 'Kane Dunleavy', 'KL4': 'Karen Mae Lasprilla',
+    'KL5': 'Karla Labastin', 'KS1': 'Karolina Stjepovic', 'KS2': 'Kasey Shvetcova',
+    'KC3': 'Kate Chace', 'KR1': 'Kathryn Reynolds', 'KB2': 'Kelly Baugh',
+    'KR4': 'Kelsey Reich', 'KL3': 'Kelvin Liu', 'KB3': 'Kenneth Bermio',
+    'KC': 'Kim Carningham', 'KM1': 'Kim Lam', 'KN2': 'Kylea Nobre',
+    'KC7': 'Kylie Carlson', 'LN1': 'Lawrence Nellas', 'LV2': 'Le Vo',
+    'LP1': 'Leah Purvis', 'LT7': 'Leonardo Tutaan', 'LXB': 'Logixboard Control',
+    'LB9': 'Lorena Butler', 'MS2': 'Manilyn Sibonga', 'MW2': 'Mareta Chang Wai',
+    'MM3': 'Maria Michelle Mejala', 'MD2': 'Mariela Monica Dalena', 'MK2': 'Marwan Kallas',
+    'MT4': 'Mary Ann Tado', 'MP1': 'Mary Anne Paulino', 'MT1': 'Matt Treeby',
+    'MB3': 'Matthew Broadhurst', 'MM7': 'Matthew Martin', 'MT3': 'Matthew Thorburn',
+    'MK1': 'Mayra Kazakeviche', 'MEL': 'MEL - Branch Account', 'MHA': 'Melbourne House Account',
+    'MC1': 'Michelle Joana Castillo', 'MA4': 'Mitha Amin', 'MG1': 'Myra Guelos',
+    'NT1': 'Namalie Tirimanne', 'ND': 'Nataly Daza', 'NB4': 'Nicole Bilson',
+    'NOM': 'Nominated by OS Agent', 'OX': 'Oliver Xie', 'PMR': 'Peter Morley',
+    'PL2': 'Priscilla Ly', 'PRJ': 'PRJ - Branch Account', 'QB1': 'Quennie Valerie Bordeos',
+    'RC': 'Rachael Christie', 'RP2': 'Renuka Priyadarshani', 'RJ0': 'Rhys Jones',
+    'RT1': 'Rogel Ponce Tejada', 'RR2': 'Rommel Ramos', 'SC5': 'Sam Chea',
+    'ST1': 'Samantha Ciappina', 'ST2': 'Sandra Valencia Trejos', 'SB': 'Sara Bu',
+    'SL8': 'Scott Leal', 'SDA': 'Sean De Asis', 'SW1': 'Selina Wang',
+    'ST4': 'Shalindra Thenuwara', 'SR4': 'Shanil Rathore', 'SZ1': 'Sharon Zhang',
+    'SC1': 'Sheila Cancio', 'SA7': 'Shiela Mae Apostol', 'SC0': 'Stephen Collins',
+    'SH4': 'Stephen Hearty', 'SD1': 'Steven Docherty', 'SM2': 'Steven Markovski',
+    'SE1': 'Stuart Eastaugh', 'SYD': 'SYD - Branch Account', 'TW': 'Teresa Weir',
+    'TT2': 'Tia-Rose Tootell', 'TC1': 'Tim Cahill', 'VE1': 'Virginia Erica',
+    'OR1': 'Vittorio Renong', 'VV1': 'Vivian Valero', 'WN': 'Wesley Neilson',
+    'WG1': 'Will Gowers', 'WC1': 'William Chan'
+}
+
+BRANCH_NAMES = {
+    'SY1': 'Sydney', 'BR1': 'Brokerage', 'FR1': 'Fremantle',
+    'AD1': 'Adelaide', 'AKL': 'Auckland', 'CBG': 'Coastalbridge',
+    'ME1': 'Melbourne', 'HAU': 'Head Office', 'BLL': 'Bulk Liquid Logistics',
+    'FRE': 'Fremantle', 'BN1': 'Brisbane', 'PR1': 'Project Logistics',
+    'PIL': 'PIL Logistics Australia'
+}

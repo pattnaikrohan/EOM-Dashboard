@@ -12,6 +12,7 @@ from openpyxl import load_workbook
 from io import BytesIO
 
 from app.services.rules import get_flags, priority_flag, get_ops_section, is_export_dept
+from app.services.staff_lookup import OPERATOR_NAMES, BRANCH_NAMES
 
 
 def _parse_number(val) -> float:
@@ -155,13 +156,16 @@ def parse_wip_review(file_bytes: bytes) -> dict:
             age_raw = _get("job_age_days")
             age = int(_parse_number(age_raw)) if age_raw is not None else _compute_age(open_date_raw)
             
+            branch_code = str(_get("branch") or "").strip()
+            op_code = str(_get("operator") or sheet_name).strip()
+            
             job = {
                 "job_number":     job_num,
                 "job_status":     str(_get("job_status") or "").strip(),
-                "branch":         str(_get("branch") or "").strip(),
+                "branch":         BRANCH_NAMES.get(branch_code, branch_code),
                 "department":     dept,
                 "open_date":      _parse_date_str(open_date_raw),
-                "operator":       str(_get("operator") or sheet_name).strip(),
+                "operator":       OPERATOR_NAMES.get(op_code, op_code),
                 "sales_rep":      str(_get("sales_rep") or "").strip(),
                 "local_charges":  str(_get("local_charges") or "").strip(),
                 "overseas_agent": str(_get("overseas_agent") or "").strip(),
@@ -194,9 +198,9 @@ def parse_wip_review(file_bytes: bytes) -> dict:
     wb.close()
     
     return {
-        "branch": branch or "ALL",
+        "branch": BRANCH_NAMES.get(branch, branch) if branch else "ALL",
         "period": period or datetime.now().strftime("%B %Y"),
-        "operators": operators,
+        "operators": [OPERATOR_NAMES.get(op, op) for op in operators],
         "jobs": all_jobs,
     }
 
@@ -282,16 +286,19 @@ def parse_cargowise_export(file_bytes: bytes) -> dict:
             return row[idx] if idx >= 0 and idx < len(row) else None
         
         dept = str(_g(dept_col) or "").strip()
-        op = str(_g(op_col) or "").strip()
+        op_code = str(_g(op_col) or "").strip()
+        op = OPERATOR_NAMES.get(op_code, op_code)
         open_date_raw = _g(etd_col) if is_export_dept(dept) else _g(eta_col)
         
         if op:
             operators_set.add(op)
+            
+        branch_code = str(_g(branch_col) or branch).strip()
         
         job = {
             "job_number":     job_id,
             "job_status":     str(_g(status_col) or "").strip(),
-            "branch":         str(_g(branch_col) or branch).strip(),
+            "branch":         BRANCH_NAMES.get(branch_code, branch_code),
             "department":     dept,
             "open_date":      _parse_date_str(open_date_raw),
             "operator":       op,
@@ -321,7 +328,7 @@ def parse_cargowise_export(file_bytes: bytes) -> dict:
     wb.close()
     
     return {
-        "branch": branch or "ALL",
+        "branch": BRANCH_NAMES.get(branch, branch) if branch else "ALL",
         "period": datetime.now().strftime("%B %Y"),
         "operators": sorted(operators_set),
         "jobs": all_jobs,
