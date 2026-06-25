@@ -196,8 +196,8 @@ export default function Dashboard() {
                     <Label
                       content={({ viewBox: { cx, cy } }: any) => (
                         <text x={cx} y={cy} textAnchor="middle" dominantBaseline="central">
-                          <tspan x={cx} dy="-0.1em" fontSize="2rem" fontWeight="900" fill="#0f172a">{flaggedJobsCount}</tspan>
-                          <tspan x={cx} dy="1.8em" fontSize="0.6rem" fontWeight="800" fill="#64748b" letterSpacing="0.1em">FLAGGED</tspan>
+                          <tspan x={cx} dy="-0.1em" fontSize="2rem" fontWeight="900" fill="var(--fg-base)">{flaggedJobsCount}</tspan>
+                          <tspan x={cx} dy="1.8em" fontSize="0.6rem" fontWeight="800" fill="var(--fg-muted)" letterSpacing="0.1em">FLAGGED</tspan>
                         </text>
                       )}
                     />
