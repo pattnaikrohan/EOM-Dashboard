@@ -112,7 +112,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           {/* Main nav items */}
           <Link
             to="/"
-            className={`sidebar__nav-item ${isActive('/') && !isActive('/operator') && !isActive('/ops-review') && !isActive('/upload') && !isActive('/settings') ? 'active' : ''}`}
+            className={`sidebar__nav-item ${isActive('/') && !isActive('/operator') && !isActive('/ops-review') && !isActive('/negative-movement') && !isActive('/upload') && !isActive('/settings') ? 'active' : ''}`}
           >
             <LayoutDashboard size={18} color="#3b82f6" />
             <span style={{ flex: 1 }}>Dashboard</span>
@@ -125,7 +125,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
           <Link
             to="/ops-review"
-            className={`sidebar__nav-item ${isActive('/ops-review') ? 'nav-active' : ''}`}
+            className="sidebar__nav-item"
+            style={{ fontWeight: isActive('/ops-review') ? 700 : 500, color: isActive('/ops-review') ? 'var(--fg-base)' : 'var(--fg-muted)', background: 'transparent' }}
           >
             <AlertTriangle size={18} color="#f59e0b" />
             <span>Ops Manager</span>
@@ -133,7 +134,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
           <Link
             to="/negative-movement"
-            className={`sidebar__nav-item ${isActive('/negative-movement') ? 'nav-active' : ''}`}
+            className="sidebar__nav-item"
+            style={{ fontWeight: isActive('/negative-movement') ? 700 : 500, color: isActive('/negative-movement') ? 'var(--fg-base)' : 'var(--fg-muted)', background: 'transparent' }}
           >
             <TrendingDown size={18} color="#ef4444" />
             <span>Neg. Movement</span>
@@ -158,7 +160,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <div style={{ marginTop: 'auto' }}>
             <Link
               to="/upload"
-              className={`sidebar__nav-item ${isActive('/upload') ? 'nav-active' : ''}`}
+              className="sidebar__nav-item"
+              style={{ fontWeight: isActive('/upload') ? 700 : 500, color: isActive('/upload') ? 'var(--fg-base)' : 'var(--fg-muted)', background: 'transparent' }}
             >
               <Upload size={18} color="#10b981" />
               <span>Upload Data</span>
@@ -166,7 +169,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
             <Link
               to="/settings"
-              className={`sidebar__nav-item ${isActive('/settings') ? 'nav-active' : ''}`}
+              className="sidebar__nav-item"
+              style={{ fontWeight: isActive('/settings') ? 700 : 500, color: isActive('/settings') ? 'var(--fg-base)' : 'var(--fg-muted)', background: 'transparent' }}
             >
               <Settings size={18} color="#94a3b8" />
               <span>Settings & Legend</span>
