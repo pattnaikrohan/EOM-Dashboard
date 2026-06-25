@@ -5,7 +5,7 @@ import { useLocation, Link } from 'react-router-dom';
 import { useState, useRef, useEffect, useMemo } from 'react';
 import {
   LayoutDashboard, Upload, Settings, ChevronRight,
-  Bell, AlertTriangle, TrendingDown, Filter, ChevronDown, Building, Trash2
+  AlertTriangle, TrendingDown, Filter, ChevronDown, Building, Trash2, Moon, Sun
 } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { FLAG_PRIORITY, FLAG_COLOURS, API_BASE } from '../utils/constants';
@@ -22,6 +22,18 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [filterOpen, setFilterOpen] = useState(false);
   const [branchFilterOpen, setBranchFilterOpen] = useState(false);
   const [deptFilterOpen, setDeptFilterOpen] = useState(false);
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    return (localStorage.getItem('theme') as 'light' | 'dark') || 'light';
+  });
+
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+    }
+    localStorage.setItem('theme', theme);
+  }, [theme]);
   
   const filterRef = useRef<HTMLDivElement>(null);
   const branchFilterRef = useRef<HTMLDivElement>(null);
@@ -92,7 +104,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <aside className="sidebar">
         {/* Brand */}
         <div className="sidebar__brand" style={{ justifyContent: 'center' }}>
-          <img src={logo} alt="EOM Dashboard" style={{ height: '28px', objectFit: 'contain' }} />
+          <img src={logo} alt="EOM Dashboard" style={{ height: '42px', objectFit: 'contain' }} />
         </div>
 
         {/* Navigation */}
@@ -467,21 +479,25 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               </div>
             )}
             <button
+              onClick={() => setTheme(t => t === 'light' ? 'dark' : 'light')}
               style={{
-                background: 'rgba(0, 0, 0, 0.05)',
-                border: '1px solid rgba(0, 0, 0, 0.1)',
+                background: 'rgba(255, 255, 255, 0.15)',
+                border: '1px solid rgba(255, 255, 255, 0.25)',
                 cursor: 'pointer',
                 padding: '0.45rem',
                 borderRadius: '10px',
-                color: '#475569',
+                color: '#f8fafc',
                 display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
                 transition: 'all 0.15s',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
               }}
-              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(0, 0, 0, 0.1)')}
-              onMouseLeave={e => (e.currentTarget.style.background = 'rgba(0, 0, 0, 0.05)')}
-              title="Notifications"
+              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255, 255, 255, 0.25)')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)')}
+              title={`Switch to ${theme === 'light' ? 'Dark' : 'Light'} Mode`}
             >
-              <Bell size={18} />
+              {theme === 'light' ? <Moon size={18} color="#f8fafc" /> : <Sun size={18} color="#fbbf24" />}
             </button>
             <div className="topbar__avatar" title="User Profile">
               OP
