@@ -153,31 +153,45 @@
   color: #38bdf8 !important;
 }
 
-[data-theme="dark"] .sidebar a span:first-child {
+[data-theme="dark"] .sidebar a[href*="/operator/"] span:first-child {
   color: #cbd5e1 !important;
 }
 
-[data-theme="dark"] .sidebar a:hover span:first-child {
+[data-theme="dark"] .sidebar a[href*="/operator/"]:hover span:first-child {
   color: #38bdf8 !important;
 }
 
-[data-theme="dark"] .sidebar a span:last-child {
+[data-theme="dark"] .sidebar a[href*="/operator/"] span:last-child {
   background: rgba(56, 189, 248, 0.15) !important;
   color: #38bdf8 !important;
 }
 
-[data-theme="dark"] .sidebar a[style*="eff6ff"] {
+[data-theme="dark"] .sidebar a[href*="/operator/"][style*="eff6ff"] {
   background: rgba(59, 130, 246, 0.2) !important;
 }
 
-[data-theme="dark"] .sidebar a[style*="eff6ff"] span:first-child {
+[data-theme="dark"] .sidebar a[href*="/operator/"][style*="eff6ff"] span:first-child {
   color: #60a5fa !important;
   font-weight: 700 !important;
 }
 
-[data-theme="dark"] .sidebar a[style*="eff6ff"] span:last-child {
+[data-theme="dark"] .sidebar a[href*="/operator/"][style*="eff6ff"] span:last-child {
   background: #3b82f6 !important;
   color: #ffffff !important;
+}
+
+/* Ensure ALL Navigation Tabs have zero blue highlight backgrounds */
+.sidebar__nav-item,
+[data-theme="dark"] .sidebar__nav-item,
+.sidebar__nav-item.active,
+[data-theme="dark"] .sidebar__nav-item.active {
+  background: transparent !important;
+  border-color: transparent !important;
+}
+
+.sidebar__nav-item span:not(.sidebar__nav-badge),
+[data-theme="dark"] .sidebar__nav-item span:not(.sidebar__nav-badge) {
+  background: transparent !important;
 }
 
 /* Request 2: Dragging Configuration Component Styles */
