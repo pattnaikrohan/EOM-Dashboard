@@ -23,11 +23,7 @@ export default function OpsReview() {
         const fullSections: Record<string, Job[]> = {};
         
         // Define all possible ops sections to ensure they are always visible
-        const allPossibleSections = [
-          'B-Jobs',
-          'Unacceptable Department Codes',
-          ...FLAG_PRIORITY.filter(f => !['CLEAN', 'Jobs at INV Status', 'Jobs at CMP — Ready to CLOSE'].includes(f))
-        ];
+        const allPossibleSections = FLAG_PRIORITY.filter(f => f !== 'CLEAN');
 
         allPossibleSections.forEach(s => { fullSections[s] = []; });
         Object.keys(data.sections).forEach(s => { fullSections[s] = data.sections[s]; });
@@ -57,9 +53,7 @@ export default function OpsReview() {
   const sectionNames = Object.keys(sections);
 
   const sectionColours: Record<string, string> = {
-    'B-Jobs': '#94a3b8',
-    'Unacceptable Department Codes': '#ef4444',
-    // We can fall back to the flag colors for the rest
+    // Fall back to flag colors
   };
 
   return (

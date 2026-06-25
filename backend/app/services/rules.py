@@ -154,14 +154,8 @@ def get_ops_section(job: dict) -> str | None:
     Determine if a job should appear in the Ops Manager Review,
     and under which section label.
     """
-    dept = str(job.get("department", "")).strip().upper()
-    jn   = str(job.get("job_number", "")).strip()
-    pf   = str(job.get("primary_flag", ""))
+    pf = str(job.get("primary_flag", ""))
 
-    if pf != "CLEAN" and pf not in ("Jobs at INV Status", "Jobs at CMP — Ready to CLOSE"):
-        if jn.startswith("B"):
-            return "B-Jobs"
-        if dept and dept not in ACCEPTABLE_DEPTS:
-            return "Unacceptable Department Codes"
+    if pf != "CLEAN":
         return pf
     return None
