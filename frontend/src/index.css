@@ -419,6 +419,17 @@ h1, h2, h3, h4, h5, h6 {
   opacity: 1;
 }
 
+.sidebar__nav-item.nav-active {
+  background: var(--bg-subtle);
+  color: var(--fg-base);
+  font-weight: 600;
+  border-color: var(--border-base);
+}
+
+.sidebar__nav-item.nav-active svg {
+  opacity: 1;
+}
+
 .sidebar__nav-badge {
   margin-left: auto;
   font-size: 0.7rem;

@@ -125,7 +125,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
           <Link
             to="/ops-review"
-            className={`sidebar__nav-item ${isActive('/ops-review') ? 'active' : ''}`}
+            className={`sidebar__nav-item ${isActive('/ops-review') ? 'nav-active' : ''}`}
           >
             <AlertTriangle size={18} color="#f59e0b" />
             <span>Ops Manager</span>
@@ -133,7 +133,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
           <Link
             to="/negative-movement"
-            className={`sidebar__nav-item ${isActive('/negative-movement') ? 'active' : ''}`}
+            className={`sidebar__nav-item ${isActive('/negative-movement') ? 'nav-active' : ''}`}
           >
             <TrendingDown size={18} color="#ef4444" />
             <span>Neg. Movement</span>
@@ -158,7 +158,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <div style={{ marginTop: 'auto' }}>
             <Link
               to="/upload"
-              className={`sidebar__nav-item ${isActive('/upload') ? 'active' : ''}`}
+              className={`sidebar__nav-item ${isActive('/upload') ? 'nav-active' : ''}`}
             >
               <Upload size={18} color="#10b981" />
               <span>Upload Data</span>
@@ -166,7 +166,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
             <Link
               to="/settings"
-              className={`sidebar__nav-item ${isActive('/settings') ? 'active' : ''}`}
+              className={`sidebar__nav-item ${isActive('/settings') ? 'nav-active' : ''}`}
             >
               <Settings size={18} color="#94a3b8" />
               <span>Settings & Legend</span>
