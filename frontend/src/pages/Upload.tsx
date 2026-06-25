@@ -30,9 +30,9 @@ export default function UploadPage() {
     <div className="fade-in">
       <div className="page-header">
         <div className="page-header__overline">Data Management</div>
-        <h1 className="page-header__title">Upload CargoWise Export</h1>
+        <h1 className="page-header__title">Upload & Merge CargoWise Exports</h1>
         <p className="page-header__subtitle">
-          Upload your weekly CargoWise export or WIP Review file to populate the dashboard
+          Upload weekly CargoWise exports or WIP Review files. New files will automatically merge with and update existing loaded data.
         </p>
       </div>
 

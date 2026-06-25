@@ -17,8 +17,6 @@ def upload_file():
     if not uploaded_files or len(uploaded_files) == 0:
         return jsonify({"error": "No files selected"}), 400
         
-    data_store.clear()
-    
     for file in uploaded_files:
         if not file.filename or not file.filename.endswith((".xlsx", ".xls")):
             continue
