@@ -139,8 +139,87 @@
   color: #f9fafb !important;
 }
 
+/* Request 1: Sidebar Dark Mode Text Overrides */
+[data-theme="dark"] .sidebar span {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .sidebar button span {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .sidebar button span[style*="margin"] {
+  background: rgba(56, 189, 248, 0.15) !important;
+  color: #38bdf8 !important;
+}
+
+[data-theme="dark"] .sidebar a span:first-child {
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .sidebar a:hover span:first-child {
+  color: #38bdf8 !important;
+}
+
+[data-theme="dark"] .sidebar a span:last-child {
+  background: rgba(56, 189, 248, 0.15) !important;
+  color: #38bdf8 !important;
+}
+
+[data-theme="dark"] .sidebar a[style*="eff6ff"] {
+  background: rgba(59, 130, 246, 0.2) !important;
+}
+
+[data-theme="dark"] .sidebar a[style*="eff6ff"] span:first-child {
+  color: #60a5fa !important;
+  font-weight: 700 !important;
+}
+
+[data-theme="dark"] .sidebar a[style*="eff6ff"] span:last-child {
+  background: #3b82f6 !important;
+  color: #ffffff !important;
+}
+
+/* Request 2: Dragging Configuration Component Styles */
+.rule-config-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.85rem 1.25rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-base);
+  border-radius: 12px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: grab;
+}
+
+.rule-config-row:active {
+  cursor: grabbing;
+}
+
+.rule-config-row.dragging {
+  opacity: 0.5;
+  transform: scale(0.98);
+  border-color: #3b82f6;
+}
+
+.rule-config-row.disabled {
+  opacity: 0.6;
+  background: var(--bg-subtle);
+}
+
+[data-theme="dark"] .rule-config-row {
+  background: #1e293b !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+[data-theme="dark"] .rule-config-row.disabled {
+  background: rgba(15, 23, 42, 0.6) !important;
+}
+
 
 * {
+
   box-sizing: border-box;
   margin: 0;
   padding: 0;
