@@ -256,19 +256,19 @@ def parse_cargowise_export(file_bytes: bytes) -> dict:
     
     id_col     = ci("Shipment ID", "Job Number")
     dept_col   = ci("Job Dept", "Department")
-    status_col = ci("Job Status")
-    op_col     = ci("Job Operator", "Operator")
-    branch_col = ci("Branch")
+    status_col = ci("Job Status", "Invoice Status", "Job Stat")
+    op_col     = ci("Job Operator", "Operator", "Job Ops")
+    branch_col = ci("Branch", "Job Brn.")
     consignor  = ci("Consignor")
     consignee  = ci("Consignee")
     origin_col = ci("Origin")
-    dest_col   = ci("Destination")
-    etd_col    = ci("Origin ETD", "ETD")
+    dest_col   = ci("Destination", "Dest.")
+    etd_col    = ci("Origin ETD", "ETD", "Job Open")
     eta_col    = ci("Destination ETA", "ETA")
-    rev_col    = ci("Total Revenue", "Revenue")
+    rev_col    = ci("Total Revenue", "Revenue", "Local Rev", "OS Amount")
     wip_col    = ci("Total WIP", "WIP")
     accr_col   = ci("Total Accrual", "Accrual")
-    cost_col   = ci("Total Cost", "Cost")
+    cost_col   = ci("Total Cost", "Cost", "Cost Local")
     profit_col = ci("Job Profit", "Profit")
     
     all_jobs = []
@@ -287,6 +287,8 @@ def parse_cargowise_export(file_bytes: bytes) -> dict:
         
         dept = str(_g(dept_col) or "").strip()
         op_code = str(_g(op_col) or "").strip()
+        if not op_code:
+            op_code = "UNASSIGNED"
         op = OPERATOR_NAMES.get(op_code, op_code)
         open_date_raw = _g(etd_col) if is_export_dept(dept) else _g(eta_col)
         
@@ -313,6 +315,8 @@ def parse_cargowise_export(file_bytes: bytes) -> dict:
             "margin_pct":     0.0,
             "job_age_days":   _compute_age(open_date_raw),
             "is_export":      is_export_dept(dept),
+            "origin":         str(_g(origin_col) or "").strip(),
+            "destination":    str(_g(dest_col) or "").strip(),
         }
         
         # Calculate margin

@@ -6,6 +6,7 @@ export const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000/a
 
 export const FLAG_COLOURS: Record<string, { colour: string; hex: string; bg: string; border: string; text: string; className: string }> = {
   'EXPORTS Jobs pending invoicing':   { colour: 'Blue',   hex: '#3B82F6', bg: 'rgba(59,130,246,0.12)',   border: 'rgba(59,130,246,0.2)',   text: '#1d4ed8', className: 'flag-badge--exports' },
+  'CROSS-TRADE Jobs pending invoicing':{ colour: 'Violet', hex: '#8B5CF6', bg: 'rgba(139,92,246,0.12)', border: 'rgba(139,92,246,0.2)', text: '#6d28d9', className: 'flag-badge--cross-trade' },
   'IMPORTS B Jobs pending invoicing': { colour: 'Indigo', hex: '#6366F1', bg: 'rgba(99,102,241,0.12)',   border: 'rgba(99,102,241,0.2)',   text: '#4338ca', className: 'flag-badge--imports-b' },
   'IMPORTS S Jobs pending invoicing': { colour: 'Cyan',   hex: '#06B6D4', bg: 'rgba(6,182,212,0.12)',    border: 'rgba(6,182,212,0.2)',    text: '#0e7490', className: 'flag-badge--imports-s' },
   'Unbilled Jobs with PROFIT':        { colour: 'Emerald',hex: '#10B981', bg: 'rgba(16,185,129,0.12)',   border: 'rgba(16,185,129,0.2)',   text: '#047857', className: 'flag-badge--unbilled-profit' },
@@ -17,11 +18,11 @@ export const FLAG_COLOURS: Record<string, { colour: string; hex: string; bg: str
   'Jobs at INV Status':               { colour: 'Slate',  hex: '#64748B', bg: 'rgba(100,116,139,0.12)',  border: 'rgba(100,116,139,0.2)',  text: '#334155', className: 'flag-badge--inv-status' },
   'Jobs at CMP — Ready to CLOSE':     { colour: 'Teal',   hex: '#14B8A6', bg: 'rgba(20,184,166,0.12)',   border: 'rgba(20,184,166,0.2)',   text: '#0f766e', className: 'flag-badge--ready-close' },
   'Jobs with Aged Accruals':          { colour: 'Amber',  hex: '#F59E0B', bg: 'rgba(245,158,11,0.12)',   border: 'rgba(245,158,11,0.2)',   text: '#b45309', className: 'flag-badge--aged-accruals' },
-  'CLEAN':                            { colour: 'White',  hex: '#E2E8F0', bg: 'rgba(226,232,240,0.3)',   border: 'rgba(226,232,240,0.5)',  text: '#64748b', className: 'flag-badge--clean' },
 };
 
 export const FLAG_PRIORITY = [
   'EXPORTS Jobs pending invoicing',
+  'CROSS-TRADE Jobs pending invoicing',
   'IMPORTS B Jobs pending invoicing',
   'IMPORTS S Jobs pending invoicing',
   'Unbilled Jobs with PROFIT',
@@ -33,7 +34,6 @@ export const FLAG_PRIORITY = [
   'Jobs at INV Status',
   'Jobs at CMP — Ready to CLOSE',
   'Jobs with Aged Accruals',
-  'CLEAN',
 ];
 
 export const STATUS_COLOURS: Record<string, string> = {

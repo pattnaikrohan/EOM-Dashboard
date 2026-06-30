@@ -106,9 +106,7 @@ class DataStore:
             "jfc_jobs":        sum(1 for j in jobs if "JFC" in j.get("flags", [])),
             "zero_rev_3m":     sum(1 for j in jobs if "ZERO REV >3M" in j.get("flags", [])),
             "jfc_opportunity": sum(1 for j in jobs if "JFC OPPORTUNITY" in j.get("flags", [])),
-            "cmp_opportunity": sum(1 for j in jobs if "CMP OPPORTUNITY" in j.get("flags", [])),
             "accrual_check":   sum(1 for j in jobs if "ACCRUAL CHECK" in j.get("flags", [])),
-            "clean_jobs":      sum(1 for j in jobs if j.get("primary_flag") == "CLEAN"),
             "total_revenue":   round(sum(j.get("revenue", 0) for j in jobs), 2),
             "total_wip":       round(sum(j.get("wip", 0) for j in jobs), 2),
             "total_cost":      round(sum(j.get("cost", 0) for j in jobs), 2),
@@ -137,7 +135,6 @@ class DataStore:
                 "wip_count":     sum(1 for j in jobs if "WIP" in j.get("flags", [])),
                 "margin_count":  sum(1 for j in jobs if "MARGIN <5%" in j.get("flags", [])),
                 "zero_rev_count": sum(1 for j in jobs if "ZERO REV >3M" in j.get("flags", [])),
-                "clean_count":   sum(1 for j in jobs if j.get("primary_flag") == "CLEAN"),
                 "total_revenue": round(sum(j.get("revenue", 0) for j in jobs), 2),
                 "total_profit":  round(sum(j.get("profit_loss", 0) for j in jobs), 2),
             })
@@ -174,15 +171,19 @@ class DataStore:
     def get_legend(self) -> list[dict]:
         """Return flag legend definitions."""
         rules = {
-            "LOSS":            "Profit/Loss < -$40",
-            "WIP":             "WIP ≠ 0",
-            "JFC":             "Job Status = JFC",
-            "MARGIN <5%":      "Margin% between 0% and 5%",
-            "ZERO REV >3M":    "Revenue = 0 AND Job Age > 91 days",
-            "JFC OPPORTUNITY": "Age > 91d, WIP = 0, Status = CMP, Rev > $1",
-            "ACCRUAL CHECK":   "Status = CMP, WIP = 0, Accrual < -$1, Age < 90d",
-            "CMP OPPORTUNITY": "Rev > $500, WIP = 0, Status ≠ CMP, Age > 91d",
-            "CLEAN":           "No flags triggered",
+            "EXPORTS Jobs pending invoicing": "Exports Jobs with a Departure date within the current month",
+            "CROSS-TRADE Jobs pending invoicing": "Cross-Trade Jobs with a Departure date within the current month",
+            "IMPORTS B Jobs pending invoicing": "Imports Jobs (FIB) with an Arrival date within the current month",
+            "IMPORTS S Jobs pending invoicing": "Imports Jobs (FIS) with an Arrival date within the current month",
+            "Unbilled Jobs with PROFIT": "Revenue = $0 AND Job Profit > $0",
+            "Unbilled Jobs with LOSS": "Revenue = $0 AND Job Profit < $0",
+            "Jobs with WIPs": "WIP > $40 AND (Accrual or Cost > $40)",
+            "Billed Jobs with LOSS": "Revenue > $0 AND Job Profit < $0 at CMP/IHL",
+            "Billed Jobs with LOW MARGIN": "Revenue > $0 AND Job Margin < 5% at CMP/IHL",
+            "Billed Jobs — EXTREME Profit": "Revenue > $0 AND Job Profit >= $5,000 at CMP/IHL",
+            "Jobs at INV Status": "Revenue > $0 AND Job Status = INV",
+            "Jobs at CMP — Ready to CLOSE": "Revenue > $0, Job Profit > $0, Accrual = 0, WIP = 0 at CMP",
+            "Jobs with Aged Accruals": "Accrual Recognised Date > 90 Days",
         }
         return [
             {

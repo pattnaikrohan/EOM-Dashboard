@@ -9,6 +9,7 @@ from datetime import datetime
 # ── Flag priority order (highest first) ────────────────────────────────────────
 FLAG_PRIORITY = [
     "EXPORTS Jobs pending invoicing",
+    "CROSS-TRADE Jobs pending invoicing",
     "IMPORTS B Jobs pending invoicing",
     "IMPORTS S Jobs pending invoicing",
     "Unbilled Jobs with PROFIT",
@@ -19,25 +20,24 @@ FLAG_PRIORITY = [
     "Billed Jobs — EXTREME Profit",
     "Jobs at INV Status",
     "Jobs at CMP — Ready to CLOSE",
-    "Jobs with Aged Accruals",
-    "CLEAN"
+    "Jobs with Aged Accruals"
 ]
 
 # ── Flag colour mapping ───────────────────────────────────────────────────────
 FLAG_COLOURS = {
-    "EXPORTS Jobs pending invoicing":   {"colour": "Blue",   "hex": "#3B82F6"},
-    "IMPORTS B Jobs pending invoicing": {"colour": "Indigo", "hex": "#6366F1"},
-    "IMPORTS S Jobs pending invoicing": {"colour": "Cyan",   "hex": "#06B6D4"},
-    "Unbilled Jobs with PROFIT":        {"colour": "Emerald","hex": "#10B981"},
-    "Unbilled Jobs with LOSS":          {"colour": "Red",    "hex": "#EF4444"},
-    "Jobs with WIPs":                   {"colour": "Orange", "hex": "#F97316"},
-    "Billed Jobs with LOSS":            {"colour": "Rose",   "hex": "#F43F5E"},
-    "Billed Jobs with LOW MARGIN":      {"colour": "Yellow", "hex": "#EAB308"},
-    "Billed Jobs — EXTREME Profit":     {"colour": "Green",  "hex": "#22C55E"},
-    "Jobs at INV Status":               {"colour": "Slate",  "hex": "#64748B"},
-    "Jobs at CMP — Ready to CLOSE":     {"colour": "Teal",   "hex": "#14B8A6"},
-    "Jobs with Aged Accruals":          {"colour": "Amber",  "hex": "#F59E0B"},
-    "CLEAN":                            {"colour": "White",  "hex": "#E2E8F0"},
+    "EXPORTS Jobs pending invoicing":     {"colour": "Blue",   "hex": "#3B82F6"},
+    "CROSS-TRADE Jobs pending invoicing": {"colour": "Violet", "hex": "#8B5CF6"},
+    "IMPORTS B Jobs pending invoicing":   {"colour": "Indigo", "hex": "#6366F1"},
+    "IMPORTS S Jobs pending invoicing":   {"colour": "Cyan",   "hex": "#06B6D4"},
+    "Unbilled Jobs with PROFIT":          {"colour": "Emerald","hex": "#10B981"},
+    "Unbilled Jobs with LOSS":            {"colour": "Red",    "hex": "#EF4444"},
+    "Jobs with WIPs":                     {"colour": "Orange", "hex": "#F97316"},
+    "Billed Jobs with LOSS":              {"colour": "Rose",   "hex": "#F43F5E"},
+    "Billed Jobs with LOW MARGIN":        {"colour": "Yellow", "hex": "#EAB308"},
+    "Billed Jobs — EXTREME Profit":       {"colour": "Green",  "hex": "#22C55E"},
+    "Jobs at INV Status":                 {"colour": "Slate",  "hex": "#64748B"},
+    "Jobs at CMP — Ready to CLOSE":       {"colour": "Teal",   "hex": "#14B8A6"},
+    "Jobs with Aged Accruals":            {"colour": "Amber",  "hex": "#F59E0B"}
 }
 
 # ── Acceptable department codes ────────────────────────────────────────────────
@@ -88,13 +88,23 @@ def get_flags(job: dict, report_period: str = "") -> list[str]:
     dept   = str(job.get("department", "")).strip().upper()
     is_exp = bool(job.get("is_export", is_export_dept(dept)))
     open_d = str(job.get("open_date", "")).strip()
+    origin = str(job.get("origin", "")).strip().upper()
+    dest   = str(job.get("destination", "")).strip().upper()
     
     current_month = is_current_month(open_d, report_period)
     pending_statuses = ("CMP", "IHL", "CLS")
 
-    # 1. EXPORTS Jobs pending invoicing
+    # Cross-Trade check
+    is_cross_trade = False
+    if origin and dest and not origin.startswith("AU") and not dest.startswith("AU"):
+        is_cross_trade = True
+
+    # 1. EXPORTS Jobs pending invoicing / CROSS-TRADE
     if is_exp and status not in pending_statuses and current_month:
-        flags.append("EXPORTS Jobs pending invoicing")
+        if is_cross_trade:
+            flags.append("CROSS-TRADE Jobs pending invoicing")
+        else:
+            flags.append("EXPORTS Jobs pending invoicing")
     
     # 2. IMPORTS B Jobs pending invoicing
     if not is_exp and dept == "FIB" and status not in pending_statuses and current_month:
@@ -140,14 +150,14 @@ def get_flags(job: dict, report_period: str = "") -> list[str]:
     if abs(accr) > 0 and age > 90:
         flags.append("Jobs with Aged Accruals")
 
-    return flags if flags else ["CLEAN"]
+    return flags
 
 def priority_flag(flags: list[str]) -> str:
     """Return the highest-priority flag from the list."""
     for f in FLAG_PRIORITY:
         if f in flags:
             return f
-    return "CLEAN"
+    return ""
 
 def get_ops_section(job: dict) -> str | None:
     """
@@ -156,6 +166,6 @@ def get_ops_section(job: dict) -> str | None:
     """
     pf = str(job.get("primary_flag", ""))
 
-    if pf != "CLEAN":
+    if pf:
         return pf
     return None

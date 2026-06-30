@@ -19,7 +19,7 @@ const columns = [
   { key: 'job_number',    label: 'Job Number',    align: 'left'  as const },
   { key: 'job_status',    label: 'Status',        align: 'left'  as const },
   { key: 'department',    label: 'Dept',           align: 'left'  as const },
-  { key: 'open_date',     label: 'Open Date',      align: 'left'  as const },
+  { key: 'open_date',     label: 'ETD / ETA',      align: 'left'  as const },
   { key: 'operator',      label: 'Operator',       align: 'left'  as const },
   { key: 'revenue',       label: 'Revenue',        align: 'right' as const },
   { key: 'wip',           label: 'WIP',            align: 'right' as const },
