@@ -177,6 +177,8 @@ def parse_wip_review(file_bytes: bytes) -> dict:
                 "margin_pct":     _parse_number(_get("margin_pct")),
                 "job_age_days":   age,
                 "is_export":      is_export_dept(dept),
+                "etd":            _parse_date_str(_get("etd")),
+                "eta":            _parse_date_str(_get("eta")),
             }
             
             # Get branch
@@ -317,6 +319,8 @@ def parse_cargowise_export(file_bytes: bytes) -> dict:
             "is_export":      is_export_dept(dept),
             "origin":         str(_g(origin_col) or "").strip(),
             "destination":    str(_g(dest_col) or "").strip(),
+            "etd":            _parse_date_str(_g(etd_col)),
+            "eta":            _parse_date_str(_g(eta_col)),
         }
         
         # Calculate margin
@@ -339,11 +343,113 @@ def parse_cargowise_export(file_bytes: bytes) -> dict:
     }
 
 
+def parse_job_billing(file_bytes: bytes) -> dict:
+    """Parse 'Job Billing - Charges Not Yet Posted as REV or CST' report."""
+    wb = load_workbook(BytesIO(file_bytes), data_only=True, read_only=True)
+    ws = wb.active
+    rows = list(ws.iter_rows(values_only=True))
+    
+    header_idx = -1
+    for i, row in enumerate(rows[:30]):
+        row_strs = [str(c or "").strip().lower() for c in row]
+        if "job number" in row_strs and "cost local" in row_strs:
+            header_idx = i
+            break
+            
+    if header_idx == -1:
+        wb.close()
+        return {"branch": "", "period": "", "operators": [], "jobs": []}
+        
+    headers = [str(h or "").strip().lower() for h in rows[header_idx]]
+    
+    id_col = headers.index("job number") if "job number" in headers else -1
+    stat_col = headers.index("job stat") if "job stat" in headers else -1
+    branch_col = headers.index("job brn.") if "job brn." in headers else -1
+    dept_col = headers.index("job dept") if "job dept" in headers else -1
+    op_col = headers.index("job ops") if "job ops" in headers else -1
+    date_col = headers.index("job open") if "job open" in headers else -1
+    cost_col = headers.index("cost local") if "cost local" in headers else -1
+    client_col = headers.index("local client") if "local client" in headers else -1
+    
+    job_accruals = {}
+    operators_set = set()
+    branch = ""
+    
+    for row in rows[header_idx + 1:]:
+        if not row or not row[id_col]:
+            continue
+            
+        job_id = str(row[id_col]).strip()
+        if not job_id or job_id == "None":
+            continue
+            
+        def _g(idx): return row[idx] if idx >= 0 and idx < len(row) else None
+        
+        cost = _parse_number(_g(cost_col))
+        if job_id not in job_accruals:
+            op_code = str(_g(op_col) or "").strip() or "UNASSIGNED"
+            op = OPERATOR_NAMES.get(op_code, op_code)
+            dept = str(_g(dept_col) or "").strip()
+            branch_code = str(_g(branch_col) or "").strip()
+            open_date_raw = _g(date_col)
+            
+            if op: operators_set.add(op)
+            if branch_code and not branch: branch = branch_code
+            
+            job_accruals[job_id] = {
+                "job_number": job_id,
+                "job_status": str(_g(stat_col) or "").strip(),
+                "branch": BRANCH_NAMES.get(branch_code, branch_code),
+                "department": dept,
+                "open_date": _parse_date_str(open_date_raw),
+                "operator": op,
+                "sales_rep": "",
+                "local_charges": "",
+                "overseas_agent": "",
+                "revenue": 0.0,
+                "wip": 0.0,
+                "cost": 0.0,
+                "accrual": 0.0,
+                "profit_loss": 0.0,
+                "margin_pct": 0.0,
+                "job_age_days": _compute_age(open_date_raw),
+                "is_export": is_export_dept(dept),
+                "origin": "",
+                "destination": "",
+                "etd": "",
+                "eta": "",
+            }
+            
+        # Accumulate the "Cost Local" into accrual
+        job_accruals[job_id]["accrual"] += cost
+
+    all_jobs = []
+    period = datetime.now().strftime("%B %Y")
+    
+    for job in job_accruals.values():
+        job["flags"] = get_flags(job, period)
+        job["primary_flag"] = priority_flag(job["flags"])
+        job["ops_section"] = get_ops_section(job)
+        all_jobs.append(job)
+        
+    wb.close()
+    return {
+        "branch": BRANCH_NAMES.get(branch, branch) if branch else "ALL",
+        "period": period,
+        "operators": sorted(operators_set),
+        "jobs": all_jobs,
+    }
+
+
+
 def parse_excel(file_bytes: bytes, filename: str = "") -> dict:
     """Auto-detect format and parse."""
     fn = filename.lower()
     if "wip_review" in fn or "wip review" in fn:
         return parse_wip_review(file_bytes)
+    
+    if "billing" in fn or "charges" in fn or "not yet posted" in fn:
+        return parse_job_billing(file_bytes)
     
     # Try to detect by checking sheet names
     wb = load_workbook(BytesIO(file_bytes), read_only=True)

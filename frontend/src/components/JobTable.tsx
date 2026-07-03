@@ -19,7 +19,8 @@ const columns = [
   { key: 'job_number',    label: 'Job Number',    align: 'left'  as const },
   { key: 'job_status',    label: 'Status',        align: 'left'  as const },
   { key: 'department',    label: 'Dept',           align: 'left'  as const },
-  { key: 'open_date',     label: 'ETD / ETA',      align: 'left'  as const },
+  { key: 'etd',           label: 'ETD',            align: 'left'  as const },
+  { key: 'eta',           label: 'ETA',            align: 'left'  as const },
   { key: 'operator',      label: 'Operator',       align: 'left'  as const },
   { key: 'revenue',       label: 'Revenue',        align: 'right' as const },
   { key: 'wip',           label: 'WIP',            align: 'right' as const },
@@ -60,7 +61,7 @@ export default function JobTable({ jobs, compact }: JobTableProps) {
   });
 
   const displayCols = compact
-    ? columns.filter(c => !['operator', 'open_date', 'department'].includes(c.key))
+    ? columns.filter(c => !['operator', 'etd', 'eta', 'department'].includes(c.key))
     : columns;
 
   return (

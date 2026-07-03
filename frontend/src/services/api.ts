@@ -30,6 +30,8 @@ export interface Job {
   flags: string[];
   primary_flag: string;
   is_export: boolean;
+  etd?: string;
+  eta?: string;
   ops_section?: string;
 }
 
