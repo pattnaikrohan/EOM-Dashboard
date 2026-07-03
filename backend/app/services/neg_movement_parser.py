@@ -16,6 +16,51 @@ from io import BytesIO
 from app.services.staff_lookup import OPERATOR_NAMES, BRANCH_NAMES
 
 
+# ── Consolidation / known-pattern keywords for auto-suppression ────────────────
+_CONSOLIDATION_PATTERNS = re.compile(
+    r'consolidat|consilid|consol\w*\s*parent|parent.*(?:consolidat|consilid|consol)|'
+    r'parent\s*/?\s*consol|child\s*costs?\s*rolled|'
+    r'charged\s+via\s+parent',
+    re.IGNORECASE,
+)
+
+_KNOWN_PL_CATEGORIES = {
+    "Accrued incorrectly",
+    "Additional unbillable charges",
+    "Consolidation parent job",
+    "Exchange rate variance",
+    "Dispute — awaiting credit",
+    "Other",
+}
+
+
+def _auto_triage(comment: str, category: str, revenue: float) -> tuple[str, str]:
+    """Determine resolution_status and category based on existing data.
+
+    Returns (resolution_status, category).
+
+    Rules (applied in priority order):
+    1. If category already matches a known P&L reason  → "reviewed"
+    2. If comment matches consolidation patterns AND revenue == 0 → "closed" + auto-set category
+    3. If comment is non-empty (branch already responded) → "responded"
+    4. Otherwise → "pending"
+    """
+    # Rule 1: Category already filled with a valid P&L reason
+    if category and category in _KNOWN_PL_CATEGORIES:
+        return "reviewed", category
+
+    # Rule 2: Consolidation parent pattern detection
+    if comment and _CONSOLIDATION_PATTERNS.search(comment) and revenue == 0:
+        return "closed", "Consolidation parent job"
+
+    # Rule 3: Branch already provided a comment
+    if comment:
+        return "responded", category
+
+    # Rule 4: No comment, no category — needs operator input
+    return "pending", category
+
+
 def _parse_number(val) -> float:
     """Safely parse a number, handling comma-formatted strings."""
     if val is None:
@@ -166,12 +211,20 @@ def _parse_tab(ws, section_name: str) -> list[dict]:
             "comment":        str(_g("comment") or "").strip(),
             "category":       str(_g("category") or "").strip(),
             "notes_ho":       str(_g("notes_ho") or "").strip(),
-            # Workflow fields
-            "resolution_status": "responded" if str(_g("comment") or "").strip() else "pending",
+            # Workflow fields (placeholder — overwritten by auto-triage below)
+            "resolution_status": "pending",
             "assigned_to":    OPERATOR_NAMES.get(sales_code, sales_code),
             "updated_at":     now_iso,
             "created_at":     now_iso,
         }
+        
+        # Run auto-triage to set resolution_status and possibly update category
+        triage_status, triage_category = _auto_triage(
+            job["comment"], job["category"], job["revenue"]
+        )
+        job["resolution_status"] = triage_status
+        if triage_category:
+            job["category"] = triage_category
         
         jobs.append(job)
     

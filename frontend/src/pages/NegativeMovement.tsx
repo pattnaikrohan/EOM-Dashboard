@@ -5,7 +5,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   TrendingDown, TrendingUp, AlertTriangle, Upload, ChevronRight, ChevronDown,
-  ArrowUp, ArrowDown, ArrowUpDown, MessageSquare, Clock, Save, ArrowRight
+  ArrowUp, ArrowDown, ArrowUpDown, MessageSquare, Clock, Save, ArrowRight,
+  AlertCircle
 } from 'lucide-react';
 import {
   getNegMovementSummary, getNegMovementJobs, getNegMovementStatus,
@@ -448,6 +449,7 @@ const TABLE_COLS = [
   { key: 'job_number',    label: 'Job Number', align: 'left'  as const },
   { key: 'status',        label: 'Status',     align: 'left'  as const },
   { key: 'department',    label: 'Dept',       align: 'left'  as const },
+  { key: 'assigned_to',   label: 'Assigned To', align: 'left' as const },
   { key: 'local_client',  label: 'Client',     align: 'left'  as const },
   { key: 'route',         label: 'Route',      align: 'left'  as const },
   { key: 'transport',     label: 'Mode',       align: 'left'  as const },
@@ -457,7 +459,7 @@ const TABLE_COLS = [
   { key: 'revenue',       label: 'Revenue',    align: 'right' as const },
   { key: 'cost',          label: 'Cost',       align: 'right' as const },
   { key: 'accrual',       label: 'Accrual',    align: 'right' as const },
-  { key: 'resolution_status', label: 'Status', align: 'center' as const },
+  { key: 'resolution_status', label: 'Review',  align: 'center' as const },
 ];
 
 const NUMERIC_KEYS = new Set(['job_profit', 'revenue', 'cost', 'accrual', 'wip']);
@@ -565,6 +567,17 @@ function CommentableRow({ job, isExpanded, statusConf, mode, plCategories, onTog
   const [notesHo, setNotesHo] = useState(job.notes_ho || '');
   const [status, setStatus] = useState(job.resolution_status || 'pending');
   const [saving, setSaving] = useState(false);
+  const isClosed = job.resolution_status === 'closed';
+
+  // Calculate overdue: pending for > 48 hours
+  const isOverdue = (() => {
+    if (job.resolution_status !== 'pending' || !job.created_at) return false;
+    try {
+      const created = new Date(job.created_at).getTime();
+      const now = Date.now();
+      return (now - created) > 48 * 60 * 60 * 1000;
+    } catch { return false; }
+  })();
 
   const handleSave = async () => {
     setSaving(true);
@@ -604,6 +617,9 @@ function CommentableRow({ job, isExpanded, statusConf, mode, plCategories, onTog
           </span>
         </td>
         <td>{job.department}</td>
+        <td style={{ maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '0.78rem' }} title={job.assigned_to}>
+          {job.assigned_to || '—'}
+        </td>
         <td style={{ maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={job.local_client}>
           {job.local_client}
         </td>
@@ -627,13 +643,25 @@ function CommentableRow({ job, isExpanded, statusConf, mode, plCategories, onTog
         </td>
         <td className="cell-number">{formatCurrency(job.accrual)}</td>
         <td style={{ textAlign: 'center' }}>
-          <span style={{
-            display: 'inline-block', padding: '3px 10px', borderRadius: 6,
-            fontSize: '0.7rem', fontWeight: 700,
-            background: statusConf.bg, color: statusConf.colour,
-          }}>
-            {statusConf.label}
-          </span>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.25rem' }}>
+            <span style={{
+              display: 'inline-block', padding: '3px 10px', borderRadius: 6,
+              fontSize: '0.7rem', fontWeight: 700,
+              background: statusConf.bg, color: statusConf.colour,
+            }}>
+              {statusConf.label}
+            </span>
+            {isOverdue && (
+              <span style={{
+                display: 'inline-flex', alignItems: 'center', gap: '0.2rem',
+                padding: '2px 6px', borderRadius: 5,
+                fontSize: '0.6rem', fontWeight: 800, letterSpacing: '0.03em',
+                background: 'rgba(239,68,68,0.12)', color: '#dc2626',
+              }}>
+                <AlertCircle size={9} /> OVERDUE
+              </span>
+            )}
+          </div>
         </td>
       </tr>
 
@@ -648,6 +676,18 @@ function CommentableRow({ job, isExpanded, statusConf, mode, plCategories, onTog
               animation: 'fadeIn 0.15s ease',
             }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr auto', gap: '1rem', alignItems: 'start' }}>
+                {/* Auto-Resolved Banner */}
+                {isClosed && (
+                  <div style={{
+                    gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: '0.5rem',
+                    padding: '0.6rem 1rem', borderRadius: 8,
+                    background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.2)',
+                    fontSize: '0.78rem', fontWeight: 600, color: '#16a34a',
+                  }}>
+                    <AlertCircle size={14} />
+                    This job was auto-resolved{job.category ? ` — ${job.category}` : ''}. Fields are read-only.
+                  </div>
+                )}
                 {/* P&L Reason */}
                 <div>
                   <label style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--fg-muted)', display: 'block', marginBottom: '0.35rem' }}>
@@ -656,10 +696,12 @@ function CommentableRow({ job, isExpanded, statusConf, mode, plCategories, onTog
                   <select
                     value={category}
                     onChange={e => setCategory(e.target.value)}
+                    disabled={isClosed}
                     style={{
                       width: '100%', padding: '0.5rem 0.75rem', borderRadius: 8,
-                      border: '1px solid var(--border-base)', background: 'var(--bg-base)',
+                      border: '1px solid var(--border-base)', background: isClosed ? 'var(--bg-subtle)' : 'var(--bg-base)',
                       fontSize: '0.8rem', color: 'var(--fg-base)',
+                      opacity: isClosed ? 0.7 : 1,
                     }}
                   >
                     <option value="">Select reason...</option>
@@ -679,11 +721,12 @@ function CommentableRow({ job, isExpanded, statusConf, mode, plCategories, onTog
                     onChange={e => setComment(e.target.value)}
                     placeholder="Explain the variance..."
                     rows={2}
+                    disabled={isClosed}
                     style={{
                       width: '100%', padding: '0.5rem 0.75rem', borderRadius: 8,
-                      border: '1px solid var(--border-base)', background: 'var(--bg-base)',
+                      border: '1px solid var(--border-base)', background: isClosed ? 'var(--bg-subtle)' : 'var(--bg-base)',
                       fontSize: '0.8rem', color: 'var(--fg-base)', resize: 'vertical',
-                      fontFamily: 'inherit',
+                      fontFamily: 'inherit', opacity: isClosed ? 0.7 : 1,
                     }}
                   />
                 </div>
@@ -698,11 +741,12 @@ function CommentableRow({ job, isExpanded, statusConf, mode, plCategories, onTog
                     onChange={e => setNotesHo(e.target.value)}
                     placeholder="Finance commentary..."
                     rows={2}
+                    disabled={isClosed}
                     style={{
                       width: '100%', padding: '0.5rem 0.75rem', borderRadius: 8,
-                      border: '1px solid var(--border-base)', background: 'var(--bg-base)',
+                      border: '1px solid var(--border-base)', background: isClosed ? 'var(--bg-subtle)' : 'var(--bg-base)',
                       fontSize: '0.8rem', color: 'var(--fg-base)', resize: 'vertical',
-                      fontFamily: 'inherit',
+                      fontFamily: 'inherit', opacity: isClosed ? 0.7 : 1,
                     }}
                   />
                 </div>
@@ -715,16 +759,19 @@ function CommentableRow({ job, isExpanded, statusConf, mode, plCategories, onTog
                   <select
                     value={status}
                     onChange={e => setStatus(e.target.value)}
+                    disabled={isClosed}
                     style={{
                       padding: '0.45rem 0.6rem', borderRadius: 8,
-                      border: '1px solid var(--border-base)', background: 'var(--bg-base)',
+                      border: '1px solid var(--border-base)', background: isClosed ? 'var(--bg-subtle)' : 'var(--bg-base)',
                       fontSize: '0.75rem', color: 'var(--fg-base)', fontWeight: 600,
+                      opacity: isClosed ? 0.7 : 1,
                     }}
                   >
                     {Object.entries(STATUS_CONFIG).map(([val, conf]) => (
                       <option key={val} value={val}>{conf.label}</option>
                     ))}
                   </select>
+                  {!isClosed && (
                   <button
                     onClick={(e) => { e.stopPropagation(); handleSave(); }}
                     disabled={saving}
@@ -740,6 +787,7 @@ function CommentableRow({ job, isExpanded, statusConf, mode, plCategories, onTog
                     <Save size={14} />
                     {saving ? 'Saving...' : 'Save'}
                   </button>
+                  )}
                 </div>
               </div>
 
