@@ -42,7 +42,37 @@ class DataStore:
             # Deduplicate jobs by job_number
             existing_jobs = {j["job_number"]: j for j in self.jobs}
             for j in parsed.get("jobs", []):
-                existing_jobs[j["job_number"]] = j
+                job_id = j["job_number"]
+                if job_id in existing_jobs:
+                    old_j = existing_jobs[job_id]
+                    # Smart merge
+                    for k, v in j.items():
+                        if k in ("revenue", "wip", "cost", "profit_loss", "margin_pct"):
+                            if v != 0.0:
+                                old_j[k] = v
+                        elif k == "accrual":
+                            # Accrual from Job Billing (which might be the only one > 0) takes precedence
+                            if v != 0.0:
+                                old_j[k] = v
+                        elif k in ("flags", "primary_flag", "ops_section"):
+                            continue # we will recompute
+                        elif k == "open_date":
+                            if v and not old_j.get(k):
+                                old_j[k] = v
+                        else:
+                            if v and (not old_j.get(k) or old_j.get(k) == "—"):
+                                old_j[k] = v
+                    
+                    # Recompute flags
+                    from app.services.rules import get_flags, priority_flag, get_ops_section
+                    # Pick the first period string to pass for current_month checks
+                    first_period = self.period.split(",")[0].strip() if self.period else ""
+                    old_j["flags"] = get_flags(old_j, first_period)
+                    old_j["primary_flag"] = priority_flag(old_j["flags"])
+                    old_j["ops_section"] = get_ops_section(old_j)
+                else:
+                    existing_jobs[job_id] = j
+                    
             self.jobs = list(existing_jobs.values())
         else:
             self.branch = parsed.get("branch", "")
