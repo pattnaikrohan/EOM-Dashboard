@@ -327,17 +327,29 @@ def parse_cargowise_export(file_bytes: bytes) -> dict:
         if job["revenue"] != 0:
             job["margin_pct"] = round((job["profit_loss"] / job["revenue"]) * 100, 2)
         
-        job["flags"] = get_flags(job, period if 'period' in locals() else "")
+        all_jobs.append(job)
+        
+    period = datetime.now().strftime("%B %Y")
+    valid_dates = [j["open_date"] for j in all_jobs if j.get("open_date")]
+    if valid_dates:
+        try:
+            # Try parsing DD/MM/YYYY
+            dates = [datetime.strptime(d, "%d/%m/%Y") for d in valid_dates]
+            max_date = max(dates)
+            period = max_date.strftime("%B %Y")
+        except ValueError:
+            pass
+
+    for job in all_jobs:
+        job["flags"] = get_flags(job, period)
         job["primary_flag"] = priority_flag(job["flags"])
         job["ops_section"] = get_ops_section(job)
-        
-        all_jobs.append(job)
     
     wb.close()
     
     return {
         "branch": BRANCH_NAMES.get(branch, branch) if branch else "ALL",
-        "period": datetime.now().strftime("%B %Y"),
+        "period": period,
         "operators": sorted(operators_set),
         "jobs": all_jobs,
     }
