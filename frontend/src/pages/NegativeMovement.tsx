@@ -645,7 +645,7 @@ function CommentableRow({ job, isExpanded, statusConf, mode, plCategories, onTog
               borderBottom: '2px solid var(--border-base)',
               animation: 'fadeIn 0.15s ease',
             }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr auto', gap: '1rem', alignItems: 'end' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr auto', gap: '1rem', alignItems: 'start' }}>
                 {/* P&L Reason */}
                 <div>
                   <label style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--fg-muted)', display: 'block', marginBottom: '0.35rem' }}>
@@ -707,6 +707,9 @@ function CommentableRow({ job, isExpanded, statusConf, mode, plCategories, onTog
 
                 {/* Actions */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <label style={{ fontSize: '0.7rem', fontWeight: 700, display: 'block', marginBottom: '0.35rem', visibility: 'hidden' }}>
+                    ACTIONS
+                  </label>
                   <select
                     value={status}
                     onChange={e => setStatus(e.target.value)}
