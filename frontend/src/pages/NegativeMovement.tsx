@@ -5,8 +5,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   TrendingDown, TrendingUp, AlertTriangle, Upload, ChevronRight, ChevronDown,
-  ArrowUp, ArrowDown, ArrowUpDown, MessageSquare, Clock, CheckCircle2,
-  Eye, Save, X, ArrowRight
+  ArrowUp, ArrowDown, ArrowUpDown, MessageSquare, Clock, Save, ArrowRight
 } from 'lucide-react';
 import {
   getNegMovementSummary, getNegMovementJobs, getNegMovementStatus,
@@ -528,17 +527,14 @@ function NegMovementTable({ jobs, plCategories, expandedRow, setExpandedRow, onS
             const rowKey = `${job.section}:${job.job_number}`;
             const isExpanded = expandedRow === rowKey;
             const statusConf = STATUS_CONFIG[job.resolution_status] || STATUS_CONFIG.pending;
-            const route = [job.origin, job.destination].filter(Boolean).join(' → ') || '—';
             const mode = [job.transport, job.container].filter(Boolean).join(' ') || '—';
 
             return (
               <CommentableRow
                 key={rowKey}
                 job={job}
-                rowKey={rowKey}
                 isExpanded={isExpanded}
                 statusConf={statusConf}
-                route={route}
                 mode={mode}
                 plCategories={plCategories}
                 onToggle={() => setExpandedRow(isExpanded ? null : rowKey)}
@@ -553,12 +549,10 @@ function NegMovementTable({ jobs, plCategories, expandedRow, setExpandedRow, onS
 }
 
 // ── Commentable Row ───────────────────────────────────────────────────────────
-function CommentableRow({ job, rowKey, isExpanded, statusConf, route, mode, plCategories, onToggle, onSave }: {
+function CommentableRow({ job, isExpanded, statusConf, mode, plCategories, onToggle, onSave }: {
   job: NegMovementJob;
-  rowKey: string;
   isExpanded: boolean;
   statusConf: { label: string; colour: string; bg: string };
-  route: string;
   mode: string;
   plCategories: string[];
   onToggle: () => void;
