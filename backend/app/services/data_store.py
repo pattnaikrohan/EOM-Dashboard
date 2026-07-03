@@ -141,6 +141,7 @@ class DataStore:
             "total_wip":       round(sum(j.get("wip", 0) for j in jobs), 2),
             "total_cost":      round(sum(j.get("cost", 0) for j in jobs), 2),
             "total_profit":    round(sum(j.get("profit_loss", 0) for j in jobs), 2),
+            "clean_jobs":      0,
         }
 
     def get_operator_summaries(self, flags: Optional[list[str]] = None,

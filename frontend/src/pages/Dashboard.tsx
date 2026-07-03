@@ -115,7 +115,7 @@ export default function Dashboard() {
       value: flag_distribution[f] || 0,
     }));
 
-  const flaggedJobsCount = kpi.total_jobs - kpi.clean_jobs;
+  const flaggedJobsCount = (kpi?.total_jobs || 0) - (kpi?.clean_jobs || 0);
 
   return (
     <div className="fade-in">
