@@ -18,7 +18,7 @@ def upload_file():
         return jsonify({"error": "No files selected"}), 400
         
     for file in uploaded_files:
-        if not file.filename or not file.filename.endswith((".xlsx", ".xls")):
+        if not file.filename or not file.filename.lower().endswith((".xlsx", ".xls")):
             continue
             
         contents = file.read()
@@ -186,6 +186,10 @@ def get_ops_review():
             sections[label] = []
         sections[label].append(item["job"])
 
+    print(f"DEBUG: Returning ops-review. Total jobs: {len(review_jobs)}")
+    for lbl, jlist in sections.items():
+        print(f"DEBUG: Section {lbl} has {len(jlist)} jobs")
+
     return jsonify({
         "branch": data_store.branch,
         "period": data_store.period,
@@ -230,7 +234,7 @@ def upload_neg_movement():
         return jsonify({"error": "No files selected"}), 400
     
     for file in uploaded_files:
-        if not file.filename or not file.filename.endswith((".xlsx", ".xls")):
+        if not file.filename or not file.filename.lower().endswith((".xlsx", ".xls")):
             continue
         
         contents = file.read()
