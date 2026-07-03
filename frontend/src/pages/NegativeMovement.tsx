@@ -209,6 +209,7 @@ export default function NegativeMovement() {
             <input
               id="neg-upload"
               type="file"
+              multiple
               accept=".xlsx,.xls"
               style={{ display: 'none' }}
               onChange={e => handleUpload(e.target.files)}
@@ -280,6 +281,7 @@ export default function NegativeMovement() {
         <input
           id="neg-re-upload"
           type="file"
+          multiple
           accept=".xlsx,.xls"
           style={{ display: 'none' }}
           onChange={e => handleUpload(e.target.files)}
