@@ -2,8 +2,8 @@
  * Settings — Configuration Manager & Flag Legend page showing interactive draggable flag definitions.
  */
 import { useState, useEffect } from 'react';
-import { Info, GripVertical, Check, X, Edit2, Plus, RotateCcw, Save, Sliders } from 'lucide-react';
-import { getLegend } from '../services/api';
+import { Info, GripVertical, Check, X, Edit2, Plus, RotateCcw, Save, Sliders, Trash2 } from 'lucide-react';
+import { getLegend, getNegMovementStatus, updatePlCategories } from '../services/api';
 import type { LegendItem } from '../services/api';
 import { FLAG_COLOURS } from '../utils/constants';
 
@@ -43,6 +43,17 @@ export default function SettingsPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<{ name: string; condition: string }>({ name: '', condition: '' });
   const [saveStatus, setSaveStatus] = useState(false);
+
+  // P&L Categories state
+  const [plCategories, setPlCategories] = useState<string[]>([]);
+  const [newCategory, setNewCategory] = useState('');
+  const [plSaveStatus, setPlSaveStatus] = useState(false);
+
+  useEffect(() => {
+    getNegMovementStatus()
+      .then(d => setPlCategories(d.pl_categories || []))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     getLegend().then(d => setLegend(d.legend)).catch(() => {
@@ -288,6 +299,107 @@ export default function SettingsPage() {
             </div>
           ))}
         </div>
+      </div>
+
+      {/* P&L Reason Categories */}
+      <div className="card">
+        <h3 style={{
+          fontSize: '0.875rem', fontWeight: 700, marginBottom: '1.25rem',
+          display: 'flex', alignItems: 'center', gap: '0.5rem',
+        }}>
+          <Sliders size={16} color="#ef4444" />
+          Negative Movement — P&L Reason Categories
+        </h3>
+        <p style={{ fontSize: '0.8rem', color: 'var(--fg-muted)', marginBottom: '1rem', lineHeight: 1.6 }}>
+          These categories appear in the P&L Reason dropdown when operators provide commentary on negative movement jobs.
+        </p>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
+          {plCategories.map((cat, idx) => (
+            <div key={idx} style={{
+              display: 'flex', alignItems: 'center', gap: '0.75rem',
+              padding: '0.5rem 0.75rem', borderRadius: 10,
+              background: 'var(--bg-subtle)', border: '1px solid var(--border-base)',
+            }}>
+              <span style={{ flex: 1, fontSize: '0.85rem', fontWeight: 500 }}>{cat}</span>
+              <button
+                onClick={() => {
+                  const updated = plCategories.filter((_, i) => i !== idx);
+                  setPlCategories(updated);
+                }}
+                style={{
+                  background: 'transparent', border: 'none', cursor: 'pointer',
+                  color: 'var(--fg-faint)', padding: '0.3rem', borderRadius: 6,
+                  transition: 'all 0.15s',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.color = '#ef4444'; }}
+                onMouseLeave={e => { e.currentTarget.style.color = 'var(--fg-faint)'; }}
+                title="Remove category"
+              >
+                <Trash2 size={14} />
+              </button>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+          <input
+            type="text"
+            value={newCategory}
+            onChange={e => setNewCategory(e.target.value)}
+            placeholder="Add new category..."
+            style={{
+              flex: 1, padding: '0.5rem 0.75rem', borderRadius: 8,
+              border: '1px solid var(--border-base)', background: 'var(--bg-base)',
+              fontSize: '0.85rem', color: 'var(--fg-base)',
+            }}
+            onKeyDown={e => {
+              if (e.key === 'Enter' && newCategory.trim()) {
+                setPlCategories([...plCategories, newCategory.trim()]);
+                setNewCategory('');
+              }
+            }}
+          />
+          <button
+            onClick={() => {
+              if (newCategory.trim()) {
+                setPlCategories([...plCategories, newCategory.trim()]);
+                setNewCategory('');
+              }
+            }}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '0.35rem',
+              padding: '0.5rem 1rem', borderRadius: 8,
+              background: 'var(--bg-subtle)', border: '1px solid var(--border-base)',
+              cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600,
+              color: 'var(--fg-muted)', transition: 'all 0.15s',
+            }}
+          >
+            <Plus size={14} /> Add
+          </button>
+        </div>
+
+        <button
+          onClick={async () => {
+            try {
+              await updatePlCategories(plCategories);
+              setPlSaveStatus(true);
+              setTimeout(() => setPlSaveStatus(false), 2000);
+            } catch (err) {
+              console.error('Failed to save P&L categories:', err);
+            }
+          }}
+          style={{
+            display: 'flex', alignItems: 'center', gap: '0.4rem',
+            padding: '0.6rem 1.5rem', borderRadius: 10,
+            background: plSaveStatus ? 'linear-gradient(135deg, #22c55e, #16a34a)' : 'linear-gradient(135deg, #3b82f6, #2563eb)',
+            color: '#fff', border: 'none', fontSize: '0.85rem', fontWeight: 700,
+            cursor: 'pointer', transition: 'all 0.2s',
+            boxShadow: '0 2px 8px rgba(59,130,246,0.3)',
+          }}
+        >
+          {plSaveStatus ? <><Check size={16} /> Saved!</> : <><Save size={16} /> Save Categories</>}
+        </button>
       </div>
     </div>
   );

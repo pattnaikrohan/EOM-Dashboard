@@ -73,3 +73,96 @@ def delete_parsed_data() -> bool:
     except Exception as e:
         logger.error(f"Error deleting from Blob Storage: {e}")
         return False
+
+
+# ── Negative Movement Blob Persistence ─────────────────────────────────────────
+
+NEG_MOVEMENT_BLOB = "neg_movement_data.json"
+NEG_MOVEMENT_COMMENTS_BLOB = "neg_movement_comments.json"
+
+
+def _get_neg_blob_client(blob_name: str):
+    try:
+        service_client = BlobServiceClient(account_url=ACCOUNT_URL, credential=SAS_TOKEN)
+        container_client = service_client.get_container_client(CONTAINER_NAME)
+        return container_client.get_blob_client(blob_name)
+    except Exception as e:
+        logger.error(f"Failed to create Neg Movement Blob Client: {e}")
+        return None
+
+
+def upload_neg_movement_data(data: dict) -> bool:
+    """Upload the parsed negative movement data to Azure Blob Storage."""
+    blob_client = _get_neg_blob_client(NEG_MOVEMENT_BLOB)
+    if not blob_client:
+        return False
+    try:
+        json_data = json.dumps(data)
+        blob_client.upload_blob(json_data, overwrite=True)
+        logger.info(f"Successfully uploaded {NEG_MOVEMENT_BLOB}.")
+        return True
+    except Exception as e:
+        logger.error(f"Error uploading neg movement data: {e}")
+        return False
+
+
+def download_neg_movement_data() -> dict | None:
+    """Download the parsed negative movement data from Azure Blob Storage."""
+    blob_client = _get_neg_blob_client(NEG_MOVEMENT_BLOB)
+    if not blob_client:
+        return None
+    try:
+        if not blob_client.exists():
+            return None
+        download_stream = blob_client.download_blob()
+        return json.loads(download_stream.readall())
+    except Exception as e:
+        logger.error(f"Error downloading neg movement data: {e}")
+        return None
+
+
+def upload_neg_movement_comments(comments: dict) -> bool:
+    """Upload the negative movement comments to Azure Blob Storage (separate blob)."""
+    blob_client = _get_neg_blob_client(NEG_MOVEMENT_COMMENTS_BLOB)
+    if not blob_client:
+        return False
+    try:
+        json_data = json.dumps(comments)
+        blob_client.upload_blob(json_data, overwrite=True)
+        logger.info(f"Successfully uploaded {NEG_MOVEMENT_COMMENTS_BLOB}.")
+        return True
+    except Exception as e:
+        logger.error(f"Error uploading neg movement comments: {e}")
+        return False
+
+
+def download_neg_movement_comments() -> dict | None:
+    """Download the negative movement comments from Azure Blob Storage."""
+    blob_client = _get_neg_blob_client(NEG_MOVEMENT_COMMENTS_BLOB)
+    if not blob_client:
+        return None
+    try:
+        if not blob_client.exists():
+            return None
+        download_stream = blob_client.download_blob()
+        return json.loads(download_stream.readall())
+    except Exception as e:
+        logger.error(f"Error downloading neg movement comments: {e}")
+        return None
+
+
+def delete_neg_movement_data() -> bool:
+    """Delete both negative movement blobs."""
+    success = True
+    for blob_name in (NEG_MOVEMENT_BLOB, NEG_MOVEMENT_COMMENTS_BLOB):
+        blob_client = _get_neg_blob_client(blob_name)
+        if blob_client:
+            try:
+                if blob_client.exists():
+                    blob_client.delete_blob()
+                    logger.info(f"Deleted {blob_name}.")
+            except Exception as e:
+                logger.error(f"Error deleting {blob_name}: {e}")
+                success = False
+    return success
+

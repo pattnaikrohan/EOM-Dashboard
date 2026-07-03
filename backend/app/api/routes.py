@@ -208,3 +208,170 @@ def get_status():
         "available_branches": data_store.available_branches,
         "available_departments": data_store.available_departments,
     })
+
+
+# ── Negative Movement Endpoints ────────────────────────────────────────────────
+
+from app.services.neg_movement_parser import parse_neg_movement_excel
+from app.services.neg_movement_store import neg_movement_store
+from app.services.blob_service import (
+    upload_neg_movement_data, upload_neg_movement_comments,
+    delete_neg_movement_data
+)
+
+
+@blueprint.route("/neg-movement/upload", methods=["POST"])
+def upload_neg_movement():
+    if 'files' not in request.files:
+        return jsonify({"error": "No files uploaded"}), 400
+    
+    uploaded_files = request.files.getlist('files')
+    if not uploaded_files or len(uploaded_files) == 0:
+        return jsonify({"error": "No files selected"}), 400
+    
+    for file in uploaded_files:
+        if not file.filename or not file.filename.endswith((".xlsx", ".xls")):
+            continue
+        
+        contents = file.read()
+        try:
+            parsed = parse_neg_movement_excel(contents)
+            neg_movement_store.load(parsed)
+        except Exception as e:
+            print(f"Failed to parse neg movement file {file.filename}: {e}")
+            import traceback
+            traceback.print_exc()
+            return jsonify({"error": f"Failed to parse file: {str(e)}"}), 400
+    
+    # Persist data to Azure Blob Storage
+    data_to_persist = {
+        "branch": neg_movement_store.branch,
+        "period": neg_movement_store.period,
+        "sections": neg_movement_store.sections,
+    }
+    upload_neg_movement_data(data_to_persist)
+    
+    summary = neg_movement_store.get_summary()
+    
+    return jsonify({
+        "success": True,
+        "message": f"Loaded negative movement data: {summary.get('total_jobs', 0)} total jobs",
+        "branch": neg_movement_store.branch,
+        "period": neg_movement_store.period,
+        "summary": summary,
+    })
+
+
+@blueprint.route("/neg-movement/summary", methods=["GET"])
+def get_neg_movement_summary():
+    if not neg_movement_store.is_loaded:
+        return jsonify({"error": "No negative movement data loaded."}), 400
+    
+    return jsonify({
+        "branch": neg_movement_store.branch,
+        "period": neg_movement_store.period,
+        "summary": neg_movement_store.get_summary(),
+        "pl_categories": neg_movement_store.pl_categories,
+    })
+
+
+@blueprint.route("/neg-movement/jobs", methods=["GET"])
+def get_neg_movement_jobs():
+    if not neg_movement_store.is_loaded:
+        return jsonify({"error": "No negative movement data loaded."}), 400
+    
+    section = request.args.get("section")
+    status_filter = request.args.get("status")
+    branch_filter = request.args.get("branch")
+    
+    jobs = neg_movement_store.get_jobs(section, status_filter, branch_filter)
+    
+    return jsonify({
+        "total": len(jobs),
+        "jobs": jobs,
+    })
+
+
+@blueprint.route("/neg-movement/comment/<job_number>", methods=["PUT"])
+def update_neg_movement_comment(job_number):
+    if not neg_movement_store.is_loaded:
+        return jsonify({"error": "No negative movement data loaded."}), 400
+    
+    body = request.get_json()
+    if not body:
+        return jsonify({"error": "Request body is required"}), 400
+    
+    section = body.get("section")
+    if not section:
+        return jsonify({"error": "'section' is required"}), 400
+    
+    updated = neg_movement_store.update_comment(
+        job_number=job_number,
+        section=section,
+        comment=body.get("comment"),
+        category=body.get("category"),
+        notes_ho=body.get("notes_ho"),
+        resolution_status=body.get("resolution_status"),
+    )
+    
+    if updated is None:
+        return jsonify({"error": f"Job '{job_number}' not found in section '{section}'"}), 404
+    
+    # Persist comments to Azure Blob Storage
+    upload_neg_movement_comments(neg_movement_store.get_serializable_comments())
+    
+    return jsonify({
+        "success": True,
+        "job": updated,
+    })
+
+
+@blueprint.route("/neg-movement/overdue", methods=["GET"])
+def get_neg_movement_overdue():
+    if not neg_movement_store.is_loaded:
+        return jsonify({"error": "No negative movement data loaded."}), 400
+    
+    hours = int(request.args.get("hours", 48))
+    overdue = neg_movement_store.get_overdue_jobs(hours)
+    
+    return jsonify({
+        "total": len(overdue),
+        "jobs": overdue,
+    })
+
+
+@blueprint.route("/neg-movement/clear", methods=["POST"])
+def clear_neg_movement():
+    neg_movement_store.clear()
+    delete_neg_movement_data()
+    return jsonify({
+        "success": True,
+        "message": "Negative movement data cleared."
+    })
+
+
+@blueprint.route("/neg-movement/status", methods=["GET"])
+def get_neg_movement_status():
+    return jsonify({
+        "loaded": neg_movement_store.is_loaded,
+        "branch": neg_movement_store.branch,
+        "period": neg_movement_store.period,
+        "pl_categories": neg_movement_store.pl_categories,
+    })
+
+
+@blueprint.route("/neg-movement/pl-categories", methods=["PUT"])
+def update_pl_categories():
+    body = request.get_json()
+    if not body or "categories" not in body:
+        return jsonify({"error": "'categories' list is required"}), 400
+    
+    neg_movement_store.update_pl_categories(body["categories"])
+    # Persist to blob
+    upload_neg_movement_comments(neg_movement_store.get_serializable_comments())
+    
+    return jsonify({
+        "success": True,
+        "pl_categories": neg_movement_store.pl_categories,
+    })
+

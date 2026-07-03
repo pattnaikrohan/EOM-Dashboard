@@ -1,0 +1,38 @@
+
+This document defines the processing logic for the EOM Agent. Rules are organised into two primary sections: General Pending Invoicing and Month End Closing Checks. Each section sets out the filter criteria and business rules to be applied during end-of-month processing.
+
+
+
+
+All rules are subject to periodic review. Contact your system administrator for rule amendment requests.
+EOM AGENT
+End of Month Processing Rules & Configuration Guide
+Version 3.0  |  Confidential  |  Internal Use Only
+
+SECTION 1  —  GENERAL PENDING INVOICING
+FILTER	DESCRIPTION
+Filter 1	Business Unit
+Filter 2	Branch
+Filter 3	Job Type
+Filter 4	Operator
+Filter 5	Job Status   (Job Status ≠ CMP / IHL / CLS)
+
+EXPORT / IMPORT RULES	EXPORT / IMPORT RULES
+JOB TYPE	DATE RULE
+Exports	Jobs with a Departure date within the current month
+Imports	Jobs with an Arrival date within the current month
+Cross-Trade	Jobs with a Departure date within the current month
+Domestic	Jobs with a Departure date within the current month
+
+SECTION 2  —  MONTH END CLOSING CHECKS	SECTION 2  —  MONTH END CLOSING CHECKS	SECTION 2  —  MONTH END CLOSING CHECKS
+CHECK	DEFINITION	RULE / CONDITION
+Unbilled Jobs with PROFIT	Unbilled jobs showing a profit — likely incomplete or incorrect.	Revenue = $0 AND Job Margin > $0
+Unbilled Jobs with LOSS	Unbilled jobs showing a loss — likely incomplete or incorrect.	Revenue = $0 AND Job Margin < $0
+Jobs with WIPs	Jobs that have outstanding Work-In-Progress amounts.	WIP > $40 AND Accrual or Cost > $40
+Billed Jobs with LOSS	Jobs at CMP/IHL billing status carrying a negative profit.	Revenue > $0 AND Job Margin < $0
+Billed Jobs with LOW MARGIN	Jobs at CMP/IHL billing status with a low profit margin.	Revenue > $0 AND Job Margin < 5%
+Billed Jobs — EXTREME Profit	Jobs at CMP/IHL billing status with an unusually high profit margin.	Revenue > $0 AND Job Margin ≥ $5,000.00
+Jobs at INV Status	Jobs currently sitting at INV (Invoiced) status.	Revenue > $0 AND Job Status = INV
+Jobs at CMP — Ready to CLOSE	Jobs at CMP status that are ready to transition to CLS (Closed).	Revenue > $0, Job Profit > $0, Accrual = 0, WIP = 0
+Jobs with Aged Accruals	Jobs with accrual entries older than 90 days.	Accrual Recognised Date > 90 Days
+

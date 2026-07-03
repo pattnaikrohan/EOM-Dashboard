@@ -169,4 +169,106 @@ export async function getLegend(): Promise<{ legend: LegendItem[] }> {
   return data;
 }
 
+// ── Negative Movement Types & API ─────────────────────────────────────────────
+
+export interface NegMovementJob {
+  job_number: string;
+  job_local_ref: string;
+  branch: string;
+  department: string;
+  status: string;
+  transport: string;
+  container: string;
+  sales_rep: string;
+  local_client: string;
+  origin: string;
+  destination: string;
+  etd: string;
+  eta: string;
+  job_profit: number;
+  revenue: number;
+  wip: number;
+  cost: number;
+  accrual: number;
+  section: string;
+  comment: string;
+  category: string;
+  notes_ho: string;
+  resolution_status: string;
+  assigned_to: string;
+  updated_at: string;
+  created_at: string;
+}
+
+export interface NegMovementSectionSummary {
+  count: number;
+  total_profit: number;
+  total_revenue: number;
+  total_cost: number;
+  pending: number;
+  responded: number;
+  reviewed: number;
+  closed: number;
+  overdue: number;
+}
+
+export interface NegMovementSummary {
+  negative_movement: NegMovementSectionSummary;
+  excess_profit: NegMovementSectionSummary;
+  jobs_with_losses: NegMovementSectionSummary;
+  overdue_count: number;
+  total_jobs: number;
+}
+
+export interface NegMovementSummaryResponse {
+  branch: string;
+  period: string;
+  summary: NegMovementSummary;
+  pl_categories: string[];
+}
+
+export async function uploadNegMovementFiles(files: File[]): Promise<any> {
+  const formData = new FormData();
+  files.forEach(file => formData.append('files', file));
+  const { data } = await api.post('/neg-movement/upload', formData);
+  return data;
+}
+
+export async function getNegMovementSummary(): Promise<NegMovementSummaryResponse> {
+  const { data } = await api.get('/neg-movement/summary');
+  return data;
+}
+
+export async function getNegMovementJobs(section?: string, status?: string, branch?: string): Promise<{ total: number; jobs: NegMovementJob[] }> {
+  const params: Record<string, string> = {};
+  if (section) params.section = section;
+  if (status) params.status = status;
+  if (branch) params.branch = branch;
+  const { data } = await api.get('/neg-movement/jobs', { params });
+  return data;
+}
+
+export async function updateNegMovementComment(
+  jobNumber: string,
+  body: { section: string; comment?: string; category?: string; notes_ho?: string; resolution_status?: string }
+): Promise<{ success: boolean; job: NegMovementJob }> {
+  const { data } = await api.put(`/neg-movement/comment/${jobNumber}`, body);
+  return data;
+}
+
+export async function getNegMovementStatus(): Promise<{ loaded: boolean; branch: string; period: string; pl_categories: string[] }> {
+  const { data } = await api.get('/neg-movement/status');
+  return data;
+}
+
+export async function clearNegMovementData(): Promise<any> {
+  const { data } = await api.post('/neg-movement/clear');
+  return data;
+}
+
+export async function updatePlCategories(categories: string[]): Promise<any> {
+  const { data } = await api.put('/neg-movement/pl-categories', { categories });
+  return data;
+}
+
 export default api;
