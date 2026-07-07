@@ -154,7 +154,7 @@ class DataStore:
                 continue
                 
             op_branches = [j.get("branch") for j in jobs if j.get("branch")]
-            op_branch = max(set(op_branches), key=op_branches.count) if op_branches else "Unknown"
+            op_branch = max(set(op_branches), key=op_branches.count) if op_branches else self.branch or "ALL"
 
             summaries.append({
                 "code":          op,
@@ -162,10 +162,10 @@ class DataStore:
                 "total_jobs":    len(jobs),
                 "export_jobs":   sum(1 for j in jobs if j.get("is_export")),
                 "import_jobs":   sum(1 for j in jobs if not j.get("is_export")),
-                "loss_count":    sum(1 for j in jobs if "LOSS" in j.get("flags", [])),
-                "wip_count":     sum(1 for j in jobs if "WIP" in j.get("flags", [])),
-                "margin_count":  sum(1 for j in jobs if "MARGIN <5%" in j.get("flags", [])),
-                "zero_rev_count": sum(1 for j in jobs if "ZERO REV >3M" in j.get("flags", [])),
+                "loss_count":    sum(1 for j in jobs if any("LOSS" in f for f in j.get("flags", []))),
+                "wip_count":     sum(1 for j in jobs if any("WIP" in f for f in j.get("flags", []))),
+                "margin_count":  sum(1 for j in jobs if any("LOW MARGIN" in f for f in j.get("flags", []))),
+                "zero_rev_count": sum(1 for j in jobs if any("Aged Accrual" in f for f in j.get("flags", []))),
                 "total_revenue": round(sum(j.get("revenue", 0) for j in jobs), 2),
                 "total_profit":  round(sum(j.get("profit_loss", 0) for j in jobs), 2),
             })
