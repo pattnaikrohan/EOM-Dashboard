@@ -105,18 +105,19 @@ def get_flags(job: dict, report_period: str = "") -> list[str]:
     if origin and dest and not origin.startswith("AU") and not dest.startswith("AU"):
         is_cross_trade = True
 
-    # 1. EXPORTS Jobs pending invoicing / CROSS-TRADE
-    if is_exp and status not in pending_statuses and current_month:
-        if is_cross_trade:
-            flags.append("CROSS-TRADE Jobs pending invoicing")
-        else:
-            flags.append("EXPORTS Jobs pending invoicing")
+    # 1. CROSS-TRADE Jobs pending invoicing
+    if is_cross_trade and status not in pending_statuses and current_month:
+        flags.append("CROSS-TRADE Jobs pending invoicing")
+        
+    # 2. EXPORTS Jobs pending invoicing
+    elif is_exp and status not in pending_statuses and current_month:
+        flags.append("EXPORTS Jobs pending invoicing")
     
-    # 2. IMPORTS B Jobs pending invoicing
-    if not is_exp and (job_num.startswith("B") or dept == "FIB") and status not in pending_statuses and current_month:
+    # 3. IMPORTS B Jobs pending invoicing
+    elif not is_exp and (job_num.startswith("B") or dept == "FIB") and status not in pending_statuses and current_month:
         flags.append("IMPORTS B Jobs pending invoicing")
     
-    # 3. IMPORTS S Jobs pending invoicing
+    # 4. IMPORTS S Jobs pending invoicing
     elif not is_exp and (job_num.startswith("S") or dept == "FIS") and status not in pending_statuses and current_month:
         flags.append("IMPORTS S Jobs pending invoicing")
 
