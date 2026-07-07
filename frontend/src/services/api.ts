@@ -10,6 +10,18 @@ const api = axios.create({
 });
 
 // ── Types ─────────────────────────────────────────────────────────────────────
+export interface AccrualLine {
+  charge_code: string;
+  os_cur: string;
+  os_amount: number;
+  ex_rate: number;
+  cost_local: number;
+  creditor: string;
+  has_acr: string;
+  acr_recognised: string;
+  age_days: number;
+}
+
 export interface Job {
   job_number: string;
   job_status: string;
@@ -33,6 +45,7 @@ export interface Job {
   etd?: string;
   eta?: string;
   ops_section?: string;
+  accrual_lines?: AccrualLine[];
 }
 
 export interface KPI {

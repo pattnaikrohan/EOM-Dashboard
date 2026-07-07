@@ -9,7 +9,7 @@ import {
 import { ArrowUpRight, Upload } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import KPICards from '../components/KPICards';
-import { formatCurrency, FLAG_COLOURS, FLAG_PRIORITY } from '../utils/constants';
+import { FLAG_COLOURS, FLAG_PRIORITY } from '../utils/constants';
 
 const PIE_COLORS = FLAG_PRIORITY.filter(f => f !== 'CLEAN').map(f => FLAG_COLOURS[f]?.hex || '#ccc');
 
@@ -126,8 +126,7 @@ export default function Dashboard() {
           EOM Review — {branch} — {period}
         </h1>
         <p className="page-header__subtitle">
-          {kpi.total_jobs} active jobs across {operators.length} operators ·
-          Revenue: {formatCurrency(kpi.total_revenue)} · P&L: {formatCurrency(kpi.total_profit)}
+          {kpi.total_jobs} active jobs across {operators.length} operators
         </p>
       </div>
 
@@ -257,8 +256,6 @@ export default function Dashboard() {
                 <th style={{ textAlign: 'right' }}>Loss</th>
                 <th style={{ textAlign: 'right' }}>WIP</th>
                 <th style={{ textAlign: 'right' }}>Margin &lt;5%</th>
-                <th style={{ textAlign: 'right' }}>Revenue</th>
-                <th style={{ textAlign: 'right' }}>Profit</th>
                 <th></th>
               </tr>
             </thead>
@@ -276,10 +273,6 @@ export default function Dashboard() {
                     {op.wip_count}
                   </td>
                   <td className="cell-number">{op.margin_count}</td>
-                  <td className="cell-number">{formatCurrency(op.total_revenue)}</td>
-                  <td className={`cell-number ${op.total_profit < 0 ? 'cell-number--negative' : 'cell-number--positive'}`}>
-                    {formatCurrency(op.total_profit)}
-                  </td>
                   <td>
                     <ArrowUpRight size={14} color="#94a3b8" />
                   </td>

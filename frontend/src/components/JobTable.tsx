@@ -1,8 +1,8 @@
 /**
  * JobTable — Sortable data table for job records.
  */
-import { useState } from 'react';
-import { ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
+import { useState, Fragment } from 'react';
+import { ArrowUp, ArrowDown, ArrowUpDown, ChevronDown, ChevronRight } from 'lucide-react';
 import type { Job } from '../services/api';
 import { formatCurrency, STATUS_COLOURS } from '../utils/constants';
 import FlagBadge from './FlagBadge';
@@ -10,6 +10,7 @@ import FlagBadge from './FlagBadge';
 interface JobTableProps {
   jobs: Job[];
   compact?: boolean;
+  hideRevenueProfit?: boolean;
 }
 
 type SortKey = keyof Job | '';
@@ -34,9 +35,10 @@ const columns = [
 
 const numericKeys = new Set(['revenue', 'wip', 'cost', 'accrual', 'profit_loss', 'margin_pct', 'job_age_days']);
 
-export default function JobTable({ jobs, compact }: JobTableProps) {
+export default function JobTable({ jobs, compact, hideRevenueProfit }: JobTableProps) {
   const [sortKey, setSortKey] = useState<SortKey>('');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
+  const [expandedRows, setExpandedRows] = useState<Record<number, boolean>>({});
 
   const handleSort = (key: string) => {
     if (sortKey === key) {
@@ -45,6 +47,10 @@ export default function JobTable({ jobs, compact }: JobTableProps) {
       setSortKey(key as SortKey);
       setSortDir(numericKeys.has(key) ? 'desc' : 'asc');
     }
+  };
+
+  const toggleExpand = (idx: number) => {
+    setExpandedRows(prev => ({ ...prev, [idx]: !prev[idx] }));
   };
 
   const sorted = [...jobs].sort((a, b) => {
@@ -60,9 +66,11 @@ export default function JobTable({ jobs, compact }: JobTableProps) {
     return sortDir === 'desc' ? -cmp : cmp;
   });
 
-  const displayCols = compact
-    ? columns.filter(c => !['operator', 'etd', 'eta', 'department'].includes(c.key))
-    : columns;
+  const displayCols = columns.filter(c => {
+    if (compact && ['operator'].includes(c.key)) return false;
+    if (hideRevenueProfit && ['revenue', 'profit_loss', 'margin_pct'].includes(c.key)) return false;
+    return true;
+  });
 
   return (
     <div className="data-table-wrapper">
@@ -96,72 +104,127 @@ export default function JobTable({ jobs, compact }: JobTableProps) {
               </td>
             </tr>
           ) : (
-            sorted.map((job, idx) => (
-              <tr key={`${job.job_number}-${idx}`}>
-                {displayCols.map(col => {
-                  const val = (job as any)[col.key];
-                  // Job Number
-                  if (col.key === 'job_number') {
-                    return <td key={col.key} className="cell-id">{val}</td>;
-                  }
-                  // Status
-                  if (col.key === 'job_status') {
-                    const cls = STATUS_COLOURS[val] || 'status-badge--default';
-                    return (
-                      <td key={col.key}>
-                        <span className={`status-badge ${cls}`}>{val}</span>
-                      </td>
-                    );
-                  }
-                  // Flags
-                  if (col.key === 'flags') {
-                    return (
-                      <td key={col.key}>
-                        <div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'wrap' }}>
-                          {(val as string[]).map((f: string, i: number) => (
-                            <FlagBadge key={i} flag={f} />
-                          ))}
+            sorted.map((job, idx) => {
+              const hasSubLines = job.accrual_lines && job.accrual_lines.length > 0;
+              const isExpanded = !!expandedRows[idx];
+
+              return (
+                <Fragment key={`${job.job_number}-${idx}`}>
+                  <tr
+                    onClick={() => hasSubLines && toggleExpand(idx)}
+                    style={{ cursor: hasSubLines ? 'pointer' : 'default', background: isExpanded ? 'var(--bg-subtle)' : undefined }}
+                  >
+                    {displayCols.map(col => {
+                      const val = (job as any)[col.key];
+                      // Job Number
+                      if (col.key === 'job_number') {
+                        return (
+                          <td key={col.key} className="cell-id">
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                              {hasSubLines && (
+                                <span style={{ color: '#3b82f6', display: 'flex', alignItems: 'center' }}>
+                                  {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                                </span>
+                              )}
+                              <span>{val}</span>
+                            </div>
+                          </td>
+                        );
+                      }
+                      // Status
+                      if (col.key === 'job_status') {
+                        const cls = STATUS_COLOURS[val] || 'status-badge--default';
+                        return (
+                          <td key={col.key}>
+                            <span className={`status-badge ${cls}`}>{val}</span>
+                          </td>
+                        );
+                      }
+                      // Flags
+                      if (col.key === 'flags') {
+                        return (
+                          <td key={col.key}>
+                            <div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'wrap' }}>
+                              {(val as string[] || []).map((f: string, i: number) => (
+                                <FlagBadge key={i} flag={f} />
+                              ))}
+                            </div>
+                          </td>
+                        );
+                      }
+                      // Numeric columns
+                      if (numericKeys.has(col.key)) {
+                        const num = (val as number) || 0;
+                        if (col.key === 'margin_pct') {
+                          return (
+                            <td key={col.key} className={`cell-number ${num < 0 ? 'cell-number--negative' : ''}`}>
+                              {num.toFixed(2)}%
+                            </td>
+                          );
+                        }
+                        if (col.key === 'job_age_days') {
+                          return <td key={col.key} className="cell-number">{num}</td>;
+                        }
+                        return (
+                          <td
+                            key={col.key}
+                            className={`cell-number ${num < 0 ? 'cell-number--negative' : num > 0 && col.key === 'profit_loss' ? 'cell-number--positive' : ''}`}
+                          >
+                            {formatCurrency(num)}
+                          </td>
+                        );
+                      }
+                      // Text
+                      return <td key={col.key}>{val || '-'}</td>;
+                    })}
+                  </tr>
+                  {isExpanded && hasSubLines && (
+                    <tr style={{ background: '#f8fafc' }}>
+                      <td colSpan={displayCols.length} style={{ padding: '0.75rem 1.5rem', borderBottom: '2px solid #e2e8f0' }}>
+                        <div className="fade-in">
+                          <div style={{ fontWeight: 600, fontSize: '0.85rem', marginBottom: '0.5rem', color: '#334155', display: 'flex', justifyContent: 'space-between' }}>
+                            <span>Aged Accrual Breakdown ({job.accrual_lines!.length} {job.accrual_lines!.length === 1 ? 'line' : 'lines'})</span>
+                            <span style={{ fontSize: '0.75rem', fontWeight: 400, color: '#64748b' }}>Ageing measured by ACR Recognised date</span>
+                          </div>
+                          <table className="data-table" style={{ margin: 0, fontSize: '0.8rem', background: '#fff', border: '1px solid #e2e8f0', borderRadius: 6 }}>
+                            <thead>
+                              <tr style={{ background: '#f1f5f9' }}>
+                                <th style={{ textAlign: 'left', padding: '0.4rem 0.6rem' }}>Charge Code</th>
+                                <th style={{ textAlign: 'left', padding: '0.4rem 0.6rem' }}>Creditor</th>
+                                <th style={{ textAlign: 'center', padding: '0.4rem 0.6rem' }}>OS Cur</th>
+                                <th style={{ textAlign: 'right', padding: '0.4rem 0.6rem' }}>OS Amount</th>
+                                <th style={{ textAlign: 'right', padding: '0.4rem 0.6rem' }}>Ex Rate</th>
+                                <th style={{ textAlign: 'right', padding: '0.4rem 0.6rem' }}>Cost Local (AUD)</th>
+                                <th style={{ textAlign: 'center', padding: '0.4rem 0.6rem' }}>Has ACR</th>
+                                <th style={{ textAlign: 'left', padding: '0.4rem 0.6rem' }}>ACR Recognised</th>
+                                <th style={{ textAlign: 'right', padding: '0.4rem 0.6rem' }}>Age (Days)</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {job.accrual_lines!.map((line, lIdx) => (
+                                <tr key={lIdx}>
+                                  <td className="cell-id" style={{ padding: '0.4rem 0.6rem' }}>{line.charge_code || '-'}</td>
+                                  <td style={{ padding: '0.4rem 0.6rem' }}>{line.creditor || '-'}</td>
+                                  <td style={{ textAlign: 'center', padding: '0.4rem 0.6rem' }}>{line.os_cur || '-'}</td>
+                                  <td className="cell-number" style={{ padding: '0.4rem 0.6rem' }}>{line.os_amount ? line.os_amount.toFixed(2) : '0.00'}</td>
+                                  <td className="cell-number" style={{ padding: '0.4rem 0.6rem' }}>{line.ex_rate ? line.ex_rate.toFixed(4) : '1.0000'}</td>
+                                  <td className="cell-number" style={{ padding: '0.4rem 0.6rem', fontWeight: 600 }}>{formatCurrency(line.cost_local || 0)}</td>
+                                  <td style={{ textAlign: 'center', padding: '0.4rem 0.6rem' }}>{line.has_acr || '-'}</td>
+                                  <td style={{ padding: '0.4rem 0.6rem' }}>{line.acr_recognised || '-'}</td>
+                                  <td className="cell-number" style={{ padding: '0.4rem 0.6rem', color: (line.age_days || 0) > 90 ? '#d97706' : undefined, fontWeight: (line.age_days || 0) > 90 ? 700 : 400 }}>
+                                    {line.age_days || 0}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
                         </div>
                       </td>
-                    );
-                  }
-                  // Direction
-                  if (col.key === 'is_export') {
-                    return (
-                      <td key={col.key}>
-                        <span className={`direction-pill ${val ? 'direction-pill--exp' : 'direction-pill--imp'}`}>
-                          {val ? '↗ EXP' : '↙ IMP'}
-                        </span>
-                      </td>
-                    );
-                  }
-                  // Numeric columns
-                  if (numericKeys.has(col.key)) {
-                    const num = val as number;
-                    if (col.key === 'margin_pct') {
-                      return (
-                        <td key={col.key} className={`cell-number ${num < 0 ? 'cell-number--negative' : ''}`}>
-                          {num.toFixed(2)}%
-                        </td>
-                      );
-                    }
-                    if (col.key === 'job_age_days') {
-                      return <td key={col.key} className="cell-number">{num}</td>;
-                    }
-                    return (
-                      <td
-                        key={col.key}
-                        className={`cell-number ${num < 0 ? 'cell-number--negative' : num > 0 && col.key === 'profit_loss' ? 'cell-number--positive' : ''}`}
-                      >
-                        {formatCurrency(num)}
-                      </td>
-                    );
-                  }
-                  // Text
-                  return <td key={col.key}>{val}</td>;
-                })}
-              </tr>
-            ))
+                    </tr>
+                  )}
+                </Fragment>
+              );
+            })
           )}
         </tbody>
       </table>

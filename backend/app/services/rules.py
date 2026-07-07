@@ -86,7 +86,13 @@ def get_flags(job: dict, report_period: str = "") -> list[str]:
     accr   = float(job.get("accrual", 0) or 0)
     cost   = float(job.get("cost", 0) or 0)
     dept   = str(job.get("department", "")).strip().upper()
+    job_num = str(job.get("job_number", "")).strip().upper()
     is_exp = bool(job.get("is_export", is_export_dept(dept)))
+    
+    # If job number explicitly starts with B or S, it is an Import job
+    if job_num.startswith("B") or job_num.startswith("S"):
+        is_exp = False
+        
     open_d = str(job.get("open_date", "")).strip()
     origin = str(job.get("origin", "")).strip().upper()
     dest   = str(job.get("destination", "")).strip().upper()
@@ -107,11 +113,11 @@ def get_flags(job: dict, report_period: str = "") -> list[str]:
             flags.append("EXPORTS Jobs pending invoicing")
     
     # 2. IMPORTS B Jobs pending invoicing
-    if not is_exp and dept == "FIB" and status not in pending_statuses and current_month:
+    if not is_exp and (job_num.startswith("B") or dept == "FIB") and status not in pending_statuses and current_month:
         flags.append("IMPORTS B Jobs pending invoicing")
     
     # 3. IMPORTS S Jobs pending invoicing
-    if not is_exp and dept == "FIS" and status not in pending_statuses and current_month:
+    elif not is_exp and (job_num.startswith("S") or dept == "FIS") and status not in pending_statuses and current_month:
         flags.append("IMPORTS S Jobs pending invoicing")
 
     # 4. Unbilled Jobs with PROFIT

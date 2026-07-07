@@ -132,6 +132,10 @@ def parse_wip_review(file_bytes: bytes) -> dict:
                 col_map["job_age_days"] = idx
             elif "flag" in hl:
                 col_map["flags_str"] = idx
+            elif "etd" in hl or "origin etd" in hl or "departure" in hl:
+                col_map["etd"] = idx
+            elif "eta" in hl or "destination eta" in hl or "arrival" in hl:
+                col_map["eta"] = idx
         
         operators.append(sheet_name)
         
@@ -177,8 +181,8 @@ def parse_wip_review(file_bytes: bytes) -> dict:
                 "margin_pct":     _parse_number(_get("margin_pct")),
                 "job_age_days":   age,
                 "is_export":      is_export_dept(dept),
-                "etd":            _parse_date_str(_get("etd")),
-                "eta":            _parse_date_str(_get("eta")),
+                "etd":            _parse_date_str(_get("etd") or open_date_raw),
+                "eta":            _parse_date_str(_get("eta") or open_date_raw),
             }
             
             # Get branch
@@ -356,7 +360,7 @@ def parse_cargowise_export(file_bytes: bytes) -> dict:
 
 
 def parse_job_billing(file_bytes: bytes) -> dict:
-    """Parse 'Job Billing - Charges Not Yet Posted as REV or CST' report."""
+    """Parse 'Job Billing - Charges Not Yet Posted as REV or CST' or Aged Accruals report."""
     wb = load_workbook(BytesIO(file_bytes), data_only=True, read_only=True)
     ws = wb.active
     rows = list(ws.iter_rows(values_only=True))
@@ -382,6 +386,14 @@ def parse_job_billing(file_bytes: bytes) -> dict:
     date_col = headers.index("job open") if "job open" in headers else -1
     cost_col = headers.index("cost local") if "cost local" in headers else -1
     client_col = headers.index("local client") if "local client" in headers else -1
+    
+    charge_col = headers.index("charge code") if "charge code" in headers else -1
+    os_cur_col = headers.index("os cur") if "os cur" in headers else -1
+    os_amt_col = headers.index("os amount") if "os amount" in headers else -1
+    ex_rate_col = headers.index("ex rate") if "ex rate" in headers else -1
+    creditor_col = headers.index("creditor") if "creditor" in headers else -1
+    has_acr_col = headers.index("has acr") if "has acr" in headers else -1
+    acr_rec_col = headers.index("acr recognised") if "acr recognised" in headers else -1
     
     job_accruals = {}
     operators_set = set()
@@ -424,16 +436,36 @@ def parse_job_billing(file_bytes: bytes) -> dict:
                 "accrual": 0.0,
                 "profit_loss": 0.0,
                 "margin_pct": 0.0,
-                "job_age_days": _compute_age(open_date_raw),
+                "job_age_days": 0,
                 "is_export": is_export_dept(dept),
                 "origin": "",
                 "destination": "",
-                "etd": "",
-                "eta": "",
+                "etd": _parse_date_str(open_date_raw),
+                "eta": _parse_date_str(open_date_raw),
+                "accrual_lines": [],
             }
             
         # Accumulate the "Cost Local" into accrual
         job_accruals[job_id]["accrual"] += cost
+        
+        # Build line item and compute age from ACR Recognised
+        acr_rec_raw = _g(acr_rec_col)
+        open_date_raw = _g(date_col)
+        line_age = _compute_age(acr_rec_raw) if acr_rec_raw else _compute_age(open_date_raw)
+        
+        line_item = {
+            "charge_code": str(_g(charge_col) or "").strip() if charge_col >= 0 else "",
+            "os_cur": str(_g(os_cur_col) or "").strip() if os_cur_col >= 0 else "",
+            "os_amount": _parse_number(_g(os_amt_col)) if os_amt_col >= 0 else 0.0,
+            "ex_rate": _parse_number(_g(ex_rate_col)) if ex_rate_col >= 0 else 1.0,
+            "cost_local": cost,
+            "creditor": str(_g(creditor_col) or "").strip() if creditor_col >= 0 else "",
+            "has_acr": str(_g(has_acr_col) or "").strip() if has_acr_col >= 0 else "",
+            "acr_recognised": _parse_date_str(acr_rec_raw),
+            "age_days": line_age,
+        }
+        job_accruals[job_id]["accrual_lines"].append(line_item)
+        job_accruals[job_id]["job_age_days"] = max(job_accruals[job_id]["job_age_days"], line_age)
 
     all_jobs = []
     period = datetime.now().strftime("%B %Y")
@@ -460,7 +492,7 @@ def parse_excel(file_bytes: bytes, filename: str = "") -> dict:
     if "wip_review" in fn or "wip review" in fn:
         return parse_wip_review(file_bytes)
     
-    if "billing" in fn or "charges" in fn or "not yet posted" in fn:
+    if "billing" in fn or "charges" in fn or "not yet posted" in fn or "accrual" in fn or "aged" in fn:
         return parse_job_billing(file_bytes)
     
     # Try to detect by checking sheet names
@@ -471,6 +503,19 @@ def parse_excel(file_bytes: bytes, filename: str = "") -> dict:
     # If it has a "Shipment Profile" sheet, it's CargoWise
     if any("shipment" in s.lower() for s in sheet_names):
         return parse_cargowise_export(file_bytes)
+    
+    # Check if first sheet has 'job number' and 'cost local' (Job Billing / Aged Accruals format)
+    try:
+        wb_check = load_workbook(BytesIO(file_bytes), data_only=True, read_only=True)
+        ws_check = wb_check.active
+        for row in list(ws_check.iter_rows(values_only=True))[:30]:
+            row_s = [str(c or "").strip().lower() for c in row]
+            if "job number" in row_s and "cost local" in row_s:
+                wb_check.close()
+                return parse_job_billing(file_bytes)
+        wb_check.close()
+    except Exception:
+        pass
     
     # If it has named operator sheets (2-3 char codes), treat as WIP Review
     if any(len(s) <= 4 and s.isalnum() for s in sheet_names):

@@ -9,7 +9,7 @@ import { getOperatorDetail } from '../services/api';
 import type { OperatorDetail, Job } from '../services/api';
 import KPICards from '../components/KPICards';
 import JobTable from '../components/JobTable';
-import { FLAG_COLOURS, FLAG_PRIORITY, formatCurrency } from '../utils/constants';
+import { FLAG_COLOURS, FLAG_PRIORITY } from '../utils/constants';
 
 export default function OperatorView() {
   const { code } = useParams<{ code: string }>();
@@ -76,12 +76,10 @@ export default function OperatorView() {
           }}>
             <User size={22} />
           </div>
-          WIP Review — {code}
+          EOM Review — {code}
         </h1>
         <p className="page-header__subtitle">
-          {data.branch} · {data.period} ·
-          Revenue: {formatCurrency(data.kpi.total_revenue)} ·
-          P&L: {formatCurrency(data.kpi.total_profit)}
+          {data.branch} · {data.period}
         </p>
       </div>
 
@@ -137,7 +135,7 @@ export default function OperatorView() {
                 {exportJobs.length > 0 && importJobs.length > 0 ? (
                   <DirectionTabView exportJobs={exportJobs} importJobs={importJobs} />
                 ) : (
-                  <JobTable jobs={jobs} compact />
+                  <JobTable jobs={jobs} compact hideRevenueProfit />
                 )}
               </div>
             )}
@@ -176,7 +174,7 @@ function DirectionTabView({ exportJobs, importJobs }: { exportJobs: Job[]; impor
           <span style={{ color: '#f59e0b' }}>↙</span> Import ({importJobs.length})
         </button>
       </div>
-      <JobTable jobs={tab === 'export' ? exportJobs : importJobs} compact />
+      <JobTable jobs={tab === 'export' ? exportJobs : importJobs} compact hideRevenueProfit />
     </>
   );
 }
