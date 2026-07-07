@@ -75,12 +75,12 @@ class DataStore:
                 else:
                     existing_jobs[job_id] = j
                     
-            self.jobs = [j for j in existing_jobs.values() if j.get("department") or j.get("revenue", 0) != 0 or j.get("cost", 0) != 0 or j.get("accrual", 0) != 0]
+            self.jobs = [j for j in existing_jobs.values() if j.get("department") or j.get("flags") or j.get("revenue", 0) != 0 or j.get("cost", 0) != 0 or j.get("accrual", 0) != 0]
         else:
             self.branch = parsed.get("branch", "")
             self.period = parsed.get("period", "")
             self.operators = parsed.get("operators", [])
-            self.jobs = [j for j in parsed.get("jobs", []) if j.get("department") or j.get("revenue", 0) != 0 or j.get("cost", 0) != 0 or j.get("accrual", 0) != 0]
+            self.jobs = [j for j in parsed.get("jobs", []) if j.get("department") or j.get("flags") or j.get("revenue", 0) != 0 or j.get("cost", 0) != 0 or j.get("accrual", 0) != 0]
         
         # Re-apply any saved workflow states (EOM Review & Triage status)
         self._reapply_workflow_states()
