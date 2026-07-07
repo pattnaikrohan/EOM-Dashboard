@@ -297,6 +297,8 @@ def parse_cargowise_export(file_bytes: bytes) -> dict:
             op_code = "UNASSIGNED"
         op = OPERATOR_NAMES.get(op_code, op_code)
         open_date_raw = _g(etd_col) if is_export_dept(dept) else _g(eta_col)
+        if not open_date_raw:
+            open_date_raw = _g(etd_col) or _g(eta_col)
         
         if op:
             operators_set.add(op)

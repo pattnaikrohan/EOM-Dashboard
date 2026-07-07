@@ -67,9 +67,8 @@ class DataStore:
                     
                     # Recompute flags
                     from app.services.rules import get_flags, priority_flag, get_ops_section
-                    # Pick the first period string to pass for current_month checks
-                    first_period = self.period.split(",")[0].strip() if self.period else ""
-                    old_j["flags"] = get_flags(old_j, first_period)
+                    # Pass the full merged period string to check against all uploaded periods
+                    old_j["flags"] = get_flags(old_j, self.period)
                     old_j["primary_flag"] = priority_flag(old_j["flags"])
                     old_j["ops_section"] = get_ops_section(old_j)
                 else:

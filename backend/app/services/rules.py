@@ -58,21 +58,26 @@ def is_export_dept(dept: str) -> bool:
 
 def is_current_month(date_str: str, report_period: str = "") -> bool:
     if not date_str:
-        return False
+        return True
     try:
         # Expected format: DD/MM/YYYY
         d = datetime.strptime(date_str, "%d/%m/%Y")
-        if report_period:
-            # Parse period like "May 2026"
-            try:
-                p = datetime.strptime(report_period.strip(), "%B %Y")
-                return d.year == p.year and d.month == p.month
-            except ValueError:
-                pass
         now = datetime.now()
-        return d.year == now.year and d.month == now.month
-    except ValueError:
+        if d.year == now.year and d.month == now.month:
+            return True
+        if report_period:
+            # Check against any of the merged periods like "June 2026, July 2026"
+            periods = [p.strip() for p in report_period.split(",")]
+            for p_str in periods:
+                try:
+                    p = datetime.strptime(p_str, "%B %Y")
+                    if d.year == p.year and d.month == p.month:
+                        return True
+                except ValueError:
+                    pass
         return False
+    except ValueError:
+        return True
 
 def get_flags(job: dict, report_period: str = "") -> list[str]:
     """Compute all applicable V3 flags for a job."""
