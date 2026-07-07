@@ -269,27 +269,58 @@ def parse_neg_movement_excel(file_bytes: bytes) -> dict:
         ws = wb[sheet_name]
         section = _detect_section(sheet_name)
         
-        # Try to extract branch and period from the first few rows
+        # Try to extract branch and period from metadata header rows (first 10 rows)
         rows = list(ws.iter_rows(values_only=True, max_row=10))
-        for row in rows[:6]:
-            for cell in row:
-                cell_str = str(cell or "").strip()
-                # Look for period info like "To: 2026-01-31"
-                if "to:" in cell_str.lower():
-                    try:
-                        date_part = cell_str.split(":")[-1].strip()
-                        d = datetime.strptime(date_part, "%Y-%m-%d")
-                        period = d.strftime("%B %Y")
-                    except (ValueError, IndexError):
-                        pass
-                # Look for date cells that indicate period
-                if isinstance(cell, (datetime, date)) and not period:
-                    period = cell.strftime("%B %Y")
+        for row in rows[:8]:
+            if not row:
+                continue
+            row_strs = [str(c or "").strip() for c in row]
+            row_lower = [s.lower() for s in row_strs]
+            
+            # Look for branch metadata row: ('Branch', 'SY1', ...) 
+            if not branch:
+                for ci, cl in enumerate(row_lower):
+                    if cl in ("branch", "branch:") and ci + 1 < len(row_strs) and row_strs[ci + 1]:
+                        code = row_strs[ci + 1].strip()
+                        branch = BRANCH_NAMES.get(code, code)
+                        break
+            
+            # Look for period: row with "To:" followed by a date
+            if not period:
+                for ci, cell in enumerate(row):
+                    cell_str = str(cell or "").strip().lower()
+                    if cell_str in ("to:", "to") and ci + 1 < len(row):
+                        next_cell = row[ci + 1]
+                        if isinstance(next_cell, (datetime, date)):
+                            period = next_cell.strftime("%B %Y")
+                            break
+                        elif next_cell:
+                            try:
+                                d = datetime.strptime(str(next_cell).strip(), "%Y-%m-%d")
+                                period = d.strftime("%B %Y")
+                            except ValueError:
+                                try:
+                                    d = datetime.strptime(str(next_cell).strip(), "%d/%m/%Y")
+                                    period = d.strftime("%B %Y")
+                                except ValueError:
+                                    pass
+                            break
+                    # Also handle "Transactions Recognised From:" row where To: and date are inline
+                    if "to:" in cell_str:
+                        try:
+                            date_part = cell_str.split("to:")[-1].strip()
+                            d = datetime.strptime(date_part, "%Y-%m-%d")
+                            period = d.strftime("%B %Y")
+                        except (ValueError, IndexError):
+                            pass
+                    # Pick up standalone date cells as period fallback
+                    if isinstance(cell, (datetime, date)) and not period:
+                        period = cell.strftime("%B %Y")
         
         jobs = _parse_tab(ws, section)
         all_jobs[section].extend(jobs)
         
-        # Extract branch from first job
+        # Fallback: extract branch from first job if metadata didn't provide it
         if not branch and jobs:
             branch = jobs[0]["branch"]
     
