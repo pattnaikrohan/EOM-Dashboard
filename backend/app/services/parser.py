@@ -263,8 +263,8 @@ def parse_cargowise_export(file_bytes: bytes) -> dict:
     id_col     = ci("Shipment ID", "Job Number")
     dept_col   = ci("Job Dept", "Department")
     status_col = ci("Job Status", "Invoice Status", "Job Stat")
-    op_col     = ci("Job Operator", "Operator", "Job Ops")
-    branch_col = ci("Branch", "Job Brn.")
+    op_col     = ci("Job Operator", "Operator", "Job Ops", "Ops", "Sales")
+    branch_col = ci("Branch", "Job Brn.", "Br.", "Br")
     consignor  = ci("Consignor")
     consignee  = ci("Consignee")
     origin_col = ci("Origin")
@@ -486,8 +486,27 @@ def parse_job_billing(file_bytes: bytes) -> dict:
 
 
 
+def is_neg_movement_file(file_bytes: bytes, filename: str = "") -> bool:
+    fn = filename.lower()
+    if "negative" in fn or "movement" in fn:
+        return True
+    try:
+        wb = load_workbook(BytesIO(file_bytes), read_only=True)
+        sheet_names = [s.lower() for s in wb.sheetnames]
+        wb.close()
+        if any("negative" in s or "excess profit" in s or "losses" in s for s in sheet_names):
+            return True
+    except Exception:
+        pass
+    return False
+
+
+
 def parse_excel(file_bytes: bytes, filename: str = "") -> dict:
     """Auto-detect format and parse."""
+    if is_neg_movement_file(file_bytes, filename):
+        return {"branch": "", "period": "", "operators": [], "jobs": []}
+
     fn = filename.lower()
     if "wip_review" in fn or "wip review" in fn:
         return parse_wip_review(file_bytes)

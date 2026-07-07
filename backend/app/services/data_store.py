@@ -42,6 +42,8 @@ class DataStore:
             # Deduplicate jobs by job_number
             existing_jobs = {j["job_number"]: j for j in self.jobs}
             for j in parsed.get("jobs", []):
+                if not j.get("department") and j.get("revenue", 0) == 0 and j.get("cost", 0) == 0 and j.get("accrual", 0) == 0:
+                    continue
                 job_id = j["job_number"]
                 if job_id in existing_jobs:
                     old_j = existing_jobs[job_id]
@@ -73,17 +75,23 @@ class DataStore:
                 else:
                     existing_jobs[job_id] = j
                     
-            self.jobs = list(existing_jobs.values())
+            self.jobs = [j for j in existing_jobs.values() if j.get("department") or j.get("revenue", 0) != 0 or j.get("cost", 0) != 0 or j.get("accrual", 0) != 0]
         else:
             self.branch = parsed.get("branch", "")
             self.period = parsed.get("period", "")
             self.operators = parsed.get("operators", [])
-            self.jobs = parsed.get("jobs", [])
+            self.jobs = [j for j in parsed.get("jobs", []) if j.get("department") or j.get("revenue", 0) != 0 or j.get("cost", 0) != 0 or j.get("accrual", 0) != 0]
         
+        # Re-apply any saved workflow states (EOM Review & Triage status)
+        self._reapply_workflow_states()
+
         self.available_branches = sorted(list(set(j.get("branch", "") for j in self.jobs if j.get("branch"))))
         self.available_departments = sorted(list(set(j.get("department", "") for j in self.jobs if j.get("department"))))
         
         self._loaded = True
+
+    def _reapply_workflow_states(self):
+        pass
 
     def clear(self):
         self.branch = ""

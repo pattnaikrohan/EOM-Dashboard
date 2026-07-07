@@ -63,7 +63,7 @@ class NegMovementStore:
                     job["notes_ho"] = saved.get("notes_ho", job.get("notes_ho", ""))
                     job["resolution_status"] = saved.get("resolution_status", job.get("resolution_status", "pending"))
                     job["updated_at"] = saved.get("updated_at", job.get("updated_at", ""))
-                    
+            self._enrich_operators(jobs)
             self.sections[section_name] = jobs
             
         self._loaded = True
@@ -152,6 +152,20 @@ class NegMovementStore:
         
         return result
 
+    def _enrich_operators(self, jobs: list[dict]):
+        try:
+            from app.services.data_store import data_store
+            eom_ops = {j["job_number"]: j["operator"] for j in data_store.jobs if j.get("operator")} if data_store.is_loaded else {}
+            for j in jobs:
+                if j.get("job_number") in eom_ops:
+                    j["assigned_to"] = eom_ops[j["job_number"]]
+                if not j.get("assigned_to") or j.get("assigned_to") == "—":
+                    j["assigned_to"] = "UNASSIGNED"
+        except Exception:
+            for j in jobs:
+                if not j.get("assigned_to") or j.get("assigned_to") == "—":
+                    j["assigned_to"] = "UNASSIGNED"
+
     def get_jobs(self, section: Optional[str] = None, 
                  status_filter: Optional[str] = None,
                  branch_filter: Optional[str] = None) -> list[dict]:
@@ -163,6 +177,8 @@ class NegMovementStore:
             for section_jobs in self.sections.values():
                 jobs.extend(section_jobs)
         
+        self._enrich_operators(jobs)
+
         if status_filter:
             jobs = [j for j in jobs if j.get("resolution_status") == status_filter]
         

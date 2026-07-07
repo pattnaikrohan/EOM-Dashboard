@@ -23,6 +23,21 @@ def upload_file():
             
         contents = file.read()
         try:
+            from app.services.parser import is_neg_movement_file
+            if is_neg_movement_file(contents, file.filename):
+                from app.services.neg_movement_parser import parse_neg_movement_excel
+                from app.services.neg_movement_store import neg_movement_store
+                from app.services.blob_service import upload_neg_movement_data
+                
+                parsed_neg = parse_neg_movement_excel(contents)
+                neg_movement_store.load(parsed_neg)
+                upload_neg_movement_data({
+                    "branch": neg_movement_store.branch,
+                    "period": neg_movement_store.period,
+                    "sections": neg_movement_store.sections,
+                })
+                continue
+
             parsed = parse_excel(contents, file.filename)
             data_store.load(parsed, merge=True)
         except Exception as e:

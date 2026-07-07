@@ -213,7 +213,7 @@ def _parse_tab(ws, section_name: str) -> list[dict]:
             "notes_ho":       str(_g("notes_ho") or "").strip(),
             # Workflow fields (placeholder — overwritten by auto-triage below)
             "resolution_status": "pending",
-            "assigned_to":    OPERATOR_NAMES.get(sales_code, sales_code),
+            "assigned_to":    OPERATOR_NAMES.get(sales_code, sales_code) or "UNASSIGNED",
             "updated_at":     now_iso,
             "created_at":     now_iso,
         }
