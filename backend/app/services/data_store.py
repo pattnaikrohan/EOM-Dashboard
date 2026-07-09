@@ -67,6 +67,12 @@ class DataStore:
                     
                     # Recompute flags
                     from app.services.rules import get_flags, priority_flag, get_ops_section
+                    # Preserve aged accrual markers during merge
+                    if j.get("has_aged_accruals"):
+                        old_j["has_aged_accruals"] = True
+                    if j.get("accrual_lines") and not old_j.get("accrual_lines"):
+                        old_j["accrual_lines"] = j["accrual_lines"]
+                    old_j["job_age_days"] = max(old_j.get("job_age_days", 0), j.get("job_age_days", 0))
                     # Pass the full merged period string to check against all uploaded periods
                     old_j["flags"] = get_flags(old_j, self.period)
                     old_j["primary_flag"] = priority_flag(old_j["flags"])
@@ -135,6 +141,7 @@ class DataStore:
             "total_jobs":      len(jobs),
             "export_jobs":     sum(1 for j in jobs if j.get("is_export")),
             "import_jobs":     sum(1 for j in jobs if not j.get("is_export")),
+            "cross_trade_jobs": sum(1 for j in jobs if "CROSS-TRADE Jobs pending invoicing" in j.get("flags", [])),
             "no_revenue":      sum(1 for j in jobs if j.get("revenue", 0) == 0),
             "has_wip":         sum(1 for j in jobs if j.get("wip", 0) != 0),
             "negative_profit": sum(1 for j in jobs if j.get("profit_loss", 0) < 0),

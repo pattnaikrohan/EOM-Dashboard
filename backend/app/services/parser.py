@@ -276,6 +276,7 @@ def parse_cargowise_export(file_bytes: bytes) -> dict:
     accr_col   = ci("Total Accrual", "Accrual")
     cost_col   = ci("Total Cost", "Cost", "Cost Local")
     profit_col = ci("Job Profit", "Profit")
+    local_client_col = ci("Local Client", "Client", "Consignor")
     
     all_jobs = []
     operators_set = set()
@@ -315,6 +316,7 @@ def parse_cargowise_export(file_bytes: bytes) -> dict:
             "sales_rep":      "",
             "local_charges":  "",
             "overseas_agent": "",
+            "local_client":   str(_g(local_client_col) or "").strip(),
             "revenue":        _parse_number(_g(rev_col)),
             "wip":            _parse_number(_g(wip_col)),
             "cost":           _parse_number(_g(cost_col)),
@@ -361,7 +363,7 @@ def parse_cargowise_export(file_bytes: bytes) -> dict:
     }
 
 
-def parse_job_billing(file_bytes: bytes) -> dict:
+def parse_job_billing(file_bytes: bytes, is_aged_file: bool = False) -> dict:
     """Parse 'Job Billing - Charges Not Yet Posted as REV or CST' or Aged Accruals report."""
     wb = load_workbook(BytesIO(file_bytes), data_only=True, read_only=True)
     ws = wb.active
@@ -432,6 +434,8 @@ def parse_job_billing(file_bytes: bytes) -> dict:
                 "sales_rep": "",
                 "local_charges": "",
                 "overseas_agent": "",
+                "local_client": str(_g(client_col) or "").strip(),
+                "has_aged_accruals": is_aged_file,
                 "revenue": 0.0,
                 "wip": 0.0,
                 "cost": 0.0,
@@ -513,8 +517,9 @@ def parse_excel(file_bytes: bytes, filename: str = "") -> dict:
     if "wip_review" in fn or "wip review" in fn:
         return parse_wip_review(file_bytes)
     
+    is_aged = "aged" in fn or ("accrual" in fn and ("3 month" in fn or "greater" in fn))
     if "billing" in fn or "charges" in fn or "not yet posted" in fn or "accrual" in fn or "aged" in fn:
-        return parse_job_billing(file_bytes)
+        return parse_job_billing(file_bytes, is_aged_file=is_aged)
     
     # Try to detect by checking sheet names
     wb = load_workbook(BytesIO(file_bytes), read_only=True)

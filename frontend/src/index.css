@@ -667,6 +667,7 @@ h1, h2, h3, h4, h5, h6 {
 .kpi-card--red::before     { background: linear-gradient(135deg, #ef4444, #dc2626); }
 .kpi-card--purple::before  { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
 .kpi-card--indigo::before  { background: linear-gradient(135deg, #6366f1, #4f46e5); }
+.kpi-card--violet::before  { background: linear-gradient(135deg, #a78bfa, #8b5cf6); }
 
 .kpi-card__icon {
   width: 40px;
@@ -684,6 +685,7 @@ h1, h2, h3, h4, h5, h6 {
 .kpi-card__icon--red     { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
 .kpi-card__icon--purple  { background: rgba(139, 92, 246, 0.1); color: #8b5cf6; }
 .kpi-card__icon--indigo  { background: rgba(99, 102, 241, 0.1); color: #6366f1; }
+.kpi-card__icon--violet  { background: rgba(139, 92, 246, 0.1); color: #8b5cf6; }
 
 .kpi-card__value {
   font-size: 1.75rem;

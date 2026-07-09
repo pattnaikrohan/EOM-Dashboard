@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import {
   Briefcase, ArrowUpRight, ArrowDownLeft, AlertCircle,
-  Layers, TrendingDown, X
+  Layers, TrendingDown, X, Repeat
 } from 'lucide-react';
 import type { KPI } from '../services/api';
 import { formatCurrency } from '../utils/constants';
@@ -19,6 +19,7 @@ export default function KPICards({ kpi }: KPICardsProps) {
   const cards = [
     { label: 'Total Jobs',   value: kpi.total_jobs,       icon: Briefcase,     variant: 'blue',   isCurrency: false, description: 'Total number of active jobs currently assigned to the operators in this view.' },
     { label: 'Export',        value: kpi.export_jobs,      icon: ArrowUpRight,  variant: 'indigo', isCurrency: false, description: 'Total number of jobs marked as Export direction (e.g., EX, OEX, AEX).' },
+    { label: 'Cross-Trade',   value: kpi.cross_trade_jobs, icon: Repeat,        variant: 'violet', isCurrency: false, description: 'Jobs where both origin and destination are outside Australia (Cross-Trade shipments).' },
     { label: 'Import',        value: kpi.import_jobs,      icon: ArrowDownLeft, variant: 'purple', isCurrency: false, description: 'Total number of jobs marked as Import direction (e.g., IM, OIM, AIM).' },
     { label: 'Has WIP',       value: kpi.has_wip,          icon: Layers,        variant: 'amber',  isCurrency: false, description: 'Number of jobs where the Work In Progress (WIP) balance is not exactly zero, indicating pending costs or unbilled items.' },
     { label: 'Loss Jobs',     value: kpi.loss_jobs,        icon: TrendingDown,  variant: 'red',    isCurrency: false, description: 'Jobs where the total Profit/Loss is strictly less than -$40.' },

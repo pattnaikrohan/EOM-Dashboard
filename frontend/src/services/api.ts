@@ -32,6 +32,7 @@ export interface Job {
   sales_rep: string;
   local_charges: string;
   overseas_agent: string;
+  local_client: string;
   revenue: number;
   wip: number;
   cost: number;
@@ -52,6 +53,7 @@ export interface KPI {
   total_jobs: number;
   export_jobs: number;
   import_jobs: number;
+  cross_trade_jobs: number;
   no_revenue: number;
   has_wip: number;
   negative_profit: number;

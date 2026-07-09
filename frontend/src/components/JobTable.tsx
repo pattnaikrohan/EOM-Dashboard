@@ -20,6 +20,7 @@ const columns = [
   { key: 'job_number',    label: 'Job Number',    align: 'left'  as const },
   { key: 'job_status',    label: 'Status',        align: 'left'  as const },
   { key: 'department',    label: 'Dept',           align: 'left'  as const },
+  { key: 'local_client',  label: 'Client Code',    align: 'left'  as const },
   { key: 'etd',           label: 'ETD',            align: 'left'  as const },
   { key: 'eta',           label: 'ETA',            align: 'left'  as const },
   { key: 'operator',      label: 'Operator',       align: 'left'  as const },
@@ -68,7 +69,7 @@ export default function JobTable({ jobs, compact, hideRevenueProfit }: JobTableP
 
   const displayCols = columns.filter(c => {
     if (compact && ['operator'].includes(c.key)) return false;
-    if (hideRevenueProfit && ['revenue', 'profit_loss', 'margin_pct'].includes(c.key)) return false;
+    if (hideRevenueProfit && ['revenue', 'margin_pct'].includes(c.key)) return false;
     return true;
   });
 
