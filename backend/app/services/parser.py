@@ -331,8 +331,12 @@ def parse_cargowise_export(file_bytes: bytes) -> dict:
             "eta":            _parse_date_str(_g(eta_col)),
         }
         
+        # If no Profit column in file, compute P/L from Revenue - abs(Cost)
+        if profit_col < 0 and job["revenue"] != 0:
+            job["profit_loss"] = round(job["revenue"] - abs(job["cost"]), 2)
+        
         # Calculate margin
-        if job["revenue"] != 0:
+        if job["revenue"] != 0 and job["profit_loss"] != 0:
             job["margin_pct"] = round((job["profit_loss"] / job["revenue"]) * 100, 2)
         
         all_jobs.append(job)
