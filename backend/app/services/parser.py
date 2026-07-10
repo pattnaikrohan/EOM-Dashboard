@@ -211,11 +211,13 @@ def parse_wip_review(file_bytes: bytes) -> dict:
     }
 
 
-def parse_cargowise_export(file_bytes: bytes) -> dict:
+def parse_cargowise_export(file_bytes: bytes, **kwargs) -> dict:
     """
     Parse a raw CargoWise Shipment Profile export.
     Returns same structure as parse_wip_review.
+    source_type: one of 'exports', 'imports_b', 'imports_s', 'cross_trade', or '' (unknown).
     """
+    source_type = kwargs.get("source_type", "")
     wb = load_workbook(BytesIO(file_bytes), data_only=True, read_only=True)
     
     # Find the Shipment Profile sheet
@@ -329,6 +331,7 @@ def parse_cargowise_export(file_bytes: bytes) -> dict:
             "destination":    str(_g(dest_col) or "").strip(),
             "etd":            _parse_date_str(_g(etd_col)),
             "eta":            _parse_date_str(_g(eta_col)),
+            "source_type":    source_type,
         }
         
         # If no Profit column in file, compute P/L from Revenue - abs(Cost)
@@ -525,6 +528,17 @@ def parse_excel(file_bytes: bytes, filename: str = "") -> dict:
     if "billing" in fn or "charges" in fn or "not yet posted" in fn or "accrual" in fn or "aged" in fn:
         return parse_job_billing(file_bytes, is_aged_file=is_aged)
     
+    # Detect source_type from filename for pending invoicing files
+    source_type = ""
+    if "cross" in fn and "trade" in fn:
+        source_type = "cross_trade"
+    elif "export" in fn:
+        source_type = "exports"
+    elif "import" in fn and " b " in fn or fn.endswith(" b.xlsx") or "import b" in fn:
+        source_type = "imports_b"
+    elif "import" in fn and (" s " in fn or fn.endswith(" s.xlsx") or "import s" in fn):
+        source_type = "imports_s"
+    
     # Try to detect by checking sheet names
     wb = load_workbook(BytesIO(file_bytes), read_only=True)
     sheet_names = wb.sheetnames
@@ -532,7 +546,7 @@ def parse_excel(file_bytes: bytes, filename: str = "") -> dict:
     
     # If it has a "Shipment Profile" sheet, it's CargoWise
     if any("shipment" in s.lower() for s in sheet_names):
-        return parse_cargowise_export(file_bytes)
+        return parse_cargowise_export(file_bytes, source_type=source_type)
     
     # Check if first sheet has 'job number' and 'cost local' (Job Billing / Aged Accruals format)
     try:
@@ -552,4 +566,4 @@ def parse_excel(file_bytes: bytes, filename: str = "") -> dict:
         return parse_wip_review(file_bytes)
     
     # Default to CargoWise
-    return parse_cargowise_export(file_bytes)
+    return parse_cargowise_export(file_bytes, source_type=source_type)

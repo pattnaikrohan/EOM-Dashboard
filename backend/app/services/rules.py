@@ -117,9 +117,8 @@ def get_flags(job: dict, report_period: str = "") -> list[str]:
     job_num = str(job.get("job_number", "")).strip().upper()
     is_exp = bool(job.get("is_export", is_export_dept(dept)))
     
-    # If job number explicitly starts with B or S, it is an Import job
-    if job_num.startswith("B") or job_num.startswith("S"):
-        is_exp = False
+    # Use source_type from filename to determine the job's category
+    source_type = str(job.get("source_type", "")).strip().lower()
         
     origin = str(job.get("origin", "")).strip().upper()
     dest   = str(job.get("destination", "")).strip().upper()
@@ -131,9 +130,9 @@ def get_flags(job: dict, report_period: str = "") -> list[str]:
     # Only exclude CMP and CLS from pending invoicing (IHL is allowed)
     pending_statuses = ("CMP", "CLS")
 
-    # Cross-Trade check
-    is_cross_trade = False
-    if origin and dest and not origin.startswith("AU") and not dest.startswith("AU"):
+    # Cross-Trade check: either from filename or from origin/dest both non-AU
+    is_cross_trade = source_type == "cross_trade"
+    if not is_cross_trade and origin and dest and not origin.startswith("AU") and not dest.startswith("AU"):
         is_cross_trade = True
 
     # 1. CROSS-TRADE Jobs pending invoicing (uses ETD)
@@ -141,15 +140,16 @@ def get_flags(job: dict, report_period: str = "") -> list[str]:
         flags.append("CROSS-TRADE Jobs pending invoicing")
         
     # 2. EXPORTS Jobs pending invoicing (uses ETD)
-    elif is_exp and status not in pending_statuses and is_current_or_past_month(etd_str, report_period):
+    #    Source file says "exports", OR department indicates export direction
+    elif (source_type == "exports" or (not source_type and is_exp)) and status not in pending_statuses and is_current_or_past_month(etd_str, report_period):
         flags.append("EXPORTS Jobs pending invoicing")
     
     # 3. IMPORTS B Jobs pending invoicing (uses ETA)
-    elif not is_exp and (job_num.startswith("B") or dept == "FIB") and status not in pending_statuses and is_current_or_past_month(eta_str, report_period):
+    elif (source_type == "imports_b" or (not source_type and not is_exp and dept in ("FIB",))) and status not in pending_statuses and is_current_or_past_month(eta_str, report_period):
         flags.append("IMPORTS B Jobs pending invoicing")
     
     # 4. IMPORTS S Jobs pending invoicing (uses ETA)
-    elif not is_exp and (job_num.startswith("S") or dept == "FIS") and status not in pending_statuses and is_current_or_past_month(eta_str, report_period):
+    elif (source_type == "imports_s" or (not source_type and not is_exp and dept in ("FIS", "FIA", "FIJ", "FIC"))) and status not in pending_statuses and is_current_or_past_month(eta_str, report_period):
         flags.append("IMPORTS S Jobs pending invoicing")
 
     # 5. Unbilled Jobs with PROFIT
