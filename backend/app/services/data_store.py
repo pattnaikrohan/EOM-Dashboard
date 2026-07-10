@@ -205,13 +205,17 @@ class DataStore:
 
     def get_ops_review_jobs(self, flags: Optional[list[str]] = None,
                             branches: Optional[list[str]] = None, departments: Optional[list[str]] = None) -> list[dict]:
-        """Get jobs that need Ops Manager review, filtered."""
+        """Get jobs that need Ops Manager review, filtered.
+        A job appears once per flag it has, so it shows in every relevant section."""
         jobs = self.get_all_jobs(None, flags, branches, departments)
-        return [
-            {"job": j, "ops_label": j.get("ops_section", "")}
-            for j in jobs
-            if j.get("ops_section")
-        ]
+        result = []
+        for j in jobs:
+            job_flags = j.get("flags", [])
+            if not job_flags:
+                continue
+            for flag in job_flags:
+                result.append({"job": j, "ops_label": flag})
+        return result
 
     def get_legend(self) -> list[dict]:
         """Return flag legend definitions."""
