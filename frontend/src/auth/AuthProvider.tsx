@@ -8,9 +8,7 @@ import { createContext, useContext, useMemo, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import {
   PublicClientApplication,
-  EventType,
   type AccountInfo,
-  type AuthenticationResult,
 } from '@azure/msal-browser';
 import { MsalProvider, useMsal, useIsAuthenticated } from '@azure/msal-react';
 import { msalConfig, loginRequest } from './authConfig';
