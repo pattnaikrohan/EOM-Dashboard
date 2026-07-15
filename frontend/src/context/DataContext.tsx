@@ -4,7 +4,7 @@
 import { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import type { DashboardData, OperatorSummary, StatusResponse } from '../services/api';
-import { uploadFiles, getDashboard, getStatus } from '../services/api';
+import { uploadFiles, syncSnowflake, getDashboard, getStatus } from '../services/api';
 
 interface DataState {
   loaded: boolean;
@@ -23,6 +23,7 @@ interface DataState {
 
 interface DataContextType extends DataState {
   handleUpload: (files: File[]) => Promise<void>;
+  handleSyncSnowflake: () => Promise<void>;
   refreshDashboard: () => Promise<void>;
   checkStatus: () => Promise<void>;
   setGlobalFlags: (flags: string[]) => void;
@@ -88,6 +89,26 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const handleSyncSnowflake = useCallback(async () => {
+    setState(prev => ({ ...prev, loading: true, error: '' }));
+    try {
+      await syncSnowflake();
+      const dash = await getDashboard(state.globalFlags, state.globalBranches, state.globalDepartments);
+      setState(prev => ({
+        ...prev,
+        loading: false,
+        dashboard: dash,
+        operators: dash.operators,
+      }));
+    } catch (err: any) {
+      setState(prev => ({
+        ...prev,
+        loading: false,
+        error: err.response?.data?.detail || err.message || 'Sync failed',
+      }));
+    }
+  }, [state.globalFlags, state.globalBranches, state.globalDepartments]);
+
   const refreshDashboard = useCallback(async () => {
     try {
       const dash = await getDashboard(state.globalFlags, state.globalBranches, state.globalDepartments);
@@ -131,7 +152,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   return (
     <DataContext.Provider value={{ 
       ...state, 
-      handleUpload, refreshDashboard, checkStatus, 
+      handleUpload, handleSyncSnowflake, refreshDashboard, checkStatus, 
       setGlobalFlags, setGlobalBranches, setGlobalDepartments 
     }}>
       {children}

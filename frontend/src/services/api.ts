@@ -6,7 +6,7 @@ import { API_BASE } from '../utils/constants';
 
 const api = axios.create({
   baseURL: API_BASE,
-  timeout: 30000,
+  timeout: 120000,
 });
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -132,12 +132,19 @@ export interface LegendItem {
 }
 
 // ── API Functions ─────────────────────────────────────────────────────────────
-export async function uploadFiles(files: File[]): Promise<UploadResponse> {
+export const uploadFiles = async (files: File[]) => {
   const formData = new FormData();
-  files.forEach(file => formData.append('files', file));
-  const { data } = await api.post('/upload', formData);
-  return data;
-}
+  files.forEach(f => formData.append('files', f));
+  const response = await api.post('/upload', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return response.data;
+};
+
+export const syncSnowflake = async () => {
+  const response = await api.post('/sync', {}, { timeout: 120000 });
+  return response.data;
+};
 
 export async function getDashboard(flags?: string[], branches?: string[], departments?: string[]): Promise<DashboardData> {
   const params: Record<string, string> = {};

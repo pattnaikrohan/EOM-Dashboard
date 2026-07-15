@@ -11,6 +11,7 @@ interface JobTableProps {
   jobs: Job[];
   compact?: boolean;
   hideRevenueProfit?: boolean;
+  defaultSort?: { key: string; dir: 'asc' | 'desc' };
 }
 
 type SortKey = keyof Job | '';
@@ -35,10 +36,28 @@ const columns = [
 ];
 
 const numericKeys = new Set(['revenue', 'wip', 'cost', 'accrual', 'profit_loss', 'margin_pct', 'job_age_days']);
+const dateKeys = new Set(['etd', 'eta']);
 
-export default function JobTable({ jobs, compact, hideRevenueProfit }: JobTableProps) {
-  const [sortKey, setSortKey] = useState<SortKey>('');
-  const [sortDir, setSortDir] = useState<SortDir>('asc');
+/** Parse a date string (YYYY-MM-DD or DD/MM/YYYY) to a sortable timestamp */
+function parseDateForSort(val: string | null | undefined): number {
+  if (!val || val === '-' || val === 'None') return 0;
+  const s = String(val).trim();
+  // YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}/.test(s)) {
+    return new Date(s).getTime() || 0;
+  }
+  // DD/MM/YYYY
+  const parts = s.split('/');
+  if (parts.length === 3) {
+    const [dd, mm, yyyy] = parts;
+    return new Date(`${yyyy}-${mm}-${dd}`).getTime() || 0;
+  }
+  return 0;
+}
+
+export default function JobTable({ jobs, compact, hideRevenueProfit, defaultSort }: JobTableProps) {
+  const [sortKey, setSortKey] = useState<SortKey>(defaultSort?.key as SortKey || '');
+  const [sortDir, setSortDir] = useState<SortDir>(defaultSort?.dir || 'asc');
   const [expandedRows, setExpandedRows] = useState<Record<number, boolean>>({});
 
   const handleSort = (key: string) => {
@@ -59,7 +78,9 @@ export default function JobTable({ jobs, compact, hideRevenueProfit }: JobTableP
     const av = (a as any)[sortKey];
     const bv = (b as any)[sortKey];
     let cmp: number;
-    if (typeof av === 'number' && typeof bv === 'number') {
+    if (dateKeys.has(sortKey)) {
+      cmp = parseDateForSort(av) - parseDateForSort(bv);
+    } else if (typeof av === 'number' && typeof bv === 'number') {
       cmp = av - bv;
     } else {
       cmp = String(av || '').localeCompare(String(bv || ''));

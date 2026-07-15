@@ -12,6 +12,7 @@ FLAG_PRIORITY = [
     "CROSS-TRADE Jobs pending invoicing",
     "IMPORTS B Jobs pending invoicing",
     "IMPORTS S Jobs pending invoicing",
+    "DOMESTIC Jobs pending invoicing",
     "Unbilled Jobs with PROFIT",
     "Unbilled Jobs with LOSS",
     "Jobs with WIPs",
@@ -29,6 +30,7 @@ FLAG_COLOURS = {
     "CROSS-TRADE Jobs pending invoicing": {"colour": "Violet", "hex": "#8B5CF6"},
     "IMPORTS B Jobs pending invoicing":   {"colour": "Indigo", "hex": "#6366F1"},
     "IMPORTS S Jobs pending invoicing":   {"colour": "Cyan",   "hex": "#06B6D4"},
+    "DOMESTIC Jobs pending invoicing":    {"colour": "Lime",   "hex": "#84CC16"},
     "Unbilled Jobs with PROFIT":          {"colour": "Emerald","hex": "#10B981"},
     "Unbilled Jobs with LOSS":            {"colour": "Red",    "hex": "#EF4444"},
     "Jobs with WIPs":                     {"colour": "Orange", "hex": "#F97316"},
@@ -38,6 +40,16 @@ FLAG_COLOURS = {
     "Jobs at INV Status":                 {"colour": "Slate",  "hex": "#64748B"},
     "Jobs at CMP — Ready to CLOSE":       {"colour": "Teal",   "hex": "#14B8A6"},
     "Jobs with Aged Accruals":            {"colour": "Amber",  "hex": "#F59E0B"}
+}
+
+# ── Section descriptions (shown as subtitles in the UI) ────────────────────────
+FLAG_DESCRIPTIONS = {
+    "EXPORTS Jobs pending invoicing":     "Jobs departing this month requiring invoicing",
+    "IMPORTS B Jobs pending invoicing":   "Jobs arriving this month requiring invoicing",
+    "IMPORTS S Jobs pending invoicing":   "Jobs arriving this month requiring invoicing",
+    "CROSS-TRADE Jobs pending invoicing": "Jobs arriving this month requiring invoicing",
+    "DOMESTIC Jobs pending invoicing":    "Jobs departing this month requiring invoicing",
+    "Jobs at INV Status":                 "Jobs to be updated to CMP upon invoice completion and accruals entered",
 }
 
 # ── Acceptable department codes ────────────────────────────────────────────────
@@ -60,8 +72,12 @@ def is_current_month(date_str: str, report_period: str = "") -> bool:
     if not date_str:
         return True
     try:
-        # Expected format: DD/MM/YYYY
-        d = datetime.strptime(date_str, "%d/%m/%Y")
+        # Try both formats (Excel DD/MM/YYYY and Snowflake YYYY-MM-DD)
+        try:
+            d = datetime.strptime(date_str, "%d/%m/%Y")
+        except ValueError:
+            d = datetime.strptime(date_str, "%Y-%m-%d")
+            
         now = datetime.now()
         if d.year == now.year and d.month == now.month:
             return True
@@ -84,7 +100,12 @@ def is_current_or_past_month(date_str: str, report_period: str = "") -> bool:
     if not date_str:
         return True  # no date = assume eligible
     try:
-        d = datetime.strptime(date_str, "%d/%m/%Y")
+        # Try both formats (Excel DD/MM/YYYY and Snowflake YYYY-MM-DD)
+        try:
+            d = datetime.strptime(date_str, "%d/%m/%Y")
+        except ValueError:
+            d = datetime.strptime(date_str, "%Y-%m-%d")
+            
         now = datetime.now()
         # Current or past: date's year-month <= current year-month
         if (d.year, d.month) <= (now.year, now.month):
@@ -119,6 +140,7 @@ def get_flags(job: dict, report_period: str = "") -> list[str]:
     
     # Use source_type from filename to determine the job's category
     source_type = str(job.get("source_type", "")).strip().lower()
+    job_direction = str(job.get("job_direction", "")).strip().upper()
         
     origin = str(job.get("origin", "")).strip().upper()
     dest   = str(job.get("destination", "")).strip().upper()
@@ -130,26 +152,66 @@ def get_flags(job: dict, report_period: str = "") -> list[str]:
     # Only exclude CMP and CLS from pending invoicing (IHL is allowed)
     pending_statuses = ("CMP", "CLS")
 
-    # Cross-Trade check: either from filename or from origin/dest both non-AU
-    is_cross_trade = source_type == "cross_trade"
+    # Cross-Trade check: either from is_cross_trade field, source_type, or origin/dest both non-AU
+    is_cross_trade = bool(job.get("is_cross_trade", False)) or source_type == "cross_trade"
     if not is_cross_trade and origin and dest and not origin.startswith("AU") and not dest.startswith("AU"):
         is_cross_trade = True
 
-    # 1. CROSS-TRADE Jobs pending invoicing (uses ETD)
-    if is_cross_trade and status not in pending_statuses and is_current_or_past_month(etd_str, report_period):
+    # ── Determine direction (works for BOTH Snowflake and Excel uploads) ──
+    # Priority: job_direction field > department code pattern > source_type > is_export flag
+    is_import = False
+    is_domestic = False
+    
+    if job_direction in ('EXP', 'E'):
+        is_exp = True
+    elif job_direction in ('IMP', 'I'):
+        is_exp = False
+        is_import = True
+    elif job_direction == 'DOM':
+        is_exp = False
+        is_domestic = True
+    elif job_direction == 'OTH':
+        is_exp = False
+    elif source_type == "exports":
+        is_exp = True
+    elif source_type == "domestic":
+        is_exp = False
+        is_domestic = True
+    elif source_type in ("imports_b", "imports_s"):
+        is_exp = False
+        is_import = True
+    elif len(dept) >= 2:
+        # Legacy Excel dept codes: 2nd char E=export, I=import (e.g. FEJ, FIS, FIB)
+        if dept[1] == 'E':
+            is_exp = True
+        elif dept[1] == 'I':
+            is_exp = False
+            is_import = True
+        # else: keep is_exp from job dict fallback
+    # else: keep is_exp from job.get("is_export") fallback above
+
+    # ── Pending Invoicing Flags ──────────────────────────────────────────
+    # 1. CROSS-TRADE Jobs pending invoicing (uses ETA — arriving this month)
+    if is_cross_trade and status not in pending_statuses and is_current_or_past_month(eta_str, report_period):
         flags.append("CROSS-TRADE Jobs pending invoicing")
         
-    # 2. EXPORTS Jobs pending invoicing (uses ETD)
-    #    Source file says "exports", OR department indicates export direction
-    elif (source_type == "exports" or (not source_type and is_exp)) and status not in pending_statuses and is_current_or_past_month(etd_str, report_period):
+    # 2. EXPORTS Jobs pending invoicing (uses ETD — departing this month)
+    elif is_exp and not is_cross_trade and status not in pending_statuses and is_current_or_past_month(etd_str, report_period):
         flags.append("EXPORTS Jobs pending invoicing")
     
-    # 3. IMPORTS B Jobs pending invoicing (uses ETA)
-    elif (source_type == "imports_b" or (not source_type and not is_exp and dept in ("FIB",))) and status not in pending_statuses and is_current_or_past_month(eta_str, report_period):
+    # 3. DOMESTIC Jobs pending invoicing (uses ETD — departing this month)
+    elif is_domestic and status not in pending_statuses and is_current_or_past_month(etd_str, report_period):
+        flags.append("DOMESTIC Jobs pending invoicing")
+    
+    # 4. IMPORTS B Jobs pending invoicing (uses ETA — arriving this month)
+    #    Matches: source_type="imports_b" OR dept code FIB OR (Snowflake import with job_number starting B)
+    elif (source_type == "imports_b" or (is_import and dept in ("FIB",)) or (is_import and job_num.startswith("B"))) \
+         and status not in pending_statuses and is_current_or_past_month(eta_str, report_period):
         flags.append("IMPORTS B Jobs pending invoicing")
     
-    # 4. IMPORTS S Jobs pending invoicing (uses ETA)
-    elif (source_type == "imports_s" or (not source_type and not is_exp and dept in ("FIS", "FIA", "FIJ", "FIC"))) and status not in pending_statuses and is_current_or_past_month(eta_str, report_period):
+    # 5. IMPORTS S Jobs pending invoicing (uses ETA — arriving this month)
+    #    All other imports that are not IMPORTS B
+    elif is_import and not is_cross_trade and status not in pending_statuses and is_current_or_past_month(eta_str, report_period):
         flags.append("IMPORTS S Jobs pending invoicing")
 
     # 5. Unbilled Jobs with PROFIT

@@ -5,8 +5,9 @@ import { useLocation, Link } from 'react-router-dom';
 import { useState, useRef, useEffect, useMemo } from 'react';
 import {
   LayoutDashboard, Upload, Settings, ChevronRight,
-  AlertTriangle, TrendingDown, Filter, ChevronDown, Building, Trash2, Moon, Sun
+  AlertTriangle, TrendingDown, Filter, ChevronDown, Building, Trash2, Moon, Sun, LogOut
 } from 'lucide-react';
+import { useAuth } from '../auth/AuthProvider';
 import { useData } from '../context/DataContext';
 import { FLAG_PRIORITY, FLAG_COLOURS, API_BASE } from '../utils/constants';
 import logo from '../assets/logo.png';
@@ -19,6 +20,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     globalBranches, setGlobalBranches, availableBranches,
     globalDepartments, setGlobalDepartments, availableDepartments
   } = useData();
+  const { displayName, email, initials, logout } = useAuth();
   const [filterOpen, setFilterOpen] = useState(false);
   const [branchFilterOpen, setBranchFilterOpen] = useState(false);
   const [deptFilterOpen, setDeptFilterOpen] = useState(false);
@@ -193,10 +195,26 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </div>
         </nav>
 
-        {/* Footer */}
+        {/* User Profile & Footer */}
         <div className="sidebar__footer">
           <div className="sidebar__footer-text">
             {period || 'No Data Loaded'}
+          </div>
+          <div className="sidebar__user-profile">
+            <div className="sidebar__user-avatar" title={displayName}>
+              {initials}
+            </div>
+            <div className="sidebar__user-info">
+              <span className="sidebar__user-name">{displayName}</span>
+              <span className="sidebar__user-email">{email}</span>
+            </div>
+            <button
+              className="sidebar__signout-btn"
+              onClick={logout}
+              title="Sign out"
+            >
+              <LogOut size={16} />
+            </button>
           </div>
         </div>
       </aside>
@@ -503,9 +521,31 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             >
               {theme === 'light' ? <Moon size={18} color="#f8fafc" /> : <Sun size={18} color="#fbbf24" />}
             </button>
-            <div className="topbar__avatar" title="User Profile">
-              OP
+            <div className="topbar__avatar" title={displayName}>
+              {initials}
             </div>
+            <button
+              onClick={logout}
+              style={{
+                background: 'rgba(239, 68, 68, 0.15)',
+                border: '1px solid rgba(239, 68, 68, 0.3)',
+                cursor: 'pointer',
+                padding: '0.45rem',
+                borderRadius: '10px',
+                color: '#ef4444',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.15s',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                marginLeft: '0.5rem'
+              }}
+              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(239, 68, 68, 0.25)')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'rgba(239, 68, 68, 0.15)')}
+              title="Logout"
+            >
+              <LogOut size={18} />
+            </button>
           </div>
         </header>
 

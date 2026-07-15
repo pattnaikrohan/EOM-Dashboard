@@ -3,12 +3,12 @@
  */
 import { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Upload as UploadIcon, FileSpreadsheet, CheckCircle, AlertCircle } from 'lucide-react';
+import { Upload as UploadIcon, FileSpreadsheet, CheckCircle, AlertCircle, Database } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { useNavigate } from 'react-router-dom';
 
 export default function UploadPage() {
-  const { handleUpload, loading, error, loaded, branch, period } = useData();
+  const { handleUpload, handleSyncSnowflake, loading, error, loaded, branch, period } = useData();
   const navigate = useNavigate();
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
@@ -71,13 +71,45 @@ export default function UploadPage() {
         )}
       </div>
 
+      <div style={{ textAlign: 'center', margin: '2rem 0' }}>
+        <div style={{ color: 'var(--fg-muted)', fontSize: '0.9rem', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>OR</div>
+        
+        <button 
+          className="btn btn-primary" 
+          onClick={async () => {
+            try {
+              await handleSyncSnowflake();
+              navigate('/');
+            } catch (e) {}
+          }}
+          disabled={loading}
+          style={{ width: '100%', maxWidth: 640, margin: '0 auto', padding: '1rem', display: 'flex', justifyContent: 'center' }}
+        >
+          {loading ? (
+             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div style={{
+                  width: 16, height: 16, borderRadius: '50%',
+                  border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff',
+                  animation: 'spin 1s linear infinite'
+                }} />
+                Syncing from Snowflake...
+             </div>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <Database size={20} />
+              Live Sync from Snowflake
+            </div>
+          )}
+        </button>
+      </div>
+
       {/* Error */}
       {error && (
         <div className="card fade-in" style={{ maxWidth: 640, margin: '1.5rem auto 0', borderColor: 'rgba(239,68,68,0.2)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#dc2626' }}>
             <AlertCircle size={20} />
             <div>
-              <div style={{ fontWeight: 700, fontSize: '0.875rem' }}>Upload Failed</div>
+              <div style={{ fontWeight: 700, fontSize: '0.875rem' }}>Error</div>
               <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '0.25rem' }}>{error}</div>
             </div>
           </div>

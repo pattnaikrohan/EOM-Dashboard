@@ -220,10 +220,11 @@ class DataStore:
     def get_legend(self) -> list[dict]:
         """Return flag legend definitions."""
         rules = {
-            "EXPORTS Jobs pending invoicing": "Exports Jobs with a Departure date within the current month",
-            "CROSS-TRADE Jobs pending invoicing": "Cross-Trade Jobs with a Departure date within the current month",
-            "IMPORTS B Jobs pending invoicing": "Imports Jobs (FIB) with an Arrival date within the current month",
-            "IMPORTS S Jobs pending invoicing": "Imports Jobs (FIS) with an Arrival date within the current month",
+            "EXPORTS Jobs pending invoicing": "Jobs departing this month requiring invoicing",
+            "CROSS-TRADE Jobs pending invoicing": "Jobs arriving this month requiring invoicing",
+            "IMPORTS B Jobs pending invoicing": "Jobs arriving this month requiring invoicing",
+            "IMPORTS S Jobs pending invoicing": "Jobs arriving this month requiring invoicing",
+            "DOMESTIC Jobs pending invoicing": "Jobs departing this month requiring invoicing",
             "Unbilled Jobs with PROFIT": "Revenue = $0 AND Job Profit > $0",
             "Unbilled Jobs with LOSS": "Revenue = $0 AND Job Profit < $0",
             "Jobs with WIPs": "WIP > $40 AND (Accrual or Cost > $40)",

@@ -65,6 +65,36 @@ def upload_file():
         "operators": data_store.operators,
     })
 
+@blueprint.route("/sync", methods=["POST"])
+def sync_snowflake():
+    try:
+        from app.services.snowflake_client import fetch_jobs_from_snowflake
+        parsed = fetch_jobs_from_snowflake()
+        
+        # We can either merge or overwrite. Let's merge for now as requested.
+        data_store.load(parsed, merge=True)
+        
+        merged_parsed = {
+            "branch": data_store.branch,
+            "period": data_store.period,
+            "operators": data_store.operators,
+            "jobs": data_store.jobs
+        }
+        
+        upload_parsed_data(merged_parsed)
+        
+        return jsonify({
+            "success": True,
+            "message": f"Synced {len(parsed['jobs'])} live jobs from Snowflake! Total in system: {len(data_store.jobs)}",
+            "branch": data_store.branch,
+            "period": data_store.period,
+            "total_jobs": len(data_store.jobs),
+            "operators": data_store.operators,
+        })
+    except Exception as e:
+        print(f"Snowflake sync failed: {e}")
+        return jsonify({"error": f"Snowflake sync failed: {str(e)}"}), 500
+
 @blueprint.route("/clear", methods=["POST"])
 def clear_data():
     data_store.clear()

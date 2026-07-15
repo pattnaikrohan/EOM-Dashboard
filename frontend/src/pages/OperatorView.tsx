@@ -11,7 +11,7 @@ import { getOperatorDetail } from '../services/api';
 import type { OperatorDetail, Job } from '../services/api';
 import KPICards from '../components/KPICards';
 import JobTable from '../components/JobTable';
-import { FLAG_COLOURS } from '../utils/constants';
+import { FLAG_COLOURS, FLAG_DESCRIPTIONS } from '../utils/constants';
 
 // ── Section groups ────────────────────────────────────────────────────────────
 const PENDING_INVOICING_FLAGS = [
@@ -19,17 +19,13 @@ const PENDING_INVOICING_FLAGS = [
   'CROSS-TRADE Jobs pending invoicing',
   'IMPORTS B Jobs pending invoicing',
   'IMPORTS S Jobs pending invoicing',
+  'DOMESTIC Jobs pending invoicing',
 ];
 
+// Only operator-visible month-end flags (others are Ops Manager only)
 const MONTH_END_CLOSING_FLAGS = [
-  'Unbilled Jobs with PROFIT',
-  'Unbilled Jobs with LOSS',
   'Jobs with WIPs',
-  'Billed Jobs with LOSS',
-  'Billed Jobs with LOW MARGIN',
-  'Billed Jobs — EXTREME Profit',
   'Jobs at INV Status',
-  'Jobs at CMP — Ready to CLOSE',
   'Jobs with Aged Accruals',
 ];
 
@@ -84,11 +80,23 @@ export default function OperatorView() {
     setExpanded(prev => ({ ...prev, [flag]: !prev[flag] }));
   };
 
+  // Determine default sort based on flag type
+  const getDefaultSort = (flag: string): { key: string; dir: 'asc' | 'desc' } | undefined => {
+    if (flag.includes('EXPORTS') || flag.includes('DOMESTIC') || flag.includes('CROSS-TRADE')) {
+      return { key: 'etd', dir: 'asc' };
+    }
+    if (flag.includes('IMPORTS')) {
+      return { key: 'eta', dir: 'asc' };
+    }
+    return undefined;
+  };
+
   const renderFlagSection = (flag: string) => {
     const jobs: Job[] = data.jobs_by_flag[flag] || [];
     const flagInfo = FLAG_COLOURS[flag];
     const isOpen = expanded[flag] ?? false;
     const isEmpty = jobs.length === 0;
+    const flagDefaultSort = getDefaultSort(flag);
 
     const exportJobs = jobs.filter(j => j.is_export);
     const importJobs = jobs.filter(j => !j.is_export);
@@ -118,7 +126,20 @@ export default function OperatorView() {
                 background: flagInfo?.hex || '#ccc',
               }} />
             </div>
-            <span className="card__title">{flag}</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.1rem' }}>
+              <span className="card__title">{flag}</span>
+              {FLAG_DESCRIPTIONS[flag] && (
+                <span style={{
+                  fontSize: '0.72rem',
+                  color: 'var(--fg-muted)',
+                  fontStyle: 'italic',
+                  fontWeight: 400,
+                  opacity: 0.8,
+                }}>
+                  {FLAG_DESCRIPTIONS[flag]}
+                </span>
+              )}
+            </div>
             <span
               className="card__count"
               style={{
@@ -155,9 +176,9 @@ export default function OperatorView() {
             ) : (
               <>
                 {exportJobs.length > 0 && importJobs.length > 0 ? (
-                  <DirectionTabView exportJobs={exportJobs} importJobs={importJobs} />
+                  <DirectionTabView exportJobs={exportJobs} importJobs={importJobs} defaultSort={flagDefaultSort} />
                 ) : (
-                  <JobTable jobs={jobs} compact hideRevenueProfit />
+                  <JobTable jobs={jobs} compact defaultSort={flagDefaultSort} />
                 )}
               </>
             )}
@@ -234,8 +255,15 @@ export default function OperatorView() {
 }
 
 /** Direction tabs sub-component */
-function DirectionTabView({ exportJobs, importJobs }: { exportJobs: Job[]; importJobs: Job[] }) {
+function DirectionTabView({ exportJobs, importJobs, defaultSort }: {
+  exportJobs: Job[]; importJobs: Job[];
+  defaultSort?: { key: string; dir: 'asc' | 'desc' };
+}) {
   const [tab, setTab] = useState<'export' | 'import'>('export');
+
+  // Exports sort by ETD, imports by ETA
+  const exportSort = defaultSort || { key: 'etd', dir: 'asc' as const };
+  const importSort = { key: 'eta', dir: 'asc' as const };
 
   return (
     <>
@@ -253,7 +281,11 @@ function DirectionTabView({ exportJobs, importJobs }: { exportJobs: Job[]; impor
           <span style={{ color: '#f59e0b' }}>↙</span> Import ({importJobs.length})
         </button>
       </div>
-      <JobTable jobs={tab === 'export' ? exportJobs : importJobs} compact hideRevenueProfit />
+      <JobTable
+        jobs={tab === 'export' ? exportJobs : importJobs}
+        compact
+        defaultSort={tab === 'export' ? exportSort : importSort}
+      />
     </>
   );
 }

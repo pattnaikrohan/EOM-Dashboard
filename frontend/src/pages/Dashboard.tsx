@@ -6,7 +6,7 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
   PieChart, Pie, Cell, Label, Legend as ReLegend
 } from 'recharts';
-import { ArrowUpRight, Upload } from 'lucide-react';
+import { ArrowUpRight, Upload, Database } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import KPICards from '../components/KPICards';
 import { FLAG_COLOURS, FLAG_PRIORITY } from '../utils/constants';
@@ -83,15 +83,30 @@ export default function Dashboard() {
         </div>
         <h2 className="empty-state__title">No Data Loaded</h2>
         <p className="empty-state__text">
-          Upload a CargoWise export or WIP Review file to get started
+          Upload a CargoWise export or WIP Review file to get started, or pull live data directly from Snowflake.
         </p>
-        <button
-          className="btn btn-primary"
-          style={{ marginTop: '1.5rem' }}
-          onClick={() => navigate('/upload')}
-        >
-          <Upload size={16} /> Upload File
-        </button>
+        <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem', justifyContent: 'center' }}>
+          <button
+            className="btn btn-secondary"
+            onClick={() => navigate('/upload')}
+          >
+            <Upload size={16} /> Upload File
+          </button>
+          <button
+            className="btn btn-primary"
+            onClick={async () => {
+              try {
+                // We don't have handleSyncSnowflake in useData directly if not destructured, let's just use it
+                // We'll navigate to upload page and do it there, or just trigger it here.
+                // Wait, it's better to add the sync button in the Upload page as well!
+                // Let's just do a basic implementation here and the main one in Upload.
+                navigate('/upload');
+              } catch (err) {}
+            }}
+          >
+            <Database size={16} /> Sync from Snowflake
+          </button>
+        </div>
       </div>
     );
   }

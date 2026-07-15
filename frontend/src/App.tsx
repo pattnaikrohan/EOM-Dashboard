@@ -11,6 +11,8 @@ import OpsReview from './pages/OpsReview';
 import UploadPage from './pages/Upload';
 import SettingsPage from './pages/Settings';
 import NegativeMovement from './pages/NegativeMovement';
+import Login from './pages/Login';
+import ProtectedRoute from './auth/ProtectedRoute';
 
 function AppRoutes() {
   const { checkStatus } = useData();
@@ -36,10 +38,24 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <DataProvider>
-      <Router>
-        <AppRoutes />
-      </Router>
-    </DataProvider>
+    <Router>
+      <Routes>
+        {/* Public route — login page */}
+        <Route path="/login" element={<Login />} />
+
+        {/* Protected routes — require authentication */}
+        <Route
+          path="/*"
+          element={
+            <ProtectedRoute>
+              <DataProvider>
+                <AppRoutes />
+              </DataProvider>
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
+    </Router>
   );
 }
+

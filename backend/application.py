@@ -50,4 +50,11 @@ def root():
     })
 
 if __name__ == "__main__":
-    app.run(port=8000, debug=True)
+    import sys, os
+    # Exclude system Python dirs from the watchdog reloader to prevent
+    # restarts while Snowflake connector touches cached .pyc files
+    exclude = [
+        os.path.dirname(sys.executable),  # e.g. C:\Python314
+        os.path.join(os.environ.get('APPDATA', ''), 'Python'),
+    ]
+    app.run(port=8000, debug=True, exclude_patterns=[f"{p}/*" for p in exclude if p])

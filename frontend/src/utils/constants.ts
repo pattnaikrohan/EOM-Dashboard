@@ -9,6 +9,7 @@ export const FLAG_COLOURS: Record<string, { colour: string; hex: string; bg: str
   'CROSS-TRADE Jobs pending invoicing':{ colour: 'Violet', hex: '#8B5CF6', bg: 'rgba(139,92,246,0.12)', border: 'rgba(139,92,246,0.2)', text: '#6d28d9', className: 'flag-badge--cross-trade' },
   'IMPORTS B Jobs pending invoicing': { colour: 'Indigo', hex: '#6366F1', bg: 'rgba(99,102,241,0.12)',   border: 'rgba(99,102,241,0.2)',   text: '#4338ca', className: 'flag-badge--imports-b' },
   'IMPORTS S Jobs pending invoicing': { colour: 'Cyan',   hex: '#06B6D4', bg: 'rgba(6,182,212,0.12)',    border: 'rgba(6,182,212,0.2)',    text: '#0e7490', className: 'flag-badge--imports-s' },
+  'DOMESTIC Jobs pending invoicing':  { colour: 'Lime',   hex: '#84CC16', bg: 'rgba(132,204,22,0.12)',   border: 'rgba(132,204,22,0.2)',   text: '#4d7c0f', className: 'flag-badge--domestic' },
   'Unbilled Jobs with PROFIT':        { colour: 'Emerald',hex: '#10B981', bg: 'rgba(16,185,129,0.12)',   border: 'rgba(16,185,129,0.2)',   text: '#047857', className: 'flag-badge--unbilled-profit' },
   'Unbilled Jobs with LOSS':          { colour: 'Red',    hex: '#EF4444', bg: 'rgba(239,68,68,0.12)',    border: 'rgba(239,68,68,0.2)',    text: '#b91c1c', className: 'flag-badge--unbilled-loss' },
   'Jobs with WIPs':                   { colour: 'Orange', hex: '#F97316', bg: 'rgba(249,115,22,0.12)',   border: 'rgba(249,115,22,0.2)',   text: '#c2410c', className: 'flag-badge--wips' },
@@ -25,6 +26,7 @@ export const FLAG_PRIORITY = [
   'CROSS-TRADE Jobs pending invoicing',
   'IMPORTS B Jobs pending invoicing',
   'IMPORTS S Jobs pending invoicing',
+  'DOMESTIC Jobs pending invoicing',
   'Unbilled Jobs with PROFIT',
   'Unbilled Jobs with LOSS',
   'Jobs with WIPs',
@@ -35,6 +37,15 @@ export const FLAG_PRIORITY = [
   'Jobs at CMP — Ready to CLOSE',
   'Jobs with Aged Accruals',
 ];
+
+export const FLAG_DESCRIPTIONS: Record<string, string> = {
+  'EXPORTS Jobs pending invoicing':     'Jobs departing this month requiring invoicing',
+  'IMPORTS B Jobs pending invoicing':   'Jobs arriving this month requiring invoicing',
+  'IMPORTS S Jobs pending invoicing':   'Jobs arriving this month requiring invoicing',
+  'CROSS-TRADE Jobs pending invoicing': 'Jobs arriving this month requiring invoicing',
+  'DOMESTIC Jobs pending invoicing':    'Jobs departing this month requiring invoicing',
+  'Jobs at INV Status':                 'Jobs to be updated to CMP upon invoice completion and accruals entered',
+};
 
 export const STATUS_COLOURS: Record<string, string> = {
   'WRK': 'status-badge--wrk',

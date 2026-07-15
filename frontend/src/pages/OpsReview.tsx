@@ -6,7 +6,7 @@ import { ChevronRight, AlertTriangle } from 'lucide-react';
 import { getOpsReview } from '../services/api';
 import type { Job } from '../services/api';
 import JobTable from '../components/JobTable';
-import { FLAG_PRIORITY, FLAG_COLOURS } from '../utils/constants';
+import { FLAG_PRIORITY, FLAG_COLOURS, FLAG_DESCRIPTIONS } from '../utils/constants';
 
 export default function OpsReview() {
   const [sections, setSections] = useState<Record<string, Job[]>>({});
@@ -101,12 +101,27 @@ export default function OpsReview() {
                   }}>
                     <AlertTriangle size={16} />
                   </div>
-                  <span className="card__title">{name}</span>
-                  <span className="card__count" style={{
-                    background: `${colour}15`, color: colour,
-                  }}>
-                    {jobs.length} {jobs.length === 1 ? 'job' : 'jobs'}
-                  </span>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      <span className="card__title">{name}</span>
+                      <span className="card__count" style={{
+                        background: `${colour}15`, color: colour,
+                      }}>
+                        {jobs.length} {jobs.length === 1 ? 'job' : 'jobs'}
+                      </span>
+                    </div>
+                    {FLAG_DESCRIPTIONS[name] && (
+                      <span style={{
+                        fontSize: '0.75rem',
+                        color: 'var(--fg-muted)',
+                        fontStyle: 'italic',
+                        fontWeight: 400,
+                        opacity: 0.8,
+                      }}>
+                        {FLAG_DESCRIPTIONS[name]}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <ChevronRight
                   size={16}

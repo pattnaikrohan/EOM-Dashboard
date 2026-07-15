@@ -455,14 +455,16 @@ const TABLE_COLS = [
   { key: 'transport',     label: 'Mode',       align: 'left'  as const },
   { key: 'etd',           label: 'ETD',        align: 'left'  as const },
   { key: 'eta',           label: 'ETA',        align: 'left'  as const },
-  { key: 'job_profit',    label: 'Movement Amount', align: 'right' as const },
   { key: 'revenue',       label: 'Revenue',    align: 'right' as const },
   { key: 'cost',          label: 'Cost',       align: 'right' as const },
+  { key: 'wip',           label: 'WIP',        align: 'right' as const },
   { key: 'accrual',       label: 'Accrual',    align: 'right' as const },
+  { key: 'job_profit',    label: 'P&L / Movement', align: 'right' as const },
+  { key: 'margin_pct',    label: 'Margin%',    align: 'right' as const },
   { key: 'resolution_status', label: 'Review',  align: 'center' as const },
 ];
 
-const NUMERIC_KEYS = new Set(['job_profit', 'revenue', 'cost', 'accrual', 'wip']);
+const NUMERIC_KEYS = new Set(['job_profit', 'revenue', 'cost', 'accrual', 'wip', 'margin_pct']);
 
 function NegMovementTable({ jobs, plCategories, expandedRow, setExpandedRow, onSaveComment }: {
   jobs: NegMovementJob[];
@@ -634,14 +636,18 @@ function CommentableRow({ job, isExpanded, statusConf, mode, plCategories, onTog
         <td>{mode}</td>
         <td>{job.etd || '—'}</td>
         <td>{job.eta || '—'}</td>
-        <td className={`cell-number ${job.job_profit < 0 ? 'cell-number--negative' : job.job_profit > 0 ? 'cell-number--positive' : ''}`}>
-          {formatCurrency(job.job_profit)}
-        </td>
         <td className="cell-number">{formatCurrency(job.revenue)}</td>
         <td className={`cell-number ${job.cost < 0 ? 'cell-number--negative' : ''}`}>
           {formatCurrency(job.cost)}
         </td>
+        <td className="cell-number">{formatCurrency((job as any).wip || 0)}</td>
         <td className="cell-number">{formatCurrency(job.accrual)}</td>
+        <td className={`cell-number ${job.job_profit < 0 ? 'cell-number--negative' : job.job_profit > 0 ? 'cell-number--positive' : ''}`}>
+          {formatCurrency(job.job_profit)}
+        </td>
+        <td className={`cell-number ${((job as any).margin_pct || 0) < 0 ? 'cell-number--negative' : ''}`}>
+          {((job as any).margin_pct || 0).toFixed(2)}%
+        </td>
         <td style={{ textAlign: 'center' }}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.25rem' }}>
             <span style={{
