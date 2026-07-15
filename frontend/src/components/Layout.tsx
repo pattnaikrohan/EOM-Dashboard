@@ -110,7 +110,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         {/* Brand */}
         <div className="sidebar__brand" style={{ justifyContent: 'center' }}>
           <img src={logo} alt="EOM Dashboard" style={{ height: '42px', objectFit: 'contain', display: isSidebarCollapsed ? 'none' : 'block' }} />
-          {isSidebarCollapsed && <div style={{ fontWeight: 900, fontSize: '1.2rem', color: '#fff' }}>EOM</div>}
         </div>
 
         {/* Navigation */}
@@ -118,6 +117,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           {/* Main nav items */}
           <Link
             to="/"
+            title="Dashboard"
             className={`sidebar__nav-item ${isActive('/') ? 'active' : ''}`}
           >
             <LayoutDashboard size={18} color="#3b82f6" />
@@ -131,6 +131,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
           <Link
             to="/ops-review"
+            title="Ops Manager Review"
             className="sidebar__nav-item"
             style={{ fontWeight: isActive('/ops-review') ? 700 : 500, color: isActive('/ops-review') ? 'var(--fg-base)' : 'var(--fg-muted)', background: 'transparent' }}
           >
@@ -140,6 +141,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
           <Link
             to="/negative-movement"
+            title="Negative Movement"
             className="sidebar__nav-item"
             style={{ fontWeight: isActive('/negative-movement') ? 700 : 500, color: isActive('/negative-movement') ? 'var(--fg-base)' : 'var(--fg-muted)', background: 'transparent' }}
           >
@@ -149,6 +151,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
           <Link
             to="/operators"
+            title="Operators"
             className={`sidebar__nav-item ${isActive('/operators') ? 'active' : ''}`}
             style={{ fontWeight: isActive('/operators') ? 700 : 500, color: isActive('/operators') ? 'var(--fg-base)' : 'var(--fg-muted)', background: 'transparent' }}
           >
@@ -160,6 +163,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <div style={{ marginTop: 'auto' }}>
             <Link
               to="/upload"
+              title="Upload Data"
               className="sidebar__nav-item"
               style={{ fontWeight: isActive('/upload') ? 700 : 500, color: isActive('/upload') ? 'var(--fg-base)' : 'var(--fg-muted)', background: 'transparent' }}
             >
@@ -169,6 +173,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
             <Link
               to="/settings"
+              title="Settings & Legend"
               className="sidebar__nav-item"
               style={{ fontWeight: isActive('/settings') ? 700 : 500, color: isActive('/settings') ? 'var(--fg-base)' : 'var(--fg-muted)', background: 'transparent' }}
             >
@@ -177,6 +182,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             </Link>
 
             <button
+              title="Clear Data"
               onClick={() => {
                 if (window.confirm("Are you sure you want to permanently clear all loaded data? This cannot be undone.")) {
                   fetch(`${API_BASE}/clear`, { method: 'POST' })
