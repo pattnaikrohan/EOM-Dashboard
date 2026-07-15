@@ -197,7 +197,8 @@ def get_flags(job: dict, report_period: str = "") -> list[str]:
     elif dept == "XTA":
         is_exp, is_import, is_domestic, is_cross_trade = False, False, False, True
 
-    # ── Assign direction field for frontend tabs ──
+    # ── Assign direction field and is_export for frontend tabs ──
+    job["is_export"] = is_exp
     if is_cross_trade:
         job["direction"] = "crosstrade"
     elif is_import:

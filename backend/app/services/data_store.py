@@ -86,7 +86,14 @@ class DataStore:
             self.period = parsed.get("period", "")
             self.operators = parsed.get("operators", [])
             self.jobs = [j for j in parsed.get("jobs", []) if j.get("department") or j.get("flags") or j.get("source_type") or j.get("revenue", 0) != 0 or j.get("cost", 0) != 0 or j.get("accrual", 0) != 0]
-        
+
+        # Always recompute flags and direction for all jobs using active V3 rules
+        from app.services.rules import get_flags, priority_flag, get_ops_section
+        for j in self.jobs:
+            j["flags"] = get_flags(j, self.period)
+            j["primary_flag"] = priority_flag(j["flags"])
+            j["ops_section"] = get_ops_section(j)
+
         # Re-apply any saved workflow states (EOM Review & Triage status)
         self._reapply_workflow_states()
 
