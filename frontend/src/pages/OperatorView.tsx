@@ -4,7 +4,6 @@
  * and MONTH END CLOSING CHECKS, even when a section has 0 jobs.
  */
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
 import { ChevronRight, User, CheckCircle2 } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { getOperatorDetail } from '../services/api';
@@ -33,16 +32,15 @@ const MONTH_END_CLOSING_FLAGS = [
 const ALL_CHECKERS = [...PENDING_INVOICING_FLAGS, ...MONTH_END_CLOSING_FLAGS];
 
 export default function OperatorView() {
-  const { code } = useParams<{ code: string }>();
-  const { globalFlags } = useData();
+  const { globalFlags, operators } = useData();
+  const [selectedCode, setSelectedCode] = useState<string>('ALL');
   const [data, setData] = useState<OperatorDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
-    if (!code) return;
     setLoading(true);
-    getOperatorDetail(code, globalFlags)
+    getOperatorDetail(selectedCode, globalFlags)
       .then(d => {
         setData(d);
         // Auto-expand sections that have jobs
@@ -55,7 +53,7 @@ export default function OperatorView() {
       })
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, [code, globalFlags]);
+  }, [selectedCode, globalFlags]);
 
   if (loading) {
     return (
@@ -70,8 +68,8 @@ export default function OperatorView() {
   if (!data) {
     return (
       <div className="empty-state fade-in">
-        <h2 className="empty-state__title">Operator Not Found</h2>
-        <p className="empty-state__text">No data available for operator "{code}"</p>
+        <h2 className="empty-state__title">Data Not Found</h2>
+        <p className="empty-state__text">No data available for operator "{selectedCode}"</p>
       </div>
     );
   }
@@ -184,26 +182,56 @@ export default function OperatorView() {
     <div className="fade-in">
       {/* Header */}
       <div className="page-header">
-        <div className="page-header__overline">Operator Review</div>
-        <h1 className="page-header__title" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <div className="page-header__overline">Shipment Dashboard</div>
+        <h1 className="page-header__title" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <div style={{
-            width: 44, height: 44, borderRadius: 14,
+            width: 48, height: 48, borderRadius: 16,
             background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: '#fff', fontWeight: 800, fontSize: '1rem',
-            boxShadow: '0 4px 12px rgba(99,102,241,0.3)',
+            color: '#fff',
+            boxShadow: '0 8px 16px rgba(99,102,241,0.25), inset 0 2px 4px rgba(255,255,255,0.2)',
           }}>
-            <User size={22} />
+            <User size={24} strokeWidth={2.5} />
           </div>
-          EOM Review — {code}
+          {selectedCode === 'ALL' ? 'All Operators' : `${selectedCode}'s Workflow`}
         </h1>
         <p className="page-header__subtitle">
           {data.branch} · {data.period}
         </p>
       </div>
 
+      {/* Operator Filter Tabs */}
+      <div style={{ marginTop: '1.5rem', marginBottom: '1.5rem' }}>
+        <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem', paddingLeft: '0.5rem' }}>
+          Filter by Operator
+        </div>
+        <div className="operator-pills" style={{ 
+          display: 'flex', gap: '0.5rem', flexWrap: 'wrap', paddingBottom: '0.75rem'
+        }}>
+          <button 
+            className={`operator-pill ${selectedCode === 'ALL' ? 'active' : ''}`}
+            onClick={() => setSelectedCode('ALL')}
+          >
+            All Operators 
+            <span className="operator-pill-badge" style={{ marginLeft: '6px' }}>{operators.reduce((sum, op) => sum + (op.visible_jobs || op.total_jobs), 0)}</span>
+          </button>
+          {operators.map(op => (
+            <button
+              key={op.code}
+              className={`operator-pill ${selectedCode === op.code ? 'active' : ''}`}
+              onClick={() => setSelectedCode(op.code)}
+            >
+              {op.code} 
+              <span className="operator-pill-badge" style={{ marginLeft: '6px' }}>{op.visible_jobs !== undefined ? op.visible_jobs : op.total_jobs}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* KPI Cards */}
       <KPICards kpi={data.kpi} />
+
+
 
       {/* ── SECTION 1: PENDING INVOICING ── */}
       <div style={{

@@ -25,7 +25,7 @@ function AppRoutes() {
     <Layout>
       <Routes>
         <Route path="/" element={<Dashboard />} />
-        <Route path="/operator/:code" element={<OperatorView />} />
+        <Route path="/operators" element={<OperatorView />} />
         <Route path="/ops-review" element={<OpsReview />} />
         <Route path="/upload" element={<UploadPage />} />
         <Route path="/settings" element={<SettingsPage />} />

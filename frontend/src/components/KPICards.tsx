@@ -17,7 +17,7 @@ export default function KPICards({ kpi }: KPICardsProps) {
   const [selectedCard, setSelectedCard] = useState<any>(null);
 
   const cards = [
-    { label: 'Total Jobs',   value: kpi.total_jobs,       icon: Briefcase,     variant: 'blue',   isCurrency: false, description: 'Total number of active jobs currently assigned to the operators in this view.' },
+    { label: 'Total Jobs',   value: kpi.visible_jobs !== undefined ? kpi.visible_jobs : kpi.total_jobs,       icon: Briefcase,     variant: 'blue',   isCurrency: false, description: 'Total number of active jobs currently assigned to the operators in this view.' },
     { label: 'Export',        value: kpi.export_jobs,      icon: ArrowUpRight,  variant: 'indigo', isCurrency: false, description: 'Total number of jobs marked as Export direction (e.g., EX, OEX, AEX).' },
     { label: 'Cross-Trade',   value: kpi.cross_trade_jobs, icon: Repeat,        variant: 'violet', isCurrency: false, description: 'Jobs where both origin and destination are outside Australia (Cross-Trade shipments).' },
     { label: 'Import',        value: kpi.import_jobs,      icon: ArrowDownLeft, variant: 'purple', isCurrency: false, description: 'Total number of jobs marked as Import direction (e.g., IM, OIM, AIM).' },

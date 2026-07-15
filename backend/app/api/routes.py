@@ -163,7 +163,7 @@ def get_operator_detail(code):
     departments = depts_param.split(',') if depts_param else None
 
     jobs = data_store.get_all_jobs(code, flags=flags, branches=branches, departments=departments)
-    if not jobs and code not in data_store.operators:
+    if not jobs and code != "ALL" and code not in data_store.operators:
         return jsonify({"error": f"Operator '{code}' not found"}), 404
 
     return jsonify({

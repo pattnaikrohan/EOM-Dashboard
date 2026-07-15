@@ -2,10 +2,10 @@
  * Layout — Sidebar + Topbar shell matching incident-management design.
  */
 import { useLocation, Link } from 'react-router-dom';
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
-  LayoutDashboard, Upload, Settings, ChevronRight,
-  AlertTriangle, TrendingDown, Filter, ChevronDown, Building, Trash2, Moon, Sun, LogOut
+  LayoutDashboard, Upload, Settings,
+  AlertTriangle, TrendingDown, Filter, Building, Trash2, Moon, Sun, LogOut, Users
 } from 'lucide-react';
 import { useAuth } from '../auth/AuthProvider';
 import { useData } from '../context/DataContext';
@@ -42,16 +42,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const branchFilterRef = useRef<HTMLDivElement>(null);
   const deptFilterRef = useRef<HTMLDivElement>(null);
   const accountMenuRef = useRef<HTMLDivElement>(null);
-
-  const operatorsByBranch = useMemo(() => {
-    const grouped: Record<string, typeof operators> = {};
-    for (const op of operators) {
-      const b = (op as any).branch || 'ALL';
-      if (!grouped[b]) grouped[b] = [];
-      grouped[b].push(op);
-    }
-    return grouped;
-  }, [operators]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -96,14 +86,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const isActive = (path: string) => {
-    if (path === '/') return location.pathname === '/';
-    return location.pathname.startsWith(path);
-  };
-
-  const isOperatorActive = (code: string) => {
-    return location.pathname === `/operator/${code}`;
-  };
+  const isActive = (path: string) => location.pathname === path;
 
   return (
     <div className="app-layout">
@@ -119,7 +102,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           {/* Main nav items */}
           <Link
             to="/"
-            className={`sidebar__nav-item ${isActive('/') && !isActive('/operator') && !isActive('/ops-review') && !isActive('/negative-movement') && !isActive('/upload') && !isActive('/settings') ? 'active' : ''}`}
+            className={`sidebar__nav-item ${isActive('/') ? 'active' : ''}`}
           >
             <LayoutDashboard size={18} color="#3b82f6" />
             <span style={{ flex: 1 }}>Dashboard</span>
@@ -148,20 +131,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <span>Neg. Movement</span>
           </Link>
 
-          {/* Operator list */}
-          {loaded && operators.length > 0 && (
-            <div style={{ marginTop: '1rem', borderTop: '1px solid rgba(0,0,0,0.05)', paddingTop: '0.5rem' }}>
-              <div className="sidebar__section-label">OPERATORS BY BRANCH</div>
-              {Object.entries(operatorsByBranch).map(([branchName, branchOps]) => (
-                <BranchSection 
-                  key={branchName} 
-                  branchName={branchName} 
-                  operators={branchOps} 
-                  isOperatorActive={isOperatorActive} 
-                />
-              ))}
-            </div>
-          )}
+          <Link
+            to="/operators"
+            className={`sidebar__nav-item ${isActive('/operators') ? 'active' : ''}`}
+            style={{ fontWeight: isActive('/operators') ? 700 : 500, color: isActive('/operators') ? 'var(--fg-base)' : 'var(--fg-muted)', background: 'transparent' }}
+          >
+            <Users size={18} color="#8b5cf6" />
+            <span>Operators</span>
+          </Link>
 
           {/* Bottom nav */}
           <div style={{ marginTop: 'auto' }}>
@@ -601,100 +578,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           {children}
         </main>
       </div>
-    </div>
-  );
-}
-
-function BranchSection({ branchName, operators, isOperatorActive }: { branchName: string, operators: any[], isOperatorActive: (code: string) => boolean }) {
-  const [isOpen, setIsOpen] = useState(true);
-  const totalJobs = operators.reduce((sum, op) => sum + op.total_jobs, 0);
-
-  return (
-    <div style={{ marginBottom: '0.4rem' }}>
-      <button 
-        onClick={() => setIsOpen(!isOpen)}
-        style={{
-          display: 'flex', alignItems: 'center', width: 'calc(100% - 1rem)', padding: '0.35rem 0.5rem',
-          margin: '0 0.5rem', borderRadius: '8px',
-          background: 'transparent', 
-          border: 'none', cursor: 'pointer', 
-          transition: 'all 0.15s ease'
-        }}
-        onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,0,0.03)'}
-        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, textAlign: 'left' }}>
-          <div style={{ 
-            width: '22px', height: '22px', display: 'flex', alignItems: 'center', justifyContent: 'center', 
-            background: isOpen ? '#3b82f6' : 'rgba(0,0,0,0.04)', borderRadius: '6px', transition: 'all 0.2s' 
-          }}>
-            <Building size={12} color={isOpen ? '#ffffff' : '#64748b'} />
-          </div>
-          <span style={{ color: isOpen ? '#0f172a' : '#475569', fontWeight: 700, fontSize: '0.7rem', letterSpacing: '0.02em' }}>
-            {branchName}
-          </span>
-          <span style={{ 
-            color: '#64748b', fontSize: '0.65rem', fontWeight: 600, marginLeft: 'auto',
-            background: 'rgba(0,0,0,0.04)', padding: '2px 6px', borderRadius: '10px'
-          }}>
-            {totalJobs}
-          </span>
-        </div>
-        <div style={{ marginLeft: '4px', display: 'flex', alignItems: 'center' }}>
-          {isOpen ? <ChevronDown size={14} color="#94a3b8" /> : <ChevronRight size={14} color="#94a3b8" />}
-        </div>
-      </button>
-
-      {isOpen && (
-        <div style={{ 
-          display: 'flex', flexDirection: 'column', gap: '2px', 
-          margin: '0.25rem 0.5rem 0.5rem 1.2rem',
-          position: 'relative'
-        }}>
-          {/* Subtle tree line */}
-          <div style={{ position: 'absolute', left: '0', top: '0', bottom: '10px', width: '1px', background: 'rgba(0,0,0,0.06)' }} />
-          
-          {operators.map(op => {
-            const active = isOperatorActive(op.code);
-            return (
-              <Link
-                key={op.code}
-                to={`/operator/${op.code}`}
-                style={{
-                  position: 'relative',
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  padding: '0.35rem 0.75rem',
-                  marginLeft: '0.5rem',
-                  borderRadius: '6px',
-                  textDecoration: 'none',
-                  background: active ? '#eff6ff' : 'transparent',
-                  color: active ? '#1d4ed8' : '#475569',
-                  fontWeight: active ? 600 : 500,
-                  fontSize: '0.75rem',
-                  transition: 'all 0.15s'
-                }}
-                onMouseEnter={e => { if(!active) { e.currentTarget.style.background = 'rgba(0,0,0,0.02)'; e.currentTarget.style.color = '#0f172a'; } }}
-                onMouseLeave={e => { if(!active) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#475569'; } }}
-              >
-                {/* Active indicator line */}
-                {active && <div style={{ position: 'absolute', left: '-0.5rem', top: '20%', bottom: '20%', width: '2px', background: '#3b82f6', borderRadius: '2px' }} />}
-                
-                <span>{op.code}</span>
-                <span style={{
-                  background: active ? '#bfdbfe' : '#f1f5f9',
-                  color: active ? '#1e40af' : '#64748b',
-                  padding: '2px 6px',
-                  borderRadius: '10px',
-                  fontSize: '0.65rem',
-                  fontWeight: 600
-                }}>
-                  {op.total_jobs}
-                </span>
-              </Link>
-            );
-          })}
-        </div>
-      )}
     </div>
   );
 }

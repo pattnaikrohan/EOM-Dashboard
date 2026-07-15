@@ -139,6 +139,12 @@ class DataStore:
         jobs = self.get_all_jobs(operator, flags, branches, departments)
         return {
             "total_jobs":      len(jobs),
+            "visible_jobs":    len([j for j in jobs if any(f in j.get("flags", []) for f in [
+                "EXPORTS Jobs pending invoicing", "CROSS-TRADE Jobs pending invoicing", 
+                "IMPORTS B Jobs pending invoicing", "IMPORTS S Jobs pending invoicing", 
+                "DOMESTIC Jobs pending invoicing", "Jobs with WIPs", "Jobs at INV Status", 
+                "Jobs with Aged Accruals"
+            ])]),
             "export_jobs":     sum(1 for j in jobs if j.get("is_export")),
             "import_jobs":     sum(1 for j in jobs if not j.get("is_export")),
             "cross_trade_jobs": sum(1 for j in jobs if "CROSS-TRADE Jobs pending invoicing" in j.get("flags", [])),
@@ -174,6 +180,12 @@ class DataStore:
                 "code":          op,
                 "branch":        op_branch,
                 "total_jobs":    len(jobs),
+                "visible_jobs":  len([j for j in jobs if any(f in j.get("flags", []) for f in [
+                    "EXPORTS Jobs pending invoicing", "CROSS-TRADE Jobs pending invoicing", 
+                    "IMPORTS B Jobs pending invoicing", "IMPORTS S Jobs pending invoicing", 
+                    "DOMESTIC Jobs pending invoicing", "Jobs with WIPs", "Jobs at INV Status", 
+                    "Jobs with Aged Accruals"
+                ])]),
                 "export_jobs":   sum(1 for j in jobs if j.get("is_export")),
                 "import_jobs":   sum(1 for j in jobs if not j.get("is_export")),
                 "loss_count":    sum(1 for j in jobs if any("LOSS" in f for f in j.get("flags", []))),

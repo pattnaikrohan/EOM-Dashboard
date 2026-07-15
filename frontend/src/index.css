@@ -415,6 +415,77 @@ h1, h2, h3, h4, h5, h6 {
   opacity: 0.7;
 }
 
+.sidebar__signout-btn:hover {
+  background: var(--bg-hover);
+  color: var(--fg-base);
+  border-color: var(--fg-muted);
+}
+
+/* ==========================================================================
+   OPERATOR PILLS
+   ========================================================================== */
+.operator-pills {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.operator-pills::-webkit-scrollbar {
+  height: 6px;
+}
+.operator-pills::-webkit-scrollbar-track {
+  background: transparent;
+}
+.operator-pills::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 10px;
+}
+
+.operator-pill {
+  padding: 0.6rem 1.25rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.02), inset 0 1px 0 rgba(255,255,255,1);
+}
+
+.operator-pill:hover {
+  border-color: rgba(99, 102, 241, 0.3);
+  color: #1e293b;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.08), inset 0 1px 0 rgba(255,255,255,1);
+  transform: translateY(-1px);
+}
+
+.operator-pill.active {
+  background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 6px 16px rgba(79, 70, 229, 0.25), inset 0 1px 1px rgba(255,255,255,0.2);
+}
+
+.operator-pill-badge {
+  background: #f1f5f9;
+  color: #475569;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  box-shadow: inset 0 1px 1px rgba(0,0,0,0.05);
+}
+
+.operator-pill.active .operator-pill-badge {
+  background: rgba(255,255,255,0.25);
+  color: #ffffff;
+  box-shadow: none;
+}
+
 .sidebar__nav-item:hover {
   background: var(--bg-subtle);
   color: var(--fg-base);

@@ -52,6 +52,7 @@ export interface Job {
 
 export interface KPI {
   total_jobs: number;
+  visible_jobs?: number;
   export_jobs: number;
   import_jobs: number;
   cross_trade_jobs: number;
@@ -76,6 +77,7 @@ export interface OperatorSummary {
   code: string;
   branch: string;
   total_jobs: number;
+  visible_jobs?: number;
   export_jobs: number;
   import_jobs: number;
   loss_count: number;
