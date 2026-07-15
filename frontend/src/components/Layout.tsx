@@ -24,6 +24,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [filterOpen, setFilterOpen] = useState(false);
   const [branchFilterOpen, setBranchFilterOpen] = useState(false);
   const [deptFilterOpen, setDeptFilterOpen] = useState(false);
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     return (localStorage.getItem('theme') as 'light' | 'dark') || 'light';
   });
@@ -40,6 +41,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const filterRef = useRef<HTMLDivElement>(null);
   const branchFilterRef = useRef<HTMLDivElement>(null);
   const deptFilterRef = useRef<HTMLDivElement>(null);
+  const accountMenuRef = useRef<HTMLDivElement>(null);
 
   const operatorsByBranch = useMemo(() => {
     const grouped: Record<string, typeof operators> = {};
@@ -61,6 +63,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       }
       if (deptFilterRef.current && !deptFilterRef.current.contains(event.target as Node)) {
         setDeptFilterOpen(false);
+      }
+      if (accountMenuRef.current && !accountMenuRef.current.contains(event.target as Node)) {
+        setAccountMenuOpen(false);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
@@ -521,31 +526,74 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             >
               {theme === 'light' ? <Moon size={18} color="#f8fafc" /> : <Sun size={18} color="#fbbf24" />}
             </button>
-            <div className="topbar__avatar" title={displayName}>
-              {initials}
+            <div className="topbar__avatar-wrapper" style={{ position: 'relative' }} ref={accountMenuRef}>
+              <div 
+                className="topbar__avatar" 
+                title={displayName}
+                onClick={() => setAccountMenuOpen(!accountMenuOpen)}
+                style={{ cursor: 'pointer' }}
+              >
+                {initials}
+              </div>
+
+              {accountMenuOpen && (
+                <div style={{
+                  position: 'absolute',
+                  top: '120%',
+                  right: 0,
+                  background: 'var(--bg-elevated)',
+                  border: '1px solid var(--border-base)',
+                  borderRadius: '12px',
+                  boxShadow: 'var(--shadow-md)',
+                  padding: '1rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '1rem',
+                  minWidth: '320px',
+                  zIndex: 50,
+                  animation: 'fadeIn 0.2s ease-out forwards'
+                }}>
+                  <div style={{ 
+                    width: '42px', height: '42px', borderRadius: '50%', 
+                    background: 'linear-gradient(135deg, #60a5fa, #818cf8)', 
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    color: 'white', fontWeight: 700, fontSize: '1.1rem',
+                    flexShrink: 0
+                  }}>
+                    {initials}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 600, color: 'var(--fg-base)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '0.95rem' }}>
+                      {displayName}
+                    </div>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--fg-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {email}
+                    </div>
+                  </div>
+                  <button
+                    onClick={logout}
+                    style={{
+                      background: 'transparent',
+                      border: '1px solid rgba(239, 68, 68, 0.3)',
+                      cursor: 'pointer',
+                      padding: '0.5rem',
+                      borderRadius: '8px',
+                      color: '#ef4444',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      transition: 'all 0.15s',
+                      flexShrink: 0
+                    }}
+                    onMouseEnter={e => (e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)')}
+                    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                    title="Logout"
+                  >
+                    <LogOut size={18} />
+                  </button>
+                </div>
+              )}
             </div>
-            <button
-              onClick={logout}
-              style={{
-                background: 'rgba(239, 68, 68, 0.15)',
-                border: '1px solid rgba(239, 68, 68, 0.3)',
-                cursor: 'pointer',
-                padding: '0.45rem',
-                borderRadius: '10px',
-                color: '#ef4444',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'all 0.15s',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                marginLeft: '0.5rem'
-              }}
-              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(239, 68, 68, 0.25)')}
-              onMouseLeave={e => (e.currentTarget.style.background = 'rgba(239, 68, 68, 0.15)')}
-              title="Logout"
-            >
-              <LogOut size={18} />
-            </button>
           </div>
         </header>
 

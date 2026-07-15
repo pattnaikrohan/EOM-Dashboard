@@ -16,25 +16,7 @@ import { MsalProvider, useMsal, useIsAuthenticated } from '@azure/msal-react';
 import { msalConfig, loginRequest } from './authConfig';
 
 // ── MSAL Instance (singleton) ─────────────────────────────────────────────────
-const msalInstance = new PublicClientApplication(msalConfig);
-
-// Set the first account as active if we already have one cached
-const accounts = msalInstance.getAllAccounts();
-if (accounts.length > 0) {
-  msalInstance.setActiveAccount(accounts[0]);
-}
-
-// Listen for successful logins and set active account
-msalInstance.addEventCallback((event) => {
-  if (
-    event.eventType === EventType.LOGIN_SUCCESS &&
-    (event.payload as AuthenticationResult)?.account
-  ) {
-    msalInstance.setActiveAccount(
-      (event.payload as AuthenticationResult).account
-    );
-  }
-});
+export const msalInstance = new PublicClientApplication(msalConfig);
 
 // ── Auth Context ──────────────────────────────────────────────────────────────
 interface AuthContextType {
