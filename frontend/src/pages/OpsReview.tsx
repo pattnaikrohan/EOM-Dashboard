@@ -8,6 +8,22 @@ import type { Job } from '../services/api';
 import JobTable from '../components/JobTable';
 import { FLAG_PRIORITY, FLAG_COLOURS, FLAG_DESCRIPTIONS } from '../utils/constants';
 
+const SHORT_NAMES: Record<string, string> = {
+  'EXPORTS Jobs pending invoicing': 'EXPORTS',
+  'IMPORTS Jobs pending invoicing': 'IMPORTS',
+  'CROSS-TRADE Jobs pending invoicing': 'CROSS-TRADE',
+  'DOMESTIC Jobs pending invoicing': 'DOMESTIC',
+  'Unbilled Jobs with PROFIT': 'UNBILLED PROFIT',
+  'Unbilled Jobs with LOSS': 'UNBILLED LOSS',
+  'Jobs with WIPs': 'WIPs > 40',
+  'Billed Jobs with LOSS': 'BILLED LOSS',
+  'Billed Jobs with LOW MARGIN': 'LOW MARGIN',
+  'Billed Jobs — EXTREME Profit': 'EXTREME PROFIT',
+  'Jobs at INV Status': 'INV STATUS',
+  'Jobs at CMP — Ready to CLOSE': 'CMP READY',
+  'Jobs with Aged Accruals': 'AGED ACCRUALS',
+};
+
 export default function OpsReview() {
   const [sections, setSections] = useState<Record<string, Job[]>>({});
   const [total, setTotal] = useState(0);
@@ -83,14 +99,51 @@ export default function OpsReview() {
           </div>
         </div>
       ) : (
-        sectionNames.map(name => {
+        <>
+          {/* Quick Access Tabs */}
+          <div style={{ marginTop: '0.5rem', marginBottom: '2rem' }}>
+            <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem', paddingLeft: '0.5rem' }}>
+              Jump to Section
+            </div>
+            <div style={{ 
+              display: 'flex', gap: '0.4rem', flexWrap: 'wrap', paddingBottom: '0.75rem'
+            }}>
+              {sectionNames.map(name => {
+                const count = sections[name]?.length || 0;
+                const colour = FLAG_COLOURS[name]?.hex || sectionColours[name] || '#6366f1';
+                const shortName = SHORT_NAMES[name] || name.replace('Jobs pending invoicing', '').replace('Jobs', '').trim();
+                
+                return (
+                  <button
+                    key={`jump-${name}`}
+                    className="jump-pill"
+                    onClick={() => {
+                      const el = document.getElementById(`section-${name.replace(/\s+/g, '-')}`);
+                      if (el) {
+                        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        if (!expanded[name]) {
+                          setExpanded(prev => ({ ...prev, [name]: true }));
+                        }
+                      }
+                    }}
+                  >
+                    <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: colour, marginRight: '6px', flexShrink: 0 }} />
+                    {shortName}
+                    <span className="jump-pill-badge" style={{ marginLeft: '6px' }}>{count}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {sectionNames.map(name => {
           const jobs = sections[name];
           const isOpen = expanded[name] ?? true;
           // Use flag color if available, otherwise section color, otherwise default
           const colour = FLAG_COLOURS[name]?.hex || sectionColours[name] || '#6366f1';
 
           return (
-            <div key={name} className="card" style={{ borderLeftColor: colour, borderLeftWidth: 3 }}>
+            <div key={name} id={`section-${name.replace(/\s+/g, '-')}`} className="card" style={{ borderLeftColor: colour, borderLeftWidth: 3, scrollMarginTop: '2rem' }}>
               <div
                 className="card__header"
                 onClick={() => setExpanded(prev => ({ ...prev, [name]: !prev[name] }))}
@@ -132,7 +185,8 @@ export default function OpsReview() {
               {isOpen && <JobTable jobs={jobs} />}
             </div>
           );
-        })
+        })}
+        </>
       )}
     </div>
   );

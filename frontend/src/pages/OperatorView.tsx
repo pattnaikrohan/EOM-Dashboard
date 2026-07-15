@@ -4,7 +4,7 @@
  * and MONTH END CLOSING CHECKS, even when a section has 0 jobs.
  */
 import { useState, useEffect } from 'react';
-import { ChevronRight, User, CheckCircle2 } from 'lucide-react';
+import { ChevronRight, User, CheckCircle2, ArrowUpRight, ArrowDownLeft, Repeat, MapPin, Clock } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { getOperatorDetail } from '../services/api';
 import type { OperatorDetail, Job } from '../services/api';
@@ -15,9 +15,8 @@ import { FLAG_COLOURS, FLAG_DESCRIPTIONS } from '../utils/constants';
 // ── Section groups ────────────────────────────────────────────────────────────
 const PENDING_INVOICING_FLAGS = [
   'EXPORTS Jobs pending invoicing',
+  'IMPORTS Jobs pending invoicing',
   'CROSS-TRADE Jobs pending invoicing',
-  'IMPORTS B Jobs pending invoicing',
-  'IMPORTS S Jobs pending invoicing',
   'DOMESTIC Jobs pending invoicing',
 ];
 
@@ -31,12 +30,66 @@ const MONTH_END_CLOSING_FLAGS = [
 // All 13 checkers in order
 const ALL_CHECKERS = [...PENDING_INVOICING_FLAGS, ...MONTH_END_CLOSING_FLAGS];
 
+function CountdownTimer() {
+  const [timeLeft, setTimeLeft] = useState({ d: '0', h: '0', m: '0' });
+
+  useEffect(() => {
+    const updateTimer = () => {
+      const now = new Date();
+      const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+      const diff = lastDay.getTime() - now.getTime();
+      
+      if (diff <= 0) {
+        setTimeLeft({ d: '0', h: '0', m: '0' });
+        return;
+      }
+      
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+      const minutes = Math.floor((diff / 1000 / 60) % 60);
+      
+      setTimeLeft({ d: String(days), h: String(hours), m: String(minutes) });
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const renderUnit = (val: string, label: string) => (
+    <div style={{ display: 'flex', alignItems: 'baseline', gap: '2px' }}>
+      <span style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0f172a', fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em' }}>{val}</span>
+      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8' }}>{label}</span>
+    </div>
+  );
+
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: '1rem',
+      background: '#ffffff', padding: '0.6rem 1.25rem', borderRadius: '9999px',
+      boxShadow: '0 4px 15px rgba(0,0,0,0.03), 0 1px 3px rgba(0,0,0,0.02)', border: '1px solid rgba(0,0,0,0.06)'
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <Clock size={16} color="#3b82f6" strokeWidth={2.5} />
+        <span style={{ fontSize: '0.7rem', fontWeight: 800, color: '#3b82f6', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Month End</span>
+      </div>
+      <div style={{ width: '1px', height: '24px', background: '#e2e8f0' }} />
+      <div style={{ display: 'flex', gap: '0.75rem' }}>
+        {renderUnit(timeLeft.d, 'd')}
+        {renderUnit(timeLeft.h, 'h')}
+        {renderUnit(timeLeft.m, 'm')}
+      </div>
+    </div>
+  );
+}
+
 export default function OperatorView() {
   const { globalFlags, operators } = useData();
   const [selectedCode, setSelectedCode] = useState<string>('ALL');
   const [data, setData] = useState<OperatorDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const [pendingInvTab, setPendingInvTab] = useState<string>('EXPORTS Jobs pending invoicing');
 
   useEffect(() => {
     setLoading(true);
@@ -181,23 +234,26 @@ export default function OperatorView() {
   return (
     <div className="fade-in">
       {/* Header */}
-      <div className="page-header">
-        <div className="page-header__overline">Shipment Dashboard</div>
-        <h1 className="page-header__title" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <div style={{
-            width: 48, height: 48, borderRadius: 16,
-            background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: '#fff',
-            boxShadow: '0 8px 16px rgba(99,102,241,0.25), inset 0 2px 4px rgba(255,255,255,0.2)',
-          }}>
-            <User size={24} strokeWidth={2.5} />
-          </div>
-          {selectedCode === 'ALL' ? 'All Operators' : `${selectedCode}'s Workflow`}
-        </h1>
-        <p className="page-header__subtitle">
-          {data.branch} · {data.period}
-        </p>
+      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div>
+          <div className="page-header__overline">Shipment Dashboard</div>
+          <h1 className="page-header__title" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <div style={{
+              width: 48, height: 48, borderRadius: 16,
+              background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: '#fff',
+              boxShadow: '0 8px 16px rgba(99,102,241,0.25), inset 0 2px 4px rgba(255,255,255,0.2)',
+            }}>
+              <User size={24} strokeWidth={2.5} />
+            </div>
+            {selectedCode === 'ALL' ? 'All Operators' : `${selectedCode}'s Workflow`}
+          </h1>
+          <p className="page-header__subtitle">
+            {data.branch} · {data.period}
+          </p>
+        </div>
+        <CountdownTimer />
       </div>
 
       {/* Operator Filter Tabs */}
@@ -233,24 +289,75 @@ export default function OperatorView() {
 
 
 
-      {/* ── SECTION 1: PENDING INVOICING ── */}
+      {/* ── SECTION 1: GENERAL PENDING INVOICING ── */}
       <div style={{
         margin: '1.5rem 0 0.75rem',
         padding: '0.5rem 0',
-        borderBottom: '2px solid #e2e8f0',
       }}>
-        <div style={{
-          fontSize: '0.7rem', fontWeight: 800, letterSpacing: '0.08em',
-          color: '#3b82f6', textTransform: 'uppercase' as const,
-        }}>
-          Section 1
+        <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--fg-base)', marginBottom: '0.25rem' }}>
+          PENDING INVOICING
         </div>
-        <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--fg-base)' }}>
-          Pending Invoicing — {PENDING_INVOICING_FLAGS.length} Checkers
+        <div style={{
+          fontSize: '0.85rem', fontWeight: 500,
+          color: 'var(--fg-muted)'
+        }}>
+          Jobs due for invoicing this month
         </div>
       </div>
 
-      {PENDING_INVOICING_FLAGS.map(flag => renderFlagSection(flag))}
+      <div className="section-card" style={{
+        background: '#fff', borderRadius: '16px', border: '1px solid #e2e8f0',
+        borderLeft: `3px solid ${FLAG_COLOURS[pendingInvTab]?.hex || '#3b82f6'}`,
+        boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -2px rgba(0,0,0,0.05)',
+        overflow: 'hidden', marginBottom: '2rem', transition: 'border-left-color 0.3s ease'
+      }}>
+        {/* Tab Header */}
+        <div style={{ display: 'flex', gap: '0.5rem', padding: '1rem', background: '#f8fafc', overflowX: 'auto', scrollbarWidth: 'none', borderBottom: '1px solid #e2e8f0' }}>
+          {PENDING_INVOICING_FLAGS.map(flag => {
+            const isActive = pendingInvTab === flag;
+            const count = (data.jobs_by_flag[flag] || []).length;
+            const flagInfo = FLAG_COLOURS[flag] || { hex: '#3b82f6' };
+            
+            let tabName = flag.replace(' Jobs pending invoicing', '');
+            let Icon = ArrowUpRight;
+            if (tabName === 'IMPORTS') { tabName = 'Import'; Icon = ArrowDownLeft; }
+            if (tabName === 'EXPORTS') { tabName = 'Export'; Icon = ArrowUpRight; }
+            if (tabName === 'CROSS-TRADE') { tabName = 'Cross-Trade'; Icon = Repeat; }
+            if (tabName === 'DOMESTIC') { tabName = 'Domestic'; Icon = MapPin; }
+
+            return (
+              <button
+                key={flag}
+                onClick={() => setPendingInvTab(flag)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '0.4rem',
+                  padding: '0.4rem 1rem',
+                  background: isActive ? '#fff' : 'transparent',
+                  border: isActive ? '1px solid rgba(0,0,0,0.05)' : '1px solid transparent',
+                  borderRadius: '24px',
+                  cursor: 'pointer',
+                  fontWeight: isActive ? 700 : 600,
+                  color: isActive ? '#0f172a' : '#64748b',
+                  transition: 'all 0.2s',
+                  whiteSpace: 'nowrap',
+                  boxShadow: isActive ? '0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.02)' : 'none'
+                }}
+              >
+                <Icon size={14} color={isActive ? flagInfo.hex : '#94a3b8'} strokeWidth={3} />
+                <span style={{ paddingTop: '1px' }}>{tabName} ({count})</span>
+              </button>
+            );
+          })}
+        </div>
+        
+        {/* Tab Content */}
+        <div style={{ padding: '0', background: '#fff' }}>
+          <JobTable 
+            jobs={data.jobs_by_flag[pendingInvTab] || []}
+            defaultSort={getDefaultSort(pendingInvTab)}
+          />
+        </div>
+      </div>
 
       {/* ── SECTION 2: MONTH END CLOSING CHECKS ── */}
       <div style={{

@@ -10,8 +10,7 @@ from datetime import datetime
 FLAG_PRIORITY = [
     "EXPORTS Jobs pending invoicing",
     "CROSS-TRADE Jobs pending invoicing",
-    "IMPORTS B Jobs pending invoicing",
-    "IMPORTS S Jobs pending invoicing",
+    "IMPORTS Jobs pending invoicing",
     "DOMESTIC Jobs pending invoicing",
     "Unbilled Jobs with PROFIT",
     "Unbilled Jobs with LOSS",
@@ -28,8 +27,7 @@ FLAG_PRIORITY = [
 FLAG_COLOURS = {
     "EXPORTS Jobs pending invoicing":     {"colour": "Blue",   "hex": "#3B82F6"},
     "CROSS-TRADE Jobs pending invoicing": {"colour": "Violet", "hex": "#8B5CF6"},
-    "IMPORTS B Jobs pending invoicing":   {"colour": "Indigo", "hex": "#6366F1"},
-    "IMPORTS S Jobs pending invoicing":   {"colour": "Cyan",   "hex": "#06B6D4"},
+    "IMPORTS Jobs pending invoicing":     {"colour": "Indigo", "hex": "#6366F1"},
     "DOMESTIC Jobs pending invoicing":    {"colour": "Lime",   "hex": "#84CC16"},
     "Unbilled Jobs with PROFIT":          {"colour": "Emerald","hex": "#10B981"},
     "Unbilled Jobs with LOSS":            {"colour": "Red",    "hex": "#EF4444"},
@@ -45,8 +43,7 @@ FLAG_COLOURS = {
 # ── Section descriptions (shown as subtitles in the UI) ────────────────────────
 FLAG_DESCRIPTIONS = {
     "EXPORTS Jobs pending invoicing":     "Jobs departing this month requiring invoicing",
-    "IMPORTS B Jobs pending invoicing":   "Jobs arriving this month requiring invoicing",
-    "IMPORTS S Jobs pending invoicing":   "Jobs arriving this month requiring invoicing",
+    "IMPORTS Jobs pending invoicing":     "Jobs arriving this month requiring invoicing",
     "CROSS-TRADE Jobs pending invoicing": "Jobs arriving this month requiring invoicing",
     "DOMESTIC Jobs pending invoicing":    "Jobs departing this month requiring invoicing",
     "Jobs at INV Status":                 "Jobs to be updated to CMP upon invoice completion and accruals entered",
@@ -190,6 +187,16 @@ def get_flags(job: dict, report_period: str = "") -> list[str]:
         # else: keep is_exp from job dict fallback
     # else: keep is_exp from job.get("is_export") fallback above
 
+    # ── Enforce explicit department mapping ──
+    if dept in ("FEA", "FES"):
+        is_exp, is_import, is_domestic, is_cross_trade = True, False, False, False
+    elif dept in ("FIA", "FIS", "CIA", "CIS"):
+        is_exp, is_import, is_domestic, is_cross_trade = False, True, False, False
+    elif dept == "FDS":
+        is_exp, is_import, is_domestic, is_cross_trade = False, False, True, False
+    elif dept == "XTA":
+        is_exp, is_import, is_domestic, is_cross_trade = False, False, False, True
+
     # ── Assign direction field for frontend tabs ──
     if is_cross_trade:
         job["direction"] = "crosstrade"
@@ -213,16 +220,9 @@ def get_flags(job: dict, report_period: str = "") -> list[str]:
     elif is_domestic and status not in pending_statuses and is_current_or_past_month(etd_str, report_period):
         flags.append("DOMESTIC Jobs pending invoicing")
     
-    # 4. IMPORTS B Jobs pending invoicing (uses ETA — arriving this month)
-    #    Matches: source_type="imports_b" OR dept code FIB OR (Snowflake import with job_number starting B)
-    elif (source_type == "imports_b" or (is_import and dept in ("FIB",)) or (is_import and job_num.startswith("B"))) \
-         and status not in pending_statuses and is_current_or_past_month(eta_str, report_period):
-        flags.append("IMPORTS B Jobs pending invoicing")
-    
-    # 5. IMPORTS S Jobs pending invoicing (uses ETA — arriving this month)
-    #    All other imports that are not IMPORTS B
+    # 4. IMPORTS Jobs pending invoicing (uses ETA — arriving this month)
     elif is_import and not is_cross_trade and status not in pending_statuses and is_current_or_past_month(eta_str, report_period):
-        flags.append("IMPORTS S Jobs pending invoicing")
+        flags.append("IMPORTS Jobs pending invoicing")
 
     # 5. Unbilled Jobs with PROFIT
     if rev == 0 and pl > 0:

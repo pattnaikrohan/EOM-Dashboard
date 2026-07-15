@@ -5,7 +5,7 @@ import { useLocation, Link } from 'react-router-dom';
 import { useState, useRef, useEffect } from 'react';
 import {
   LayoutDashboard, Upload, Settings,
-  AlertTriangle, TrendingDown, Filter, Building, Trash2, Moon, Sun, LogOut, Users
+  AlertTriangle, TrendingDown, Filter, Building, Trash2, Moon, Sun, LogOut, Users, ChevronRight
 } from 'lucide-react';
 import { useAuth } from '../auth/AuthProvider';
 import { useData } from '../context/DataContext';
@@ -28,6 +28,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     return (localStorage.getItem('theme') as 'light' | 'dark') || 'light';
   });
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     if (theme === 'dark') {
@@ -91,10 +92,25 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="app-layout">
       {/* ── LEFT SIDEBAR ──────────────────────────────── */}
-      <aside className="sidebar">
+      <aside className={`sidebar ${isSidebarCollapsed ? 'collapsed' : ''}`} style={{ position: 'relative' }}>
+        {/* Toggle Button */}
+        <button 
+          onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+          className="sidebar-toggle-btn"
+          style={{
+            position: 'absolute', right: '-14px', top: '40px',
+            background: '#fff', border: '1px solid #e2e8f0', borderRadius: '50%',
+            width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer', zIndex: 200, boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)'
+          }}
+        >
+          <ChevronRight size={16} color="#3b82f6" style={{ transform: isSidebarCollapsed ? 'none' : 'rotate(180deg)', transition: 'transform 0.3s' }} />
+        </button>
+
         {/* Brand */}
         <div className="sidebar__brand" style={{ justifyContent: 'center' }}>
-          <img src={logo} alt="EOM Dashboard" style={{ height: '42px', objectFit: 'contain' }} />
+          <img src={logo} alt="EOM Dashboard" style={{ height: '42px', objectFit: 'contain', display: isSidebarCollapsed ? 'none' : 'block' }} />
+          {isSidebarCollapsed && <div style={{ fontWeight: 900, fontSize: '1.2rem', color: '#fff' }}>EOM</div>}
         </div>
 
         {/* Navigation */}

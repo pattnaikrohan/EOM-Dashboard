@@ -141,7 +141,7 @@ export default function JobTable({ jobs, compact, hideRevenueProfit, defaultSort
                       // Job Number
                       if (col.key === 'job_number') {
                         return (
-                          <td key={col.key} className="cell-id">
+                          <td key={col.key} className="cell-id" style={{ whiteSpace: 'nowrap' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                               {hasSubLines && (
                                 <span style={{ color: '#3b82f6', display: 'flex', alignItems: 'center' }}>
@@ -157,7 +157,7 @@ export default function JobTable({ jobs, compact, hideRevenueProfit, defaultSort
                       if (col.key === 'job_status') {
                         const cls = STATUS_COLOURS[val] || 'status-badge--default';
                         return (
-                          <td key={col.key}>
+                          <td key={col.key} style={{ whiteSpace: 'nowrap' }}>
                             <span className={`status-badge ${cls}`}>{val}</span>
                           </td>
                         );
@@ -197,7 +197,8 @@ export default function JobTable({ jobs, compact, hideRevenueProfit, defaultSort
                         );
                       }
                       // Text
-                      return <td key={col.key}>{val || '-'}</td>;
+                      const isDate = dateKeys.has(col.key);
+                      return <td key={col.key} style={isDate ? { whiteSpace: 'nowrap' } : undefined}>{val || '-'}</td>;
                     })}
                   </tr>
                   {isExpanded && hasSubLines && (
