@@ -148,7 +148,7 @@ class DataStore:
             "total_jobs":      len(jobs),
             "visible_jobs":    len([j for j in jobs if any(f in j.get("flags", []) for f in [
                 "EXPORTS Jobs pending invoicing", "CROSS-TRADE Jobs pending invoicing", 
-                "IMPORTS B Jobs pending invoicing", "IMPORTS S Jobs pending invoicing", 
+                "IMPORTS Jobs pending invoicing", "IMPORTS B Jobs pending invoicing", "IMPORTS S Jobs pending invoicing", 
                 "DOMESTIC Jobs pending invoicing", "Jobs with WIPs", "Jobs at INV Status", 
                 "Jobs with Aged Accruals"
             ])]),
@@ -189,7 +189,7 @@ class DataStore:
                 "total_jobs":    len(jobs),
                 "visible_jobs":  len([j for j in jobs if any(f in j.get("flags", []) for f in [
                     "EXPORTS Jobs pending invoicing", "CROSS-TRADE Jobs pending invoicing", 
-                    "IMPORTS B Jobs pending invoicing", "IMPORTS S Jobs pending invoicing", 
+                    "IMPORTS Jobs pending invoicing", "IMPORTS B Jobs pending invoicing", "IMPORTS S Jobs pending invoicing", 
                     "DOMESTIC Jobs pending invoicing", "Jobs with WIPs", "Jobs at INV Status", 
                     "Jobs with Aged Accruals"
                 ])]),
