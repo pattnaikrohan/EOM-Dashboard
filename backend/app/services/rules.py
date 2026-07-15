@@ -190,6 +190,16 @@ def get_flags(job: dict, report_period: str = "") -> list[str]:
         # else: keep is_exp from job dict fallback
     # else: keep is_exp from job.get("is_export") fallback above
 
+    # ── Assign direction field for frontend tabs ──
+    if is_cross_trade:
+        job["direction"] = "crosstrade"
+    elif is_import:
+        job["direction"] = "import"
+    elif is_domestic:
+        job["direction"] = "domestic"
+    else:
+        job["direction"] = "export"
+
     # ── Pending Invoicing Flags ──────────────────────────────────────────
     # 1. CROSS-TRADE Jobs pending invoicing (uses ETA — arriving this month)
     if is_cross_trade and status not in pending_statuses and is_current_or_past_month(eta_str, report_period):

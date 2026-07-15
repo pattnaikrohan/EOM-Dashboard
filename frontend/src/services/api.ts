@@ -45,6 +45,7 @@ export interface Job {
   is_export: boolean;
   etd?: string;
   eta?: string;
+  direction?: string;
   ops_section?: string;
   accrual_lines?: AccrualLine[];
 }

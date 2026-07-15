@@ -97,10 +97,6 @@ export default function OperatorView() {
     const isOpen = expanded[flag] ?? false;
     const isEmpty = jobs.length === 0;
     const flagDefaultSort = getDefaultSort(flag);
-
-    const exportJobs = jobs.filter(j => j.is_export);
-    const importJobs = jobs.filter(j => !j.is_export);
-
     return (
       <div
         key={flag}
@@ -175,11 +171,7 @@ export default function OperatorView() {
               </div>
             ) : (
               <>
-                {exportJobs.length > 0 && importJobs.length > 0 ? (
-                  <DirectionTabView exportJobs={exportJobs} importJobs={importJobs} defaultSort={flagDefaultSort} />
-                ) : (
-                  <JobTable jobs={jobs} compact defaultSort={flagDefaultSort} />
-                )}
+                <DirectionTabView jobs={jobs} defaultSort={flagDefaultSort} flag={flag} />
               </>
             )}
           </div>
@@ -255,36 +247,106 @@ export default function OperatorView() {
 }
 
 /** Direction tabs sub-component */
-function DirectionTabView({ exportJobs, importJobs, defaultSort }: {
-  exportJobs: Job[]; importJobs: Job[];
+function DirectionTabView({ jobs, defaultSort, flag }: {
+  jobs: Job[];
   defaultSort?: { key: string; dir: 'asc' | 'desc' };
+  flag: string;
 }) {
-  const [tab, setTab] = useState<'export' | 'import'>('export');
+  const exportJobs = jobs.filter(j => j.direction === 'export' || (!j.direction && j.is_export));
+  const importJobs = jobs.filter(j => j.direction === 'import' || (!j.direction && !j.is_export && j.direction !== 'domestic' && j.direction !== 'crosstrade'));
+  const domesticJobs = jobs.filter(j => j.direction === 'domestic');
+  const crossTradeJobs = jobs.filter(j => j.direction === 'crosstrade');
 
-  // Exports sort by ETD, imports by ETA
-  const exportSort = defaultSort || { key: 'etd', dir: 'asc' as const };
-  const importSort = { key: 'eta', dir: 'asc' as const };
+  // Only show tabs that have jobs, or show Export/Import if both are 0 (as a fallback so there's at least one tab)
+  const hasExport = exportJobs.length > 0;
+  const hasImport = importJobs.length > 0;
+  const hasDomestic = domesticJobs.length > 0;
+  const hasCross = crossTradeJobs.length > 0;
+
+  // Determine which tabs to show. If it's a direction-specific flag, only show that tab.
+  // Otherwise, show all tabs that have jobs, plus keep Export/Import visible if we want a default.
+  // Actually, to keep it clean: only show tabs that have > 0 jobs, but ensure at least one tab is active.
+  const availableTabs = [
+    ...(hasExport ? ['export'] : []),
+    ...(hasImport ? ['import'] : []),
+    ...(hasDomestic ? ['domestic'] : []),
+    ...(hasCross ? ['crosstrade'] : [])
+  ];
+
+  // If no tabs have jobs (shouldn't happen since jobs.length > 0), fallback to export
+  if (availableTabs.length === 0) availableTabs.push('export');
+
+  // If there's only one direction present, we don't necessarily need tabs, 
+  // but to match the design request, we will show it if it's not a direction-specific flag.
+  // Actually, let's always show tabs if there's more than one, or if it's a generic flag.
+  // We'll just show the available tabs.
+  const [tab, setTab] = useState<string>(availableTabs[0]);
+
+  // Handle cases where jobs change and current tab has 0 jobs
+  useEffect(() => {
+    if (!availableTabs.includes(tab)) {
+      setTab(availableTabs[0]);
+    }
+  }, [availableTabs, tab]);
+
+  // Sort based on tab
+  const getSort = () => {
+    if (defaultSort) return defaultSort;
+    if (tab === 'import') return { key: 'eta', dir: 'asc' as const };
+    return { key: 'etd', dir: 'asc' as const }; // export, domestic, crosstrade
+  };
+
+  const currentJobs = tab === 'export' ? exportJobs 
+                    : tab === 'import' ? importJobs 
+                    : tab === 'domestic' ? domesticJobs 
+                    : crossTradeJobs;
+
+  // If there is only one direction and it perfectly matches the flag name (e.g. EXPORTS Jobs pending invoicing),
+  // it might be cleaner to omit the tab. But let's show it anyway for consistency, or just hide if availableTabs.length === 1
+  const hideTabs = availableTabs.length === 1 && flag.toUpperCase().includes(availableTabs[0].toUpperCase());
 
   return (
     <>
-      <div className="direction-tabs">
-        <button
-          className={`direction-tab ${tab === 'export' ? 'active' : ''}`}
-          onClick={() => setTab('export')}
-        >
-          <span style={{ color: '#3b82f6' }}>↗</span> Export ({exportJobs.length})
-        </button>
-        <button
-          className={`direction-tab ${tab === 'import' ? 'active' : ''}`}
-          onClick={() => setTab('import')}
-        >
-          <span style={{ color: '#f59e0b' }}>↙</span> Import ({importJobs.length})
-        </button>
-      </div>
+      {!hideTabs && (
+        <div className="direction-tabs" style={{ marginBottom: '1rem' }}>
+          {hasExport && (
+            <button
+              className={`direction-tab ${tab === 'export' ? 'active' : ''}`}
+              onClick={() => setTab('export')}
+            >
+              <span style={{ color: '#3b82f6' }}>↗</span> Export ({exportJobs.length})
+            </button>
+          )}
+          {hasImport && (
+            <button
+              className={`direction-tab ${tab === 'import' ? 'active' : ''}`}
+              onClick={() => setTab('import')}
+            >
+              <span style={{ color: '#f59e0b' }}>↙</span> Import ({importJobs.length})
+            </button>
+          )}
+          {hasDomestic && (
+            <button
+              className={`direction-tab ${tab === 'domestic' ? 'active' : ''}`}
+              onClick={() => setTab('domestic')}
+            >
+              <span style={{ color: '#10b981' }}>⟷</span> Domestic ({domesticJobs.length})
+            </button>
+          )}
+          {hasCross && (
+            <button
+              className={`direction-tab ${tab === 'crosstrade' ? 'active' : ''}`}
+              onClick={() => setTab('crosstrade')}
+            >
+              <span style={{ color: '#8b5cf6' }}>⇄</span> Cross-trade ({crossTradeJobs.length})
+            </button>
+          )}
+        </div>
+      )}
       <JobTable
-        jobs={tab === 'export' ? exportJobs : importJobs}
+        jobs={currentJobs}
         compact
-        defaultSort={tab === 'export' ? exportSort : importSort}
+        defaultSort={getSort()}
       />
     </>
   );
