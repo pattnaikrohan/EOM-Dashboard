@@ -86,7 +86,7 @@ function CountdownTimer() {
 
 export default function OperatorView() {
   const { globalFlags, operators } = useData();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const initialOp = searchParams.get('operator') || 'ALL';
   const [selectedCode, setSelectedCode] = useState<string>(initialOp);
   const [data, setData] = useState<OperatorDetail | null>(null);
