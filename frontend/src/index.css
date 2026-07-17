@@ -987,13 +987,15 @@ h1, h2, h3, h4, h5, h6 {
   white-space: nowrap !important;
 }
 
-.cell-number--negative {
-  color: var(--danger-fg);
+.cell-number--negative,
+.data-table td.cell-number--negative {
+  color: var(--danger-fg) !important;
   font-weight: 600;
 }
 
-.cell-number--positive {
-  color: var(--success-fg);
+.cell-number--positive,
+.data-table td.cell-number--positive {
+  color: var(--success-fg) !important;
 }
 
 .cell-id {
@@ -1174,6 +1176,14 @@ h1, h2, h3, h4, h5, h6 {
   padding: 0.65rem 1rem;
   border-bottom: 1px solid var(--border-base);
   font-size: 0.8125rem;
+}
+
+.operator-table td.cell-number {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8125rem;
+  text-align: right;
+  font-weight: 500;
+  white-space: nowrap;
 }
 
 .operator-table tr {
@@ -2041,5 +2051,51 @@ h1, h2, h3, h4, h5, h6 {
   background: var(--danger-bg);
   border-color: rgba(239, 68, 68, 0.2);
   color: var(--danger-fg);
+}
+
+/* ==========================================================================
+   SCROLL TO TOP BUTTON
+   ========================================================================== */
+
+.scroll-to-top {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1rem;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.04);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: 0;
+  transform: translateY(10px);
+  pointer-events: none;
+  z-index: 1000;
+}
+
+.scroll-to-top.visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.scroll-to-top:hover {
+  background: rgba(255, 255, 255, 0.95);
+  color: #3b82f6;
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.15), 0 2px 8px rgba(0, 0, 0, 0.06);
+  transform: translateY(-2px);
+  border-color: rgba(59, 130, 246, 0.2);
+}
+
+.scroll-to-top:active {
+  transform: translateY(0);
 }
 

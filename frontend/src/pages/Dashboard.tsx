@@ -262,6 +262,16 @@ export default function Dashboard() {
         </h3>
         <div className="data-table-wrapper">
           <table className="operator-table">
+            <colgroup>
+              <col style={{ width: '22%' }} />
+              <col style={{ width: '11%' }} />
+              <col style={{ width: '11%' }} />
+              <col style={{ width: '11%' }} />
+              <col style={{ width: '11%' }} />
+              <col style={{ width: '11%' }} />
+              <col style={{ width: '13%' }} />
+              <col style={{ width: '10%' }} />
+            </colgroup>
             <thead>
               <tr>
                 <th>Operator</th>
@@ -276,7 +286,7 @@ export default function Dashboard() {
             </thead>
             <tbody>
               {operators.map(op => (
-                <tr key={op.code} onClick={() => navigate(`/operator/${op.code}`)}>
+                <tr key={op.code} onClick={() => navigate(`/operators?operator=${encodeURIComponent(op.code)}`)} style={{ cursor: 'pointer' }}>
                   <td><span className="operator-code">{op.code}</span></td>
                   <td className="cell-number">{op.total_jobs}</td>
                   <td className="cell-number">{op.export_jobs}</td>
@@ -288,7 +298,7 @@ export default function Dashboard() {
                     {op.wip_count}
                   </td>
                   <td className="cell-number">{op.margin_count}</td>
-                  <td>
+                  <td style={{ textAlign: 'center' }}>
                     <ArrowUpRight size={14} color="#94a3b8" />
                   </td>
                 </tr>

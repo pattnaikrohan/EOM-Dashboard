@@ -4,6 +4,7 @@
  * and MONTH END CLOSING CHECKS, even when a section has 0 jobs.
  */
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { ChevronRight, User, CheckCircle2, ArrowUpRight, ArrowDownLeft, Repeat, MapPin, Clock } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { getOperatorDetail } from '../services/api';
@@ -85,7 +86,9 @@ function CountdownTimer() {
 
 export default function OperatorView() {
   const { globalFlags, operators } = useData();
-  const [selectedCode, setSelectedCode] = useState<string>('ALL');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialOp = searchParams.get('operator') || 'ALL';
+  const [selectedCode, setSelectedCode] = useState<string>(initialOp);
   const [data, setData] = useState<OperatorDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
@@ -355,6 +358,7 @@ export default function OperatorView() {
           <JobTable 
             jobs={data.jobs_by_flag[pendingInvTab] || []}
             defaultSort={getDefaultSort(pendingInvTab)}
+            hideRevenueProfit
           />
         </div>
       </div>
@@ -481,6 +485,7 @@ function DirectionTabView({ jobs, defaultSort, flag }: {
       <JobTable
         jobs={currentJobs}
         compact
+        hideRevenueProfit
         defaultSort={getSort()}
       />
     </>
