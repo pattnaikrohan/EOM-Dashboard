@@ -257,8 +257,8 @@ def get_flags(job: dict, report_period: str = "") -> list[str]:
     if rev > 0 and pl > 0 and accr == 0 and wip == 0 and status == "CMP":
         flags.append("Jobs at CMP — Ready to CLOSE")
         
-    # 13. Jobs with Aged Accruals — trust source file OR computed age (age ≥ 80 required)
-    if (job.get("has_aged_accruals") and age >= 80) or (abs(accr) > 0 and age >= 80):
+    # 13. Jobs with Aged Accruals — trust source file OR computed age (age ≥ 90 required)
+    if (job.get("has_aged_accruals") and age >= 90) or (abs(accr) > 0 and age >= 90):
         flags.append("Jobs with Aged Accruals")
 
     return flags
