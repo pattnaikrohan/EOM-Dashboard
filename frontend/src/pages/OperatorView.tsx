@@ -11,6 +11,7 @@ import { getOperatorDetail } from '../services/api';
 import type { OperatorDetail, Job } from '../services/api';
 import KPICards from '../components/KPICards';
 import JobTable from '../components/JobTable';
+import PremiumLoader from '../components/PremiumLoader';
 import { FLAG_COLOURS, FLAG_DESCRIPTIONS } from '../utils/constants';
 
 // ── Section groups ────────────────────────────────────────────────────────────
@@ -112,13 +113,7 @@ export default function OperatorView() {
   }, [selectedCode, globalFlags]);
 
   if (loading) {
-    return (
-      <div className="fade-in" style={{ padding: '2rem' }}>
-        {[1, 2, 3].map(i => (
-          <div key={i} className="skeleton" style={{ height: 80, marginBottom: '1rem', borderRadius: 16 }} />
-        ))}
-      </div>
-    );
+    return <PremiumLoader text="Loading operator data..." />;
   }
 
   if (!data) {

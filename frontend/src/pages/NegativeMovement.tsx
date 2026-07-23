@@ -8,11 +8,9 @@ import {
   ArrowUp, ArrowDown, ArrowUpDown, MessageSquare, Clock, Save, ArrowRight,
   AlertCircle
 } from 'lucide-react';
-import {
-  getNegMovementSummary, getNegMovementJobs, getNegMovementStatus,
-  uploadNegMovementFiles, updateNegMovementComment,
-} from '../services/api';
-import type { NegMovementJob, NegMovementSummary, NegMovementSectionSummary } from '../services/api';
+import { getNegMovementSummary, uploadNegMovementFiles, getNegMovementJobs, updateNegMovementComment, clearNegMovementData, updatePlCategories } from '../services/api';
+import type { NegMovementSummaryResponse, NegMovementJob } from '../services/api';
+import PremiumLoader from '../components/PremiumLoader';
 import { formatCurrency } from '../utils/constants';
 
 // ── Section config ────────────────────────────────────────────────────────────
@@ -145,13 +143,7 @@ export default function NegativeMovement() {
 
   // ── Loading State ──────────────────────────────────────────────────────────
   if (loading) {
-    return (
-      <div className="fade-in" style={{ padding: '2rem' }}>
-        {[1, 2, 3, 4].map(i => (
-          <div key={i} className="skeleton" style={{ height: 80, marginBottom: '1rem', borderRadius: 16 }} />
-        ))}
-      </div>
-    );
+    return <PremiumLoader text="Loading Negative Movement data..." />;
   }
 
   // ── Upload State (no data loaded) ──────────────────────────────────────────
