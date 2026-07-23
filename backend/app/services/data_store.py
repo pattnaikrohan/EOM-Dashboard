@@ -232,12 +232,12 @@ class DataStore:
 
     def get_jobs_by_flag(self, operator: Optional[str] = None, flags: Optional[list[str]] = None,
                          branches: Optional[list[str]] = None, departments: Optional[list[str]] = None) -> dict[str, list[dict]]:
-        """Group jobs by their primary flag, optionally filtered."""
+        """Group jobs by ALL flags they have (a job appears in every section it qualifies for)."""
         jobs = self.get_all_jobs(operator, flags, branches, departments)
         grouped: dict[str, list[dict]] = {}
         for f in FLAG_PRIORITY:
-            grouped[f] = [j for j in jobs if j.get("primary_flag") == f]
-        return {k: v for k, v in grouped.items() if v}  # remove empty groups
+            grouped[f] = [j for j in jobs if f in j.get("flags", [])]
+        return grouped
 
     def get_ops_review_jobs(self, flags: Optional[list[str]] = None,
                             branches: Optional[list[str]] = None, departments: Optional[list[str]] = None) -> list[dict]:
