@@ -8,8 +8,11 @@ import {
   ArrowUp, ArrowDown, ArrowUpDown, MessageSquare, Clock, Save, ArrowRight,
   AlertCircle
 } from 'lucide-react';
-import { getNegMovementSummary, uploadNegMovementFiles, getNegMovementJobs, updateNegMovementComment, clearNegMovementData, updatePlCategories } from '../services/api';
-import type { NegMovementSummaryResponse, NegMovementJob } from '../services/api';
+import {
+  getNegMovementSummary, getNegMovementJobs, getNegMovementStatus,
+  uploadNegMovementFiles, updateNegMovementComment
+} from '../services/api';
+import type { NegMovementJob, NegMovementSummary, NegMovementSectionSummary } from '../services/api';
 import PremiumLoader from '../components/PremiumLoader';
 import { formatCurrency } from '../utils/constants';
 
