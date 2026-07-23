@@ -9,6 +9,7 @@ import {
 import { ArrowUpRight, Upload, Database } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import KPICards from '../components/KPICards';
+import PremiumLoader from '../components/PremiumLoader';
 import { FLAG_COLOURS, FLAG_PRIORITY } from '../utils/constants';
 
 const PIE_COLORS = FLAG_PRIORITY.filter(f => f !== 'CLEAN').map(f => FLAG_COLOURS[f]?.hex || '#ccc');
@@ -72,8 +73,16 @@ const CustomPieTooltip = ({ active, payload }: any) => {
 };
 
 export default function Dashboard() {
-  const { loaded, dashboard, branch, period } = useData();
+  const { loaded, dashboard, branch, period, loading } = useData();
   const navigate = useNavigate();
+
+  if (loading && !loaded) {
+    return (
+      <div style={{ padding: '6rem' }}>
+        <PremiumLoader text="Loading Dashboard Data..." />
+      </div>
+    );
+  }
 
   if (!loaded || !dashboard) {
     return (

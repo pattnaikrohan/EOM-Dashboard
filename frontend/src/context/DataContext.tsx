@@ -36,7 +36,7 @@ const DataContext = createContext<DataContextType | null>(null);
 export function DataProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<DataState>({
     loaded: false,
-    loading: false,
+    loading: true,
     branch: '',
     period: '',
     operators: [],
@@ -129,6 +129,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, [state.globalFlags, state.globalBranches, state.globalDepartments, refreshDashboard]);
 
   const checkStatus = useCallback(async () => {
+    setState(prev => ({ ...prev, loading: true }));
     try {
       const status: StatusResponse = await getStatus();
       if (status.loaded) {
@@ -145,8 +146,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
           availableBranches: dash.available_branches || status.available_branches || [],
           availableDepartments: dash.available_departments || status.available_departments || [],
         }));
+      } else {
+        setState(prev => ({ ...prev, loading: false }));
       }
-    } catch { /* silent */ }
+    } catch { 
+        setState(prev => ({ ...prev, loading: false }));
+    }
   }, []);
 
   return (

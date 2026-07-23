@@ -3,6 +3,7 @@ In-memory data store for parsed EOM data.
 Acts as the data layer between the parser and the API.
 """
 from __future__ import annotations
+import functools
 from typing import Optional
 from app.services.rules import FLAG_COLOURS, FLAG_PRIORITY
 
@@ -113,12 +114,20 @@ class DataStore:
         self.available_branches = []
         self.available_departments = []
         self._loaded = False
+        self._get_all_jobs_cached.cache_clear()
 
     # ── Query helpers ──────────────────────────────────────────────────────
 
     def get_all_jobs(self, operator: Optional[str] = None, flags: Optional[list[str]] = None,
                      branches: Optional[list[str]] = None, departments: Optional[list[str]] = None) -> list[dict]:
         """Filter jobs by operator, flags, branches, and departments if specified."""
+        flags_tuple = tuple(flags) if flags else None
+        branches_tuple = tuple(branches) if branches else None
+        departments_tuple = tuple(departments) if departments else None
+        return self._get_all_jobs_cached(operator, flags_tuple, branches_tuple, departments_tuple)
+
+    @functools.lru_cache(maxsize=128)
+    def _get_all_jobs_cached(self, operator, flags, branches, departments):
         jobs = self.jobs
         if operator and operator.upper() != "ALL":
             jobs = [j for j in jobs if j["operator"] == operator]
@@ -175,8 +184,16 @@ class DataStore:
                                branches: Optional[list[str]] = None, departments: Optional[list[str]] = None) -> list[dict]:
         """Get summary for each operator, optionally filtered."""
         summaries = []
+        filtered_jobs = self.get_all_jobs(None, flags, branches, departments)
+        
+        jobs_by_op = {op: [] for op in self.operators}
+        for j in filtered_jobs:
+            op = j.get("operator")
+            if op in jobs_by_op:
+                jobs_by_op[op].append(j)
+
         for op in self.operators:
-            jobs = self.get_all_jobs(op, flags, branches, departments)
+            jobs = jobs_by_op[op]
             if len(jobs) == 0:
                 continue
                 
