@@ -131,6 +131,32 @@ export function DataProvider({ children }: { children: ReactNode }) {
     } catch { /* silent */ }
   }, [state.globalFlags, state.globalBranches, state.globalDepartments]);
 
+  const handleSyncSnowflakeBackground = useCallback(async () => {
+    try {
+      await syncSnowflake();
+      const dash = await getDashboard(state.globalFlags, state.globalBranches, state.globalDepartments);
+      setState(prev => ({
+        ...prev,
+        dashboard: dash,
+        operators: dash.operators,
+        branch: dash.branch || prev.branch,
+        period: dash.period || prev.period,
+        availableBranches: dash.available_branches || prev.availableBranches,
+        availableDepartments: dash.available_departments || prev.availableDepartments,
+      }));
+    } catch (err) {
+      console.error('Background sync failed:', err);
+    }
+  }, [state.globalFlags, state.globalBranches, state.globalDepartments]);
+
+  useEffect(() => {
+    if (!state.loaded) return;
+    const interval = setInterval(() => {
+      handleSyncSnowflakeBackground();
+    }, 10 * 60 * 1000); // 10 minutes
+    return () => clearInterval(interval);
+  }, [state.loaded, handleSyncSnowflakeBackground]);
+
   useEffect(() => {
     if (state.loaded) {
       const timer = setTimeout(() => {

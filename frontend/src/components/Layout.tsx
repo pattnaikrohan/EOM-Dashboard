@@ -5,12 +5,13 @@ import { useLocation, Link } from 'react-router-dom';
 import { useState, useRef, useEffect } from 'react';
 import {
   LayoutDashboard, Upload, Settings,
-  AlertTriangle, TrendingDown, Filter, Building, Trash2, Moon, Sun, LogOut, Users, ChevronRight
+  AlertTriangle, TrendingDown, Filter, Building, Trash2, Moon, Sun, LogOut, Users, ChevronRight, RefreshCw
 } from 'lucide-react';
 import { useAuth } from '../auth/AuthProvider';
 import { useData } from '../context/DataContext';
 import { FLAG_PRIORITY, FLAG_COLOURS, API_BASE } from '../utils/constants';
 import logo from '../assets/logo.png';
+import SnowflakeSyncOverlay from './SnowflakeSyncOverlay';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
@@ -18,7 +19,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     loaded, operators, period, 
     globalFlags, setGlobalFlags,
     globalBranches, setGlobalBranches, availableBranches,
-    globalDepartments, setGlobalDepartments, availableDepartments
+    globalDepartments, setGlobalDepartments, availableDepartments,
+    syncing, handleSyncSnowflake
   } = useData();
   const { displayName, email, initials, logout } = useAuth();
   const [filterOpen, setFilterOpen] = useState(false);
@@ -91,6 +93,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="app-layout">
+      <SnowflakeSyncOverlay visible={syncing} />
       {/* ── LEFT SIDEBAR ──────────────────────────────── */}
       <aside className={`sidebar ${isSidebarCollapsed ? 'collapsed' : ''}`} style={{ position: 'relative' }}>
         {/* Toggle Button */}
@@ -504,6 +507,27 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 </div>
               </div>
             )}
+            <button
+              onClick={() => handleSyncSnowflake()}
+              style={{
+                background: 'rgba(56, 189, 248, 0.15)',
+                border: '1px solid rgba(56, 189, 248, 0.25)',
+                cursor: 'pointer',
+                padding: '0.45rem',
+                borderRadius: '10px',
+                color: '#38bdf8',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.15s',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
+              }}
+              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(56, 189, 248, 0.3)')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'rgba(56, 189, 248, 0.15)')}
+              title="Live Sync from Snowflake"
+            >
+              <RefreshCw size={18} />
+            </button>
             <button
               onClick={() => setTheme(t => t === 'light' ? 'dark' : 'light')}
               style={{
