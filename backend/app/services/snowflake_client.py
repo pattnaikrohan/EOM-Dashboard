@@ -3,10 +3,10 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.backends import default_backend
 import os
 
-SF_ACCOUNT   = "SGLYREN-GG43054"
-SF_USER      = "TEST_AI_AUTO"
-SF_WAREHOUSE = "PROD_COMPUTE_WH"
-SF_ROLE      = "PROD_ENGINEER"
+SF_ACCOUNT   = os.environ.get("SF_ACCOUNT", "SGLYREN-GG43054")
+SF_USER      = os.environ.get("SF_USER", "TEST_AI_AUTO")
+SF_WAREHOUSE = os.environ.get("SF_WAREHOUSE", "PROD_COMPUTE_WH")
+SF_ROLE      = os.environ.get("SF_ROLE", "PROD_ENGINEER")
 
 PRIVATE_KEY_PEM = """-----BEGIN PRIVATE KEY-----
 MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDFkLT/bHavGuUi
@@ -50,7 +50,8 @@ def get_connection():
 
 def fetch_jobs_from_snowflake():
     # Because we don't have CREATE VIEW permissions in PROD.CORE, we run the raw CTE logic here.
-    sql_file = r'd:\EOM DASHBOARDS PROTO\database\VW_EOM_JOB_CHARGES.sql'
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    sql_file = os.path.join(current_dir, 'VW_EOM_JOB_CHARGES.sql')
     with open(sql_file, 'r', encoding='utf-8') as f:
         sql_content = f.read()
 
