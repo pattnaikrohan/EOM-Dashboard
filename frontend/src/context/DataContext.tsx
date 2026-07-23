@@ -9,6 +9,7 @@ import { uploadFiles, syncSnowflake, getDashboard, getStatus } from '../services
 interface DataState {
   loaded: boolean;
   loading: boolean;
+  syncing: boolean;
   branch: string;
   period: string;
   operators: OperatorSummary[];
@@ -37,6 +38,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<DataState>({
     loaded: false,
     loading: true,
+    syncing: false,
     branch: '',
     period: '',
     operators: [],
@@ -90,20 +92,27 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const handleSyncSnowflake = useCallback(async () => {
-    setState(prev => ({ ...prev, loading: true, error: '' }));
+    setState(prev => ({ ...prev, syncing: true, loading: true, error: '' }));
     try {
       await syncSnowflake();
       const dash = await getDashboard(state.globalFlags, state.globalBranches, state.globalDepartments);
       setState(prev => ({
         ...prev,
+        loaded: true,
         loading: false,
+        syncing: false,
         dashboard: dash,
         operators: dash.operators,
+        branch: dash.branch || prev.branch,
+        period: dash.period || prev.period,
+        availableBranches: dash.available_branches || prev.availableBranches,
+        availableDepartments: dash.available_departments || prev.availableDepartments,
       }));
     } catch (err: any) {
       setState(prev => ({
         ...prev,
         loading: false,
+        syncing: false,
         error: err.response?.data?.detail || err.message || 'Sync failed',
       }));
     }

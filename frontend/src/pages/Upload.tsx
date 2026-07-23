@@ -1,15 +1,17 @@
 /**
  * Upload Page — Drag-and-drop file upload.
  */
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Upload as UploadIcon, FileSpreadsheet, CheckCircle, AlertCircle, Database } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { useNavigate } from 'react-router-dom';
+import SnowflakeSyncOverlay from '../components/SnowflakeSyncOverlay';
 
 export default function UploadPage() {
-  const { handleUpload, handleSyncSnowflake, loading, error, loaded, branch, period } = useData();
+  const { handleUpload, handleSyncSnowflake, loading, error, loaded, branch, period, syncing } = useData();
   const navigate = useNavigate();
+  const [syncDone, setSyncDone] = useState(false);
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
@@ -28,6 +30,12 @@ export default function UploadPage() {
 
   return (
     <div className="fade-in">
+      <SnowflakeSyncOverlay
+        visible={syncing}
+        onComplete={() => {
+          if (syncDone) navigate('/');
+        }}
+      />
       <div className="page-header">
         <div className="page-header__overline">Data Management</div>
         <h1 className="page-header__title">Upload & Merge CargoWise Exports</h1>
@@ -79,7 +87,7 @@ export default function UploadPage() {
           onClick={async () => {
             try {
               await handleSyncSnowflake();
-              navigate('/');
+              setSyncDone(true);
             } catch (e) {}
           }}
           disabled={loading}
