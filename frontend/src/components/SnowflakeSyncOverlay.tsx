@@ -1,21 +1,16 @@
 /**
- * SnowflakeSyncOverlay v3 — Cinematic data pipeline animation.
- *
- * Entrance: The overlay fades in from transparent with a soft blur reveal,
- * then elements stagger in one by one (glow → crystal → title → stage → progress).
- *
- * Main: Mesh gradient background, floating data nodes connected by pulsing lines,
- * a breathing central crystal, and a morphing progress ring.
+ * SnowflakeSyncOverlay — Full-page cinematic animation shown during Snowflake sync.
+ * v2: Hexagonal data-node network with flowing connection lines and a central snowflake crystal.
  */
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 
 const STAGES = [
-  { text: 'Establishing secure connection…', sub: 'Authenticating with Snowflake' },
-  { text: 'Querying shipment data…', sub: 'Running VW_EOM_JOBS_SUMMARY' },
-  { text: 'Streaming live records…', sub: 'Transferring from cloud warehouse' },
-  { text: 'Processing job entries…', sub: 'Applying flag rules & checkers' },
-  { text: 'Building summaries…', sub: 'Computing operator analytics' },
-  { text: 'Finalizing dashboard…', sub: 'Preparing visualizations' },
+  { text: 'Establishing secure connection to Snowflake…', icon: '🔐' },
+  { text: 'Querying live shipment data…', icon: '❄️' },
+  { text: 'Streaming records from cloud warehouse…', icon: '📡' },
+  { text: 'Processing & flagging job entries…', icon: '⚙️' },
+  { text: 'Building operator summaries…', icon: '📊' },
+  { text: 'Finalizing dashboard…', icon: '✨' },
 ];
 
 interface Props {
@@ -25,161 +20,125 @@ interface Props {
 
 export default function SnowflakeSyncOverlay({ visible, onComplete }: Props) {
   const [stageIndex, setStageIndex] = useState(0);
-  const [phase, setPhase] = useState<'idle' | 'entering' | 'active' | 'exiting'>('idle');
+  const [exiting, setExiting] = useState(false);
 
-  // Generate stable random positions for data nodes
-  const dataNodes = useMemo(() =>
-    Array.from({ length: 20 }).map(() => ({
-      x: Math.random() * 100,
-      y: Math.random() * 100,
-      size: 2 + Math.random() * 3,
-      delay: Math.random() * 5,
-      duration: 3 + Math.random() * 4,
-    })), []);
-
-  // Phase transitions: idle → entering → active → exiting → idle
+  // Cycle through stages while visible
   useEffect(() => {
-    if (visible && phase === 'idle') {
-      setPhase('entering');
-      setStageIndex(0);
-      // After entrance animation, go active
-      const timer = setTimeout(() => setPhase('active'), 1200);
-      return () => clearTimeout(timer);
-    }
-  }, [visible, phase]);
-
-  // Cycle stages while active
-  useEffect(() => {
-    if (phase !== 'active') return;
+    if (!visible) return;
+    setStageIndex(0);
+    setExiting(false);
     const interval = setInterval(() => {
-      setStageIndex(prev => (prev < STAGES.length - 1 ? prev + 1 : prev));
+      setStageIndex(prev => {
+        if (prev < STAGES.length - 1) return prev + 1;
+        return prev;
+      });
     }, 3500);
     return () => clearInterval(interval);
-  }, [phase]);
+  }, [visible]);
 
-  // When sync completes (visible goes false while active)
+  // When visible becomes false (sync done), play exit animation then call onComplete
   useEffect(() => {
-    if (!visible && (phase === 'active' || phase === 'entering')) {
-      setPhase('exiting');
+    if (!visible && stageIndex > 0) {
+      setExiting(true);
       const timer = setTimeout(() => {
-        setPhase('idle');
         onComplete?.();
-      }, 1000);
+      }, 800);
       return () => clearTimeout(timer);
     }
-  }, [visible, phase, onComplete]);
+  }, [visible, stageIndex, onComplete]);
 
-  if (phase === 'idle') return null;
+  if (!visible && !exiting) return null;
 
   const progress = Math.min(((stageIndex + 1) / STAGES.length) * 100, 100);
-  const isEntering = phase === 'entering';
-  const isExiting = phase === 'exiting';
 
   return (
-    <div className={`sync-overlay ${isEntering ? 'sync-overlay--enter' : ''} ${isExiting ? 'sync-overlay--exit' : ''}`}>
-      {/* Mesh gradient background layers */}
-      <div className="sync-mesh" />
-      <div className="sync-mesh sync-mesh--2" />
-      <div className="sync-mesh sync-mesh--3" />
+    <div className={`sync-overlay ${exiting ? 'sync-overlay--exit' : ''}`}>
+      {/* Animated aurora background */}
+      <div className="sync-aurora" />
+      <div className="sync-aurora sync-aurora--2" />
 
-      {/* Grid pattern */}
-      <div className="sync-grid" />
-
-      {/* Floating data nodes with connections */}
-      <div className="sync-nodes">
-        {dataNodes.map((node, i) => (
+      {/* Floating snowflake crystals */}
+      <div className="sync-overlay__particles">
+        {Array.from({ length: 30 }).map((_, i) => (
           <div
             key={i}
-            className="sync-node"
+            className="sync-crystal"
             style={{
-              left: `${node.x}%`,
-              top: `${node.y}%`,
-              width: `${node.size}px`,
-              height: `${node.size}px`,
-              animationDelay: `${node.delay}s`,
-              animationDuration: `${node.duration}s`,
+              left: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 10}s`,
+              animationDuration: `${6 + Math.random() * 8}s`,
+              fontSize: `${8 + Math.random() * 14}px`,
+              opacity: 0.15 + Math.random() * 0.3,
             }}
-          />
+          >
+            ❄
+          </div>
         ))}
       </div>
 
-      {/* Scanning line */}
-      <div className="sync-scanline" />
+      {/* Orbital rings */}
+      <div className="sync-orbital-system">
+        <div className="sync-orbit sync-orbit--1">
+          <div className="sync-orbit-dot" />
+        </div>
+        <div className="sync-orbit sync-orbit--2">
+          <div className="sync-orbit-dot" />
+        </div>
+        <div className="sync-orbit sync-orbit--3">
+          <div className="sync-orbit-dot" />
+        </div>
+      </div>
 
-      {/* Central content — staggered entrance */}
+      {/* Main content */}
       <div className="sync-overlay__content">
-        {/* Progress ring */}
-        <div className={`sync-ring-container ${isEntering ? 'sync-stagger-1' : ''}`}>
-          <svg className="sync-progress-ring" viewBox="0 0 120 120" width="140" height="140">
-            {/* Background ring */}
-            <circle cx="60" cy="60" r="52" fill="none" stroke="rgba(56,189,248,0.06)" strokeWidth="1.5" />
-            {/* Progress arc */}
-            <circle
-              cx="60" cy="60" r="52"
-              fill="none"
-              stroke="url(#syncGradient)"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeDasharray={`${progress * 3.267} ${326.7 - progress * 3.267}`}
-              strokeDashoffset="81.675"
-              style={{ transition: 'stroke-dasharray 1s cubic-bezier(0.4,0,0.2,1)' }}
-            />
-            {/* Glow ring */}
-            <circle cx="60" cy="60" r="46" fill="none" stroke="rgba(56,189,248,0.04)" strokeWidth="8" />
-            <defs>
-              <linearGradient id="syncGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#0ea5e9" />
-                <stop offset="50%" stopColor="#38bdf8" />
-                <stop offset="100%" stopColor="#7dd3fc" />
-              </linearGradient>
-            </defs>
+        {/* Central snowflake crystal */}
+        <div className="sync-central-crystal">
+          <div className="sync-central-glow" />
+          <svg className="sync-snowflake-svg" viewBox="0 0 100 100" width="64" height="64">
+            {/* Six-fold symmetry snowflake */}
+            {[0, 60, 120, 180, 240, 300].map(angle => (
+              <g key={angle} transform={`rotate(${angle} 50 50)`}>
+                <line x1="50" y1="50" x2="50" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                <line x1="50" y1="25" x2="40" y2="18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                <line x1="50" y1="25" x2="60" y2="18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                <line x1="50" y1="35" x2="43" y2="30" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+                <line x1="50" y1="35" x2="57" y2="30" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+              </g>
+            ))}
+            <circle cx="50" cy="50" r="4" fill="currentColor" opacity="0.6" />
           </svg>
-          {/* Inner snowflake */}
-          <div className="sync-inner-crystal">
-            <svg viewBox="0 0 100 100" width="44" height="44">
-              {[0, 60, 120, 180, 240, 300].map(angle => (
-                <g key={angle} transform={`rotate(${angle} 50 50)`}>
-                  <line x1="50" y1="50" x2="50" y2="14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" opacity="0.9" />
-                  <line x1="50" y1="26" x2="41" y2="19" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.7" />
-                  <line x1="50" y1="26" x2="59" y2="19" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.7" />
-                  <line x1="50" y1="36" x2="44" y2="31" stroke="currentColor" strokeWidth="1" strokeLinecap="round" opacity="0.5" />
-                  <line x1="50" y1="36" x2="56" y2="31" stroke="currentColor" strokeWidth="1" strokeLinecap="round" opacity="0.5" />
-                </g>
-              ))}
-              <circle cx="50" cy="50" r="3" fill="currentColor" opacity="0.4" />
-            </svg>
-          </div>
         </div>
 
         {/* Title */}
-        <div className={`sync-overlay__title-group ${isEntering ? 'sync-stagger-2' : ''}`}>
-          <h1 className="sync-overlay__title">Syncing from Snowflake</h1>
-          <p className="sync-overlay__subtitle">Live data pipeline active</p>
-        </div>
+        <h1 className="sync-overlay__title">
+          Syncing from Snowflake
+        </h1>
 
         {/* Stage text */}
-        <div className={`sync-overlay__stage-group ${isEntering ? 'sync-stagger-3' : ''}`} key={stageIndex}>
-          <div className="sync-overlay__stage-text">{STAGES[stageIndex].text}</div>
-          <div className="sync-overlay__stage-sub">{STAGES[stageIndex].sub}</div>
+        <div className="sync-overlay__stage" key={stageIndex}>
+          <span className="sync-overlay__stage-icon">{STAGES[stageIndex].icon}</span>
+          <span className="sync-overlay__stage-text">{STAGES[stageIndex].text}</span>
         </div>
 
         {/* Progress bar */}
-        <div className={`sync-overlay__progress-section ${isEntering ? 'sync-stagger-4' : ''}`}>
-          <div className="sync-overlay__progress-track">
-            <div className="sync-overlay__progress-fill" style={{ width: `${progress}%` }} />
-          </div>
-          <div className="sync-overlay__progress-label">
-            {Math.round(progress)}%
-          </div>
+        <div className="sync-overlay__progress-track">
+          <div
+            className="sync-overlay__progress-fill"
+            style={{ width: `${progress}%` }}
+          />
+          <div
+            className="sync-overlay__progress-glow"
+            style={{ left: `${progress}%` }}
+          />
         </div>
 
-        {/* Step indicators */}
-        <div className={`sync-overlay__steps ${isEntering ? 'sync-stagger-5' : ''}`}>
+        {/* Dots indicator */}
+        <div className="sync-overlay__dots">
           {STAGES.map((_, i) => (
-            <div key={i} className={`sync-step ${i < stageIndex ? 'sync-step--done' : ''} ${i === stageIndex ? 'sync-step--active' : ''}`}>
-              <div className="sync-step__dot" />
-              {i < STAGES.length - 1 && <div className="sync-step__line" />}
-            </div>
+            <div
+              key={i}
+              className={`sync-overlay__dot ${i <= stageIndex ? 'sync-overlay__dot--active' : ''} ${i === stageIndex ? 'sync-overlay__dot--current' : ''}`}
+            />
           ))}
         </div>
       </div>
