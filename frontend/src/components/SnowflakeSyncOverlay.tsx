@@ -41,6 +41,7 @@ export default function SnowflakeSyncOverlay({ visible, onComplete }: Props) {
     if (!visible && stageIndex > 0) {
       setExiting(true);
       const timer = setTimeout(() => {
+        setExiting(false);
         onComplete?.();
       }, 800);
       return () => clearTimeout(timer);
