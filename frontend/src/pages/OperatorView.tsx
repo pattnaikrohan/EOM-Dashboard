@@ -86,7 +86,7 @@ function CountdownTimer() {
 }
 
 export default function OperatorView() {
-  const { globalFlags, operators } = useData();
+  const { globalFlags, operators, loaded } = useData();
   const [searchParams] = useSearchParams();
   const initialOp = searchParams.get('operator') || 'ALL';
   const [selectedCode, setSelectedCode] = useState<string>(initialOp);
@@ -96,6 +96,7 @@ export default function OperatorView() {
   const [pendingInvTab, setPendingInvTab] = useState<string>('EXPORTS Jobs pending invoicing');
 
   useEffect(() => {
+    if (!loaded) return;
     setLoading(true);
     getOperatorDetail(selectedCode, globalFlags)
       .then(d => {
@@ -110,7 +111,16 @@ export default function OperatorView() {
       })
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, [selectedCode, globalFlags]);
+  }, [selectedCode, globalFlags, loaded]);
+
+  if (!loaded) {
+    return (
+      <div className="empty-state fade-in">
+        <h2 className="empty-state__title">No Data Loaded</h2>
+        <p className="empty-state__text">Sync or upload data from the Dashboard first.</p>
+      </div>
+    );
+  }
 
   if (loading) {
     return <PremiumLoader text="Loading operator data..." />;

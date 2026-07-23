@@ -210,7 +210,7 @@ function DirectionTabView({ jobs, defaultSort, flag }: {
 
 // ── Main Component ────────────────────────────────────────────────────────────
 export default function OpsReview() {
-  const { globalFlags } = useData();
+  const { globalFlags, loaded } = useData();
   const [sections, setSections] = useState<Record<string, Job[]>>({});
   const [kpi, setKpi] = useState<KPI | null>(null);
   const [branch, setBranch] = useState('');
@@ -221,6 +221,7 @@ export default function OpsReview() {
   const [pendingInvTab, setPendingInvTab] = useState<string>('EXPORTS Jobs pending invoicing');
 
   const loadData = useCallback(async () => {
+    if (!loaded) return;
     setLoading(true);
     try {
       // Load ops-review sections (jobs appear under ALL flags)
@@ -257,9 +258,18 @@ export default function OpsReview() {
     } finally {
       setLoading(false);
     }
-  }, [globalFlags]);
+  }, [globalFlags, loaded]);
 
   useEffect(() => { loadData(); }, [loadData]);
+
+  if (!loaded) {
+    return (
+      <div className="empty-state fade-in">
+        <h2 className="empty-state__title">No Data Loaded</h2>
+        <p className="empty-state__text">Sync or upload data from the Dashboard first.</p>
+      </div>
+    );
+  }
 
   if (loading) {
     return <PremiumLoader text="Loading Ops Manager data..." />;
