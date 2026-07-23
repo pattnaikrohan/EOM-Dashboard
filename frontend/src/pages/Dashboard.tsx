@@ -115,14 +115,28 @@ export default function Dashboard() {
   const { kpi, operators, flag_distribution } = dashboard;
 
   // Chart data
-  const operatorBarData = operators
+  const sortedOperators = [...operators]
     .filter(op => op.total_jobs > 0)
-    .map(op => ({
-      name: op.code,
-      Jobs: op.total_jobs,
-      Loss: op.loss_count,
-      WIP: op.wip_count,
-    }));
+    .sort((a, b) => b.total_jobs - a.total_jobs);
+  
+  const topOperators = sortedOperators.slice(0, 20);
+  const otherOperators = sortedOperators.slice(20);
+  
+  const operatorBarData = topOperators.map(op => ({
+    name: op.code,
+    Jobs: op.total_jobs,
+    Loss: op.loss_count,
+    WIP: op.wip_count,
+  }));
+
+  if (otherOperators.length > 0) {
+    operatorBarData.push({
+      name: 'Other',
+      Jobs: otherOperators.reduce((sum, op) => sum + op.total_jobs, 0),
+      Loss: otherOperators.reduce((sum, op) => sum + op.loss_count, 0),
+      WIP: otherOperators.reduce((sum, op) => sum + op.wip_count, 0),
+    });
+  }
 
   const flagPieData = FLAG_PRIORITY
     .filter(f => f !== 'CLEAN' && (flag_distribution[f] || 0) > 0)
@@ -180,9 +194,9 @@ export default function Dashboard() {
               <YAxis tick={{ fontSize: 11, fontWeight: 600, fill: '#64748b' }} axisLine={false} tickLine={false} />
               <Tooltip content={<CustomBarTooltip />} cursor={{ fill: 'rgba(59, 130, 246, 0.05)' }} />
               <ReLegend verticalAlign="top" height={36} iconType="circle" wrapperStyle={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569' }} />
-              <Bar dataKey="Jobs" fill="url(#colorJobs)" radius={[6, 6, 0, 0]} animationDuration={1500} filter="url(#barShadow)" />
-              <Bar dataKey="Loss" fill="url(#colorLoss)" radius={[6, 6, 0, 0]} animationDuration={1500} filter="url(#barShadow)" />
-              <Bar dataKey="WIP" fill="url(#colorWIP)" radius={[6, 6, 0, 0]} animationDuration={1500} filter="url(#barShadow)" />
+              <Bar dataKey="Jobs" fill="url(#colorJobs)" radius={[6, 6, 0, 0]} animationDuration={1500} filter="url(#barShadow)" maxBarSize={40} />
+              <Bar dataKey="Loss" fill="url(#colorLoss)" radius={[6, 6, 0, 0]} animationDuration={1500} filter="url(#barShadow)" maxBarSize={40} />
+              <Bar dataKey="WIP" fill="url(#colorWIP)" radius={[6, 6, 0, 0]} animationDuration={1500} filter="url(#barShadow)" maxBarSize={40} />
             </BarChart>
           </ResponsiveContainer>
         </div>

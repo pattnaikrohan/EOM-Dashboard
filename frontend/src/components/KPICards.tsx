@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import {
   Briefcase, ArrowUpRight, ArrowDownLeft, AlertCircle,
-  Layers, TrendingDown, X, Repeat
+  Layers, TrendingDown, X, Repeat, DollarSign, Activity
 } from 'lucide-react';
 import type { KPI } from '../services/api';
 import { formatCurrency } from '../utils/constants';
@@ -21,9 +21,13 @@ export default function KPICards({ kpi }: KPICardsProps) {
     { label: 'Export',        value: kpi.export_jobs,      icon: ArrowUpRight,  variant: 'indigo', isCurrency: false, description: 'Total number of jobs marked as Export direction (e.g., EX, OEX, AEX).' },
     { label: 'Cross-Trade',   value: kpi.cross_trade_jobs, icon: Repeat,        variant: 'violet', isCurrency: false, description: 'Jobs where both origin and destination are outside Australia (Cross-Trade shipments).' },
     { label: 'Import',        value: kpi.import_jobs,      icon: ArrowDownLeft, variant: 'purple', isCurrency: false, description: 'Total number of jobs marked as Import direction (e.g., IM, OIM, AIM).' },
-    { label: 'Has WIP',       value: kpi.has_wip,          icon: Layers,        variant: 'amber',  isCurrency: false, description: 'Number of jobs where the Work In Progress (WIP) balance is not exactly zero, indicating pending costs or unbilled items.' },
-    { label: 'Loss Jobs',     value: kpi.loss_jobs,        icon: TrendingDown,  variant: 'red',    isCurrency: false, description: 'Jobs where the total Profit/Loss is strictly less than -$40.' },
-    { label: 'No Revenue',    value: kpi.no_revenue,       icon: AlertCircle,   variant: 'amber',  isCurrency: false, description: 'Jobs where the recognized revenue is exactly $0.' },
+    { label: 'Total Revenue', value: kpi.total_revenue || 0, icon: DollarSign,    variant: 'emerald', isCurrency: true,  description: 'Total recognized revenue across all jobs in the current view.' },
+    { label: 'Total Profit',  value: kpi.total_profit || 0,  icon: Activity,      variant: 'emerald', isCurrency: true,  description: 'Net profit (Revenue - Cost) across all jobs.' },
+    { label: 'WIP Value',     value: kpi.total_wip || 0,     icon: Layers,        variant: 'amber',   isCurrency: true,  description: 'Total dollar amount currently in Work In Progress.' },
+    { label: 'Has WIP Jobs',  value: kpi.has_wip,          icon: Layers,        variant: 'amber',   isCurrency: false, description: 'Number of jobs where the Work In Progress (WIP) balance is not exactly zero.' },
+    { label: 'Loss Jobs',     value: kpi.loss_jobs,        icon: TrendingDown,  variant: 'red',     isCurrency: false, description: 'Jobs where the total Profit/Loss is strictly less than -$40.' },
+    { label: 'Low Margin',    value: kpi.margin_below_5 || 0, icon: AlertCircle, variant: 'red',    isCurrency: false, description: 'Jobs where the margin is below 5%.' },
+    { label: 'No Revenue',    value: kpi.no_revenue,       icon: AlertCircle,   variant: 'amber',   isCurrency: false, description: 'Jobs where the recognized revenue is exactly $0.' },
   ];
 
   return (
