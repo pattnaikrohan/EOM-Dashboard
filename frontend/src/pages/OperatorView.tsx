@@ -3,9 +3,9 @@
  * All 13 checkers are always visible, grouped under PENDING INVOICING
  * and MONTH END CLOSING CHECKS, even when a section has 0 jobs.
  */
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { ChevronRight, User, CheckCircle2, ArrowUpRight, ArrowDownLeft, Repeat, MapPin, Clock, Search, ChevronDown } from 'lucide-react';
+import { ChevronRight, User, CheckCircle2, ArrowUpRight, ArrowDownLeft, Repeat, MapPin, Clock } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { getOperatorDetail } from '../services/api';
 import type { OperatorDetail, Job } from '../services/api';
@@ -94,25 +94,6 @@ export default function OperatorView() {
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [pendingInvTab, setPendingInvTab] = useState<string>('EXPORTS Jobs pending invoicing');
-
-  // Searchable dropdown state
-  const [operatorSearch, setOperatorSearch] = useState('');
-  const [operatorDropdownOpen, setOperatorDropdownOpen] = useState(false);
-  const operatorDropdownRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (operatorDropdownRef.current && !operatorDropdownRef.current.contains(event.target as Node)) {
-        setOperatorDropdownOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  const filteredOperators = operators.filter(op => 
-    op.code.toLowerCase().includes(operatorSearch.toLowerCase())
-  );
 
   useEffect(() => {
     setLoading(true);
@@ -273,132 +254,31 @@ export default function OperatorView() {
         <CountdownTimer />
       </div>
 
-      {/* Operator Filter Selector */}
-      <div style={{ marginTop: '1.5rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-        <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-          Select Operator
+      {/* Operator Filter Tabs */}
+      <div style={{ marginTop: '1.5rem', marginBottom: '1.5rem' }}>
+        <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem', paddingLeft: '0.5rem' }}>
+          Filter by Operator
         </div>
-        
-        <div ref={operatorDropdownRef} style={{ position: 'relative', width: '320px' }}>
-          <button
-            onClick={() => setOperatorDropdownOpen(!operatorDropdownOpen)}
-            style={{
-              width: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              background: '#fff',
-              border: '1px solid #e2e8f0',
-              padding: '0.6rem 1rem',
-              borderRadius: '12px',
-              fontSize: '0.9rem',
-              fontWeight: 600,
-              color: '#334155',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
-              cursor: 'pointer',
-              transition: 'border-color 0.2s'
-            }}
-            onMouseEnter={e => e.currentTarget.style.borderColor = '#cbd5e1'}
-            onMouseLeave={e => e.currentTarget.style.borderColor = '#e2e8f0'}
+        <div className="operator-pills" style={{ 
+          display: 'flex', gap: '0.5rem', flexWrap: 'wrap', paddingBottom: '0.75rem'
+        }}>
+          <button 
+            className={`operator-pill ${selectedCode === 'ALL' ? 'active' : ''}`}
+            onClick={() => setSelectedCode('ALL')}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <User size={16} color="#64748b" />
-              {selectedCode === 'ALL' ? 'All Operators' : selectedCode}
-            </div>
-            <ChevronDown size={16} color="#94a3b8" />
+            All Operators 
+            <span className="operator-pill-badge" style={{ marginLeft: '6px' }}>{operators.reduce((sum, op) => sum + (op.visible_jobs || op.total_jobs), 0)}</span>
           </button>
-
-          {operatorDropdownOpen && (
-            <div className="filter-dropdown" style={{
-              position: 'absolute',
-              top: '120%',
-              left: 0,
-              width: '100%',
-              background: 'rgba(255, 255, 255, 0.98)',
-              backdropFilter: 'blur(20px)',
-              borderRadius: '12px',
-              boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
-              border: '1px solid #e2e8f0',
-              zIndex: 100,
-              padding: '0.75rem',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '0.5rem'
-            }}>
-              {/* Search Bar */}
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                background: '#f8fafc',
-                border: '1px solid #e2e8f0',
-                borderRadius: '8px',
-                padding: '0.5rem 0.75rem',
-                gap: '8px'
-              }}>
-                <Search size={14} color="#94a3b8" />
-                <input
-                  type="text"
-                  placeholder="Search operators..."
-                  value={operatorSearch}
-                  onChange={e => setOperatorSearch(e.target.value)}
-                  autoFocus
-                  style={{
-                    border: 'none',
-                    background: 'transparent',
-                    outline: 'none',
-                    width: '100%',
-                    fontSize: '0.85rem',
-                    color: '#334155'
-                  }}
-                />
-              </div>
-
-              <div style={{ maxHeight: '280px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <button
-                  onClick={() => { setSelectedCode('ALL'); setOperatorDropdownOpen(false); setOperatorSearch(''); }}
-                  style={{
-                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                    padding: '0.6rem 0.75rem', borderRadius: '6px', background: selectedCode === 'ALL' ? '#eff6ff' : 'transparent',
-                    color: selectedCode === 'ALL' ? '#2563eb' : '#475569', fontWeight: selectedCode === 'ALL' ? 700 : 500,
-                    border: 'none', cursor: 'pointer', textAlign: 'left', transition: 'background 0.2s'
-                  }}
-                  onMouseEnter={e => { if (selectedCode !== 'ALL') e.currentTarget.style.background = '#f1f5f9' }}
-                  onMouseLeave={e => { if (selectedCode !== 'ALL') e.currentTarget.style.background = 'transparent' }}
-                >
-                  All Operators
-                  <span style={{ fontSize: '0.75rem', background: selectedCode === 'ALL' ? '#bfdbfe' : '#e2e8f0', padding: '2px 8px', borderRadius: '12px', fontWeight: 700 }}>
-                    {operators.reduce((sum, op) => sum + (op.visible_jobs !== undefined ? op.visible_jobs : op.total_jobs), 0)}
-                  </span>
-                </button>
-
-                {filteredOperators.map(op => (
-                  <button
-                    key={op.code}
-                    onClick={() => { setSelectedCode(op.code); setOperatorDropdownOpen(false); setOperatorSearch(''); }}
-                    style={{
-                      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                      padding: '0.6rem 0.75rem', borderRadius: '6px', background: selectedCode === op.code ? '#eff6ff' : 'transparent',
-                      color: selectedCode === op.code ? '#2563eb' : '#475569', fontWeight: selectedCode === op.code ? 700 : 500,
-                      border: 'none', cursor: 'pointer', textAlign: 'left', transition: 'background 0.2s'
-                    }}
-                    onMouseEnter={e => { if (selectedCode !== op.code) e.currentTarget.style.background = '#f1f5f9' }}
-                    onMouseLeave={e => { if (selectedCode !== op.code) e.currentTarget.style.background = 'transparent' }}
-                  >
-                    {op.code}
-                    <span style={{ fontSize: '0.75rem', background: selectedCode === op.code ? '#bfdbfe' : '#e2e8f0', padding: '2px 8px', borderRadius: '12px', fontWeight: 700 }}>
-                      {op.visible_jobs !== undefined ? op.visible_jobs : op.total_jobs}
-                    </span>
-                  </button>
-                ))}
-                
-                {filteredOperators.length === 0 && (
-                  <div style={{ padding: '1rem', textAlign: 'center', color: '#94a3b8', fontSize: '0.85rem' }}>
-                    No operators found.
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
+          {operators.map(op => (
+            <button
+              key={op.code}
+              className={`operator-pill ${selectedCode === op.code ? 'active' : ''}`}
+              onClick={() => setSelectedCode(op.code)}
+            >
+              {op.code} 
+              <span className="operator-pill-badge" style={{ marginLeft: '6px' }}>{op.visible_jobs !== undefined ? op.visible_jobs : op.total_jobs}</span>
+            </button>
+          ))}
         </div>
       </div>
 
