@@ -2201,7 +2201,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ==========================================================================
-   SNOWFLAKE SYNC OVERLAY — Full-page cinematic loading
+   SNOWFLAKE SYNC OVERLAY v2 — Aurora + Crystal + Orbital System
    ========================================================================== */
 .sync-overlay {
   position: fixed;
@@ -2210,7 +2210,7 @@ h1, h2, h3, h4, h5, h6 {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #0a0e27 0%, #0d1b3e 25%, #0f2147 50%, #0a1628 75%, #060b1a 100%);
+  background: linear-gradient(135deg, #020617 0%, #0c1631 30%, #0f172a 50%, #091428 70%, #020617 100%);
   animation: sync-fade-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   overflow: hidden;
 }
@@ -2226,148 +2226,177 @@ h1, h2, h3, h4, h5, h6 {
 
 @keyframes sync-fade-out {
   from { opacity: 1; transform: scale(1); }
-  to { opacity: 0; transform: scale(1.05); }
+  to { opacity: 0; transform: scale(1.08); filter: blur(8px); }
 }
 
-/* ── Particles ── */
+/* ── Aurora waves ── */
+.sync-aurora {
+  position: absolute;
+  inset: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(ellipse at 30% 20%, rgba(56, 189, 248, 0.08) 0%, transparent 50%),
+              radial-gradient(ellipse at 70% 80%, rgba(99, 102, 241, 0.06) 0%, transparent 50%),
+              radial-gradient(ellipse at 50% 50%, rgba(14, 165, 233, 0.04) 0%, transparent 60%);
+  animation: sync-aurora-drift 12s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.sync-aurora--2 {
+  background: radial-gradient(ellipse at 60% 30%, rgba(6, 182, 212, 0.06) 0%, transparent 50%),
+              radial-gradient(ellipse at 20% 70%, rgba(139, 92, 246, 0.05) 0%, transparent 50%);
+  animation: sync-aurora-drift 16s ease-in-out 2s infinite reverse;
+}
+
+@keyframes sync-aurora-drift {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  33% { transform: translate(3%, -2%) rotate(1deg); }
+  66% { transform: translate(-2%, 3%) rotate(-1deg); }
+}
+
+/* ── Floating snowflake crystals ── */
 .sync-overlay__particles {
   position: absolute;
   inset: 0;
   pointer-events: none;
 }
 
-.sync-particle {
+.sync-crystal {
   position: absolute;
-  bottom: -20px;
-  background: #29b6f6;
-  border-radius: 50%;
-  animation: sync-particle-rise linear infinite;
-  box-shadow: 0 0 6px rgba(41, 182, 246, 0.6);
+  top: -30px;
+  color: #67e8f9;
+  animation: sync-crystal-fall linear infinite;
+  filter: blur(0.5px);
 }
 
-@keyframes sync-particle-rise {
+@keyframes sync-crystal-fall {
   0% {
-    transform: translateY(0) translateX(0) scale(1);
+    transform: translateY(0) rotate(0deg) scale(1);
     opacity: 0;
   }
-  10% {
-    opacity: 0.8;
-  }
-  90% {
-    opacity: 0.3;
-  }
+  5% { opacity: 0.4; }
+  85% { opacity: 0.15; }
   100% {
-    transform: translateY(-100vh) translateX(calc(-50px + 100px * var(--drift, 0.5))) scale(0.3);
+    transform: translateY(calc(100vh + 60px)) rotate(360deg) scale(0.5);
     opacity: 0;
   }
 }
 
-/* ── Data stream lines ── */
-.sync-overlay__streams {
+/* ── Orbital ring system ── */
+.sync-orbital-system {
   position: absolute;
-  inset: 0;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 300px;
+  height: 300px;
   pointer-events: none;
 }
 
-.sync-stream {
+.sync-orbit {
   position: absolute;
-  top: 0;
-  width: 1px;
-  height: 100%;
-  background: linear-gradient(
-    to bottom,
-    transparent 0%,
-    rgba(41, 182, 246, 0.15) 20%,
-    rgba(41, 182, 246, 0.3) 50%,
-    rgba(41, 182, 246, 0.15) 80%,
-    transparent 100%
-  );
-  animation: sync-stream-flow 3s ease-in-out infinite alternate;
+  inset: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(56, 189, 248, 0.08);
 }
 
-@keyframes sync-stream-flow {
-  0% { transform: scaleY(0.6); opacity: 0.05; }
-  50% { transform: scaleY(1); opacity: 0.12; }
-  100% { transform: scaleY(0.8); opacity: 0.06; }
+.sync-orbit--1 {
+  inset: 10%;
+  animation: sync-orbit-spin 8s linear infinite;
+  border-color: rgba(56, 189, 248, 0.12);
+}
+
+.sync-orbit--2 {
+  inset: -5%;
+  animation: sync-orbit-spin 14s linear infinite reverse;
+  border-color: rgba(99, 102, 241, 0.08);
+}
+
+.sync-orbit--3 {
+  inset: -20%;
+  animation: sync-orbit-spin 20s linear infinite;
+  border-color: rgba(6, 182, 212, 0.06);
+}
+
+@keyframes sync-orbit-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.sync-orbit-dot {
+  position: absolute;
+  top: -3px;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #38bdf8;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.8), 0 0 20px rgba(56, 189, 248, 0.4);
+  transform: translateX(-50%);
+}
+
+.sync-orbit--2 .sync-orbit-dot {
+  background: #818cf8;
+  box-shadow: 0 0 10px rgba(129, 140, 248, 0.8), 0 0 20px rgba(129, 140, 248, 0.4);
+  width: 5px;
+  height: 5px;
+}
+
+.sync-orbit--3 .sync-orbit-dot {
+  background: #22d3ee;
+  box-shadow: 0 0 10px rgba(34, 211, 238, 0.8), 0 0 20px rgba(34, 211, 238, 0.4);
+  width: 4px;
+  height: 4px;
+}
+
+/* ── Central snowflake crystal ── */
+.sync-central-crystal {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.sync-central-glow {
+  position: absolute;
+  inset: -30px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.15) 0%, rgba(56, 189, 248, 0.05) 40%, transparent 70%);
+  animation: sync-glow-pulse 3s ease-in-out infinite;
+}
+
+@keyframes sync-glow-pulse {
+  0%, 100% { transform: scale(0.85); opacity: 0.6; }
+  50% { transform: scale(1.15); opacity: 1; }
+}
+
+.sync-snowflake-svg {
+  position: relative;
+  z-index: 2;
+  color: #7dd3fc;
+  filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.5)) drop-shadow(0 0 20px rgba(56, 189, 248, 0.2));
+  animation: sync-crystal-rotate 20s linear infinite;
+}
+
+@keyframes sync-crystal-rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 /* ── Main content ── */
 .sync-overlay__content {
   position: relative;
-  z-index: 2;
+  z-index: 3;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2rem;
+  gap: 1.75rem;
   text-align: center;
   max-width: 500px;
   padding: 2rem;
-}
-
-/* ── Snowflake icon + rings ── */
-.sync-overlay__icon-container {
-  position: relative;
-  width: 120px;
-  height: 120px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.sync-overlay__ring {
-  position: absolute;
-  border-radius: 50%;
-  border: 1px solid rgba(41, 182, 246, 0.15);
-}
-
-.sync-overlay__ring--1 {
-  width: 100%;
-  height: 100%;
-  animation: sync-ring-pulse 3s ease-in-out infinite;
-}
-
-.sync-overlay__ring--2 {
-  width: 140%;
-  height: 140%;
-  animation: sync-ring-pulse 3s ease-in-out 0.5s infinite;
-  border-color: rgba(41, 182, 246, 0.1);
-}
-
-.sync-overlay__ring--3 {
-  width: 180%;
-  height: 180%;
-  animation: sync-ring-pulse 3s ease-in-out 1s infinite;
-  border-color: rgba(41, 182, 246, 0.06);
-}
-
-@keyframes sync-ring-pulse {
-  0%, 100% { transform: scale(0.9); opacity: 0.3; }
-  50% { transform: scale(1.1); opacity: 0.8; }
-}
-
-.sync-overlay__snowflake {
-  position: relative;
-  z-index: 2;
-  width: 72px;
-  height: 72px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, rgba(41, 182, 246, 0.15), rgba(100, 181, 246, 0.08));
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(41, 182, 246, 0.25);
-  color: #29b6f6;
-  animation: sync-snowflake-rotate 12s linear infinite;
-  box-shadow:
-    0 0 30px rgba(41, 182, 246, 0.2),
-    0 0 60px rgba(41, 182, 246, 0.1),
-    inset 0 0 20px rgba(41, 182, 246, 0.05);
-}
-
-@keyframes sync-snowflake-rotate {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
 }
 
 /* ── Title ── */
@@ -2375,12 +2404,12 @@ h1, h2, h3, h4, h5, h6 {
   font-size: 1.8rem;
   font-weight: 800;
   letter-spacing: -0.02em;
-  background: linear-gradient(135deg, #e3f2fd 0%, #29b6f6 40%, #90caf9 60%, #e1f5fe 100%);
+  background: linear-gradient(135deg, #e0f2fe 0%, #38bdf8 30%, #7dd3fc 50%, #bae6fd 70%, #e0f2fe 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: sync-title-shimmer 4s ease-in-out infinite;
-  background-size: 200% 100%;
+  animation: sync-title-shimmer 5s ease-in-out infinite;
+  background-size: 300% 100%;
   margin: 0;
 }
 
@@ -2398,8 +2427,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 @keyframes sync-stage-enter {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(12px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .sync-overlay__stage-icon {
@@ -2409,7 +2438,7 @@ h1, h2, h3, h4, h5, h6 {
 .sync-overlay__stage-text {
   font-size: 1rem;
   font-weight: 500;
-  color: rgba(224, 244, 255, 0.8);
+  color: rgba(186, 230, 253, 0.8);
   letter-spacing: 0.01em;
 }
 
@@ -2417,49 +2446,53 @@ h1, h2, h3, h4, h5, h6 {
 .sync-overlay__progress-track {
   position: relative;
   width: 320px;
-  height: 4px;
+  height: 3px;
   border-radius: 4px;
-  background: rgba(41, 182, 246, 0.1);
+  background: rgba(56, 189, 248, 0.08);
   overflow: visible;
 }
 
 .sync-overlay__progress-fill {
   height: 100%;
   border-radius: 4px;
-  background: linear-gradient(90deg, #0288d1, #29b6f6, #4fc3f7);
-  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 0 12px rgba(41, 182, 246, 0.5);
+  background: linear-gradient(90deg, #0284c7, #38bdf8, #7dd3fc);
+  transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.5), 0 0 24px rgba(56, 189, 248, 0.2);
 }
 
 .sync-overlay__progress-glow {
   position: absolute;
-  top: -6px;
-  width: 16px;
-  height: 16px;
+  top: -8px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(41, 182, 246, 0.8) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.6) 0%, transparent 70%);
   transform: translateX(-50%);
-  transition: left 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: left 1s cubic-bezier(0.4, 0, 0.2, 1);
   pointer-events: none;
 }
 
 /* ── Dots indicator ── */
 .sync-overlay__dots {
   display: flex;
-  gap: 8px;
+  gap: 10px;
 }
 
 .sync-overlay__dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: rgba(41, 182, 246, 0.2);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  background: rgba(56, 189, 248, 0.15);
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .sync-overlay__dot--active {
-  background: #29b6f6;
-  box-shadow: 0 0 8px rgba(41, 182, 246, 0.6);
-  transform: scale(1.3);
+  background: #38bdf8;
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.5);
+}
+
+.sync-overlay__dot--current {
+  transform: scale(1.5);
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.8);
 }
 

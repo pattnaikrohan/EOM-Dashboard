@@ -10,7 +10,6 @@ import { ArrowUpRight, Upload, Database } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import KPICards from '../components/KPICards';
 import PremiumLoader from '../components/PremiumLoader';
-import SnowflakeSyncOverlay from '../components/SnowflakeSyncOverlay';
 import { FLAG_COLOURS, FLAG_PRIORITY } from '../utils/constants';
 
 const PIE_COLORS = FLAG_PRIORITY.filter(f => f !== 'CLEAN').map(f => FLAG_COLOURS[f]?.hex || '#ccc');
@@ -74,7 +73,7 @@ const CustomPieTooltip = ({ active, payload }: any) => {
 };
 
 export default function Dashboard() {
-  const { loaded, dashboard, branch, period, loading, syncing, handleSyncSnowflake } = useData();
+  const { loaded, dashboard, branch, period, loading } = useData();
   const navigate = useNavigate();
 
   if (loading && !loaded) {
@@ -87,33 +86,29 @@ export default function Dashboard() {
 
   if (!loaded || !dashboard) {
     return (
-      <>
-        <SnowflakeSyncOverlay visible={syncing} />
-        <div className="empty-state fade-in">
-          <div className="empty-state__icon">
-            <Upload size={36} />
-          </div>
-          <h2 className="empty-state__title">No Data Loaded</h2>
-          <p className="empty-state__text">
-            Upload a CargoWise export or WIP Review file to get started, or pull live data directly from Snowflake.
-          </p>
-          <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem', justifyContent: 'center' }}>
-            <button
-              className="btn btn-secondary"
-              onClick={() => navigate('/upload')}
-            >
-              <Upload size={16} /> Upload File
-            </button>
-            <button
-              className="btn btn-primary"
-              onClick={() => handleSyncSnowflake()}
-              disabled={syncing}
-            >
-              <Database size={16} /> Sync from Snowflake
-            </button>
-          </div>
+      <div className="empty-state fade-in">
+        <div className="empty-state__icon">
+          <Upload size={36} />
         </div>
-      </>
+        <h2 className="empty-state__title">No Data Loaded</h2>
+        <p className="empty-state__text">
+          Upload a CargoWise export or WIP Review file to get started, or pull live data directly from Snowflake.
+        </p>
+        <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem', justifyContent: 'center' }}>
+          <button
+            className="btn btn-secondary"
+            onClick={() => navigate('/upload')}
+          >
+            <Upload size={16} /> Upload File
+          </button>
+          <button
+            className="btn btn-primary"
+            onClick={() => navigate('/upload')}
+          >
+            <Database size={16} /> Sync from Snowflake
+          </button>
+        </div>
+      </div>
     );
   }
 

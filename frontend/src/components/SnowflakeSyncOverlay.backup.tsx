@@ -1,6 +1,7 @@
 /**
  * SnowflakeSyncOverlay — Full-page cinematic animation shown during Snowflake sync.
- * v2: Hexagonal data-node network with flowing connection lines and a central snowflake crystal.
+ * Features: animated snowflake logo, data stream particles, staged progress text,
+ * and a smooth reveal transition when loading completes.
  */
 import { useState, useEffect } from 'react';
 
@@ -53,60 +54,63 @@ export default function SnowflakeSyncOverlay({ visible, onComplete }: Props) {
 
   return (
     <div className={`sync-overlay ${exiting ? 'sync-overlay--exit' : ''}`}>
-      {/* Animated aurora background */}
-      <div className="sync-aurora" />
-      <div className="sync-aurora sync-aurora--2" />
-
-      {/* Floating snowflake crystals */}
+      {/* Animated background particles */}
       <div className="sync-overlay__particles">
-        {Array.from({ length: 30 }).map((_, i) => (
+        {Array.from({ length: 50 }).map((_, i) => (
           <div
             key={i}
-            className="sync-crystal"
+            className="sync-particle"
             style={{
               left: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 10}s`,
-              animationDuration: `${6 + Math.random() * 8}s`,
-              fontSize: `${8 + Math.random() * 14}px`,
-              opacity: 0.15 + Math.random() * 0.3,
+              animationDelay: `${Math.random() * 8}s`,
+              animationDuration: `${4 + Math.random() * 6}s`,
+              width: `${2 + Math.random() * 4}px`,
+              height: `${2 + Math.random() * 4}px`,
+              opacity: 0.3 + Math.random() * 0.5,
             }}
-          >
-            ❄
-          </div>
+          />
         ))}
       </div>
 
-      {/* Orbital rings */}
-      <div className="sync-orbital-system">
-        <div className="sync-orbit sync-orbit--1">
-          <div className="sync-orbit-dot" />
-        </div>
-        <div className="sync-orbit sync-orbit--2">
-          <div className="sync-orbit-dot" />
-        </div>
-        <div className="sync-orbit sync-orbit--3">
-          <div className="sync-orbit-dot" />
-        </div>
+      {/* Data stream lines */}
+      <div className="sync-overlay__streams">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <div
+            key={i}
+            className="sync-stream"
+            style={{
+              left: `${10 + i * 12}%`,
+              animationDelay: `${i * 0.4}s`,
+              opacity: 0.08 + (i % 3) * 0.04,
+            }}
+          />
+        ))}
       </div>
 
       {/* Main content */}
       <div className="sync-overlay__content">
-        {/* Central snowflake crystal */}
-        <div className="sync-central-crystal">
-          <div className="sync-central-glow" />
-          <svg className="sync-snowflake-svg" viewBox="0 0 100 100" width="64" height="64">
-            {/* Six-fold symmetry snowflake */}
-            {[0, 60, 120, 180, 240, 300].map(angle => (
-              <g key={angle} transform={`rotate(${angle} 50 50)`}>
-                <line x1="50" y1="50" x2="50" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                <line x1="50" y1="25" x2="40" y2="18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                <line x1="50" y1="25" x2="60" y2="18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                <line x1="50" y1="35" x2="43" y2="30" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-                <line x1="50" y1="35" x2="57" y2="30" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-              </g>
-            ))}
-            <circle cx="50" cy="50" r="4" fill="currentColor" opacity="0.6" />
-          </svg>
+        {/* Snowflake icon with pulse rings */}
+        <div className="sync-overlay__icon-container">
+          <div className="sync-overlay__ring sync-overlay__ring--1" />
+          <div className="sync-overlay__ring sync-overlay__ring--2" />
+          <div className="sync-overlay__ring sync-overlay__ring--3" />
+          <div className="sync-overlay__snowflake">
+            <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="2" x2="12" y2="22" />
+              <line x1="2" y1="12" x2="22" y2="12" />
+              <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+              <line x1="19.07" y1="4.93" x2="4.93" y2="19.07" />
+              {/* Snowflake branches */}
+              <line x1="12" y1="2" x2="9" y2="5" />
+              <line x1="12" y1="2" x2="15" y2="5" />
+              <line x1="12" y1="22" x2="9" y2="19" />
+              <line x1="12" y1="22" x2="15" y2="19" />
+              <line x1="2" y1="12" x2="5" y2="9" />
+              <line x1="2" y1="12" x2="5" y2="15" />
+              <line x1="22" y1="12" x2="19" y2="9" />
+              <line x1="22" y1="12" x2="19" y2="15" />
+            </svg>
+          </div>
         </div>
 
         {/* Title */}
@@ -137,7 +141,7 @@ export default function SnowflakeSyncOverlay({ visible, onComplete }: Props) {
           {STAGES.map((_, i) => (
             <div
               key={i}
-              className={`sync-overlay__dot ${i <= stageIndex ? 'sync-overlay__dot--active' : ''} ${i === stageIndex ? 'sync-overlay__dot--current' : ''}`}
+              className={`sync-overlay__dot ${i <= stageIndex ? 'sync-overlay__dot--active' : ''}`}
             />
           ))}
         </div>
