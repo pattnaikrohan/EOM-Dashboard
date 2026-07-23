@@ -259,7 +259,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                       {globalBranches.length > 0 ? `${globalBranches.length} Branches` : 'Branches'}
                     </button>
                     {branchFilterOpen && (
-                      <div style={{
+                      <div className="filter-dropdown" style={{
                         position: 'absolute', top: '120%', right: 0, background: 'rgba(255, 255, 255, 0.95)',
                         backdropFilter: 'blur(20px)', borderRadius: '14px', boxShadow: '0 15px 50px rgba(0, 105, 148, 0.15)',
                         padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem',
@@ -337,7 +337,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                       {globalDepartments.length > 0 ? `${globalDepartments.length} Depts` : 'Departments'}
                     </button>
                     {deptFilterOpen && (
-                      <div style={{
+                      <div className="filter-dropdown" style={{
                         position: 'absolute', top: '120%', right: 0, background: 'rgba(255, 255, 255, 0.95)',
                         backdropFilter: 'blur(20px)', borderRadius: '14px', boxShadow: '0 15px 50px rgba(0, 105, 148, 0.15)',
                         padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem',
@@ -415,7 +415,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   </button>
 
                   {filterOpen && (
-                    <div style={{
+                    <div className="filter-dropdown" style={{
                       position: 'absolute',
                       top: '120%',
                       right: 0,

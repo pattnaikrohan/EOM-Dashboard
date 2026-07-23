@@ -2173,3 +2173,29 @@ h1, h2, h3, h4, h5, h6 {
   0%, 100% { opacity: 0.4; }
   50% { opacity: 1; }
 }
+
+/* ==========================================================================
+   FILTER DROPDOWN ANIMATIONS
+   ========================================================================== */
+.filter-dropdown {
+  animation: filter-slide-down 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transform-origin: top center;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.filter-dropdown::-webkit-scrollbar {
+  width: 6px;
+}
+.filter-dropdown::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.1);
+  border-radius: 4px;
+}
+.filter-dropdown::-webkit-scrollbar-thumb:hover {
+  background: rgba(0,0,0,0.2);
+}
+
+@keyframes filter-slide-down {
+  from { opacity: 0; transform: translateY(-10px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}

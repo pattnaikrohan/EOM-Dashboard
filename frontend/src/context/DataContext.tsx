@@ -124,9 +124,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (state.loaded) {
-      refreshDashboard();
+      const timer = setTimeout(() => {
+        refreshDashboard();
+      }, 400);
+      return () => clearTimeout(timer);
     }
-  }, [state.globalFlags, state.globalBranches, state.globalDepartments, refreshDashboard]);
+  }, [state.globalFlags, state.globalBranches, state.globalDepartments, refreshDashboard, state.loaded]);
 
   const checkStatus = useCallback(async () => {
     setState(prev => ({ ...prev, loading: true }));
