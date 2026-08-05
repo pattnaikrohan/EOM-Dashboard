@@ -97,7 +97,11 @@ def _resolve_user_from_token():
     Returns an EomUser on success, or (error_response, status_code) on failure.
     """
     auth_header = request.headers.get('Authorization', '')
+
     if not auth_header.startswith('Bearer '):
+        if not STRICT_AUTH:
+            # Fallback to dev/demo full_access user if strict auth is not enforced
+            return _get_dev_user()
         return jsonify({'error': 'Missing or invalid Authorization header'}), 401
 
     token = auth_header[7:]  # Strip 'Bearer '
@@ -132,6 +136,10 @@ def _resolve_user_from_token():
                 resolved['can_upload_data'] = resolved['role'] in ('full_access', 'bu_access')
                 resolved['can_edit_settings'] = resolved['role'] == 'full_access' or resolved.get('is_settings_admin', False)
 
+        # If after token validation & fallback, user still has no_access and strict auth is disabled, allow dev fallback
+        if resolved['role'] == 'no_access' and not STRICT_AUTH:
+            return _get_dev_user()
+
         return EomUser(
             email=email,
             name=name,
@@ -148,9 +156,13 @@ def _resolve_user_from_token():
 
     except JWTError as e:
         print(f"[Auth] Azure AD token validation failed: {e}")
+        if not STRICT_AUTH:
+            return _get_dev_user()
         return jsonify({'error': 'Invalid or expired token'}), 401
     except Exception as e:
         print(f"[Auth] Unexpected error validating token: {e}")
+        if not STRICT_AUTH:
+            return _get_dev_user()
         return jsonify({'error': 'Authentication failed'}), 401
 
 
