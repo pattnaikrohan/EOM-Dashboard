@@ -86,7 +86,7 @@ function CountdownTimer() {
 }
 
 export default function OperatorView() {
-  const { globalFlags, operators, loaded } = useData();
+  const { globalFlags, globalBranches, globalDepartments, operators, loaded } = useData();
   const [searchParams] = useSearchParams();
   const initialOp = searchParams.get('operator') || 'ALL';
   const [selectedCode, setSelectedCode] = useState<string>(initialOp);
@@ -98,7 +98,7 @@ export default function OperatorView() {
   useEffect(() => {
     if (!loaded) return;
     setLoading(true);
-    getOperatorDetail(selectedCode, globalFlags)
+    getOperatorDetail(selectedCode, globalFlags, globalBranches, globalDepartments)
       .then(d => {
         setData(d);
         // Auto-expand sections that have jobs
@@ -111,7 +111,8 @@ export default function OperatorView() {
       })
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, [selectedCode, globalFlags, loaded]);
+  }, [selectedCode, globalFlags, globalBranches, globalDepartments, loaded]);
+
 
   if (!loaded) {
     return (

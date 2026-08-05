@@ -210,7 +210,7 @@ function DirectionTabView({ jobs, defaultSort, flag }: {
 
 // ── Main Component ────────────────────────────────────────────────────────────
 export default function OpsReview() {
-  const { globalFlags, loaded } = useData();
+  const { globalFlags, globalBranches, globalDepartments, loaded } = useData();
   const [sections, setSections] = useState<Record<string, Job[]>>({});
   const [kpi, setKpi] = useState<KPI | null>(null);
   const [branch, setBranch] = useState('');
@@ -224,10 +224,11 @@ export default function OpsReview() {
     if (!loaded) return;
     setLoading(true);
     try {
-      // Load ops-review sections (jobs appear under ALL flags)
-      const opsData = await getOpsReview(globalFlags);
+      // Load ops-review sections (jobs appear under ALL flags) with global branch/dept filters
+      const opsData = await getOpsReview(globalFlags, globalBranches, globalDepartments);
       // Load operator detail for KPI data
-      const detailData = await getOperatorDetail('ALL', globalFlags);
+      const detailData = await getOperatorDetail('ALL', globalFlags, globalBranches, globalDepartments);
+
 
       // Build full sections: every flag always present
       const fullSections: Record<string, Job[]> = {};
@@ -258,7 +259,8 @@ export default function OpsReview() {
     } finally {
       setLoading(false);
     }
-  }, [globalFlags, loaded]);
+  }, [globalFlags, globalBranches, globalDepartments, loaded]);
+
 
   useEffect(() => { loadData(); }, [loadData]);
 
