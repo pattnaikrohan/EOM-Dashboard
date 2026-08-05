@@ -1,5 +1,8 @@
 /**
  * AAW EOM Review Agent — Main App with routing.
+ *
+ * Routes are protected by both authentication (ProtectedRoute) and
+ * authorization (role-based guards via useAuth permissions).
  */
 import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
@@ -13,9 +16,11 @@ import SettingsPage from './pages/Settings';
 import NegativeMovement from './pages/NegativeMovement';
 import Login from './pages/Login';
 import ProtectedRoute from './auth/ProtectedRoute';
+import { useAuth } from './auth/AuthProvider';
 
 function AppRoutes() {
   const { checkStatus } = useData();
+  const { canAccessOpsManager, canUploadData } = useAuth();
 
   useEffect(() => {
     checkStatus();
@@ -26,8 +31,14 @@ function AppRoutes() {
       <Routes>
         <Route path="/" element={<Dashboard />} />
         <Route path="/operators" element={<OperatorView />} />
-        <Route path="/ops-review" element={<OpsReview />} />
-        <Route path="/upload" element={<UploadPage />} />
+        <Route
+          path="/ops-review"
+          element={canAccessOpsManager ? <OpsReview /> : <Navigate to="/" replace />}
+        />
+        <Route
+          path="/upload"
+          element={canUploadData ? <UploadPage /> : <Navigate to="/" replace />}
+        />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/negative-movement" element={<NegativeMovement />} />
         <Route path="*" element={<Navigate to="/" replace />} />
@@ -58,4 +69,3 @@ export default function App() {
     </Router>
   );
 }
-

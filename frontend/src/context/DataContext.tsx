@@ -1,10 +1,16 @@
 /**
  * DataContext — Global state for loaded EOM data.
+ *
+ * Auto-scopes branches based on the user's AD group-resolved permissions.
+ * Branch_access users only see their own branch(es).
+ * BU_access users see their own branch(es).
+ * Full_access users see all branches.
  */
-import { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
 import type { DashboardData, OperatorSummary, StatusResponse } from '../services/api';
 import { uploadFiles, syncSnowflake, getDashboard, getStatus } from '../services/api';
+import { useAuth } from '../auth/AuthProvider';
 
 interface DataState {
   loaded: boolean;
@@ -20,6 +26,7 @@ interface DataState {
   globalDepartments: string[];
   availableBranches: string[];
   availableDepartments: string[];
+  allowedBranches: string[] | null;  // null = all allowed (full_access)
 }
 
 interface DataContextType extends DataState {
@@ -30,11 +37,18 @@ interface DataContextType extends DataState {
   setGlobalFlags: (flags: string[]) => void;
   setGlobalBranches: (branches: string[]) => void;
   setGlobalDepartments: (departments: string[]) => void;
+  allowedBranches: string[] | null;
 }
 
 const DataContext = createContext<DataContextType | null>(null);
 
 export function DataProvider({ children }: { children: ReactNode }) {
+  const { role, branchNames } = useAuth();
+  const autoScopedRef = useRef(false);
+
+  // Determine allowed branches based on role
+  const allowedBranches = role === 'full_access' ? null : (branchNames.length > 0 ? branchNames : []);
+
   const [state, setState] = useState<DataState>({
     loaded: false,
     loading: true,
@@ -49,7 +63,16 @@ export function DataProvider({ children }: { children: ReactNode }) {
     globalDepartments: [],
     availableBranches: [],
     availableDepartments: [],
+    allowedBranches,
   });
+
+  // Auto-scope branches on first load when user has branch restrictions
+  useEffect(() => {
+    if (!autoScopedRef.current && allowedBranches && allowedBranches.length > 0) {
+      setState(prev => ({ ...prev, globalBranches: allowedBranches, allowedBranches }));
+      autoScopedRef.current = true;
+    }
+  }, [allowedBranches]);
 
   const setGlobalFlags = useCallback((flags: string[]) => {
     setState(prev => ({ ...prev, globalFlags: flags }));
@@ -196,7 +219,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
     <DataContext.Provider value={{ 
       ...state, 
       handleUpload, handleSyncSnowflake, refreshDashboard, checkStatus, 
-      setGlobalFlags, setGlobalBranches, setGlobalDepartments 
+      setGlobalFlags, setGlobalBranches, setGlobalDepartments,
+      allowedBranches,
     }}>
       {children}
     </DataContext.Provider>

@@ -9,3 +9,5 @@ cryptography
 xlsxwriter==3.2.0
 pydantic==2.8.0
 azure-storage-blob==12.20.0
+python-jose[cryptography]
+requests

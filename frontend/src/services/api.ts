@@ -1,12 +1,54 @@
 /**
- * API Service — Axios client for the FastAPI backend.
+ * API Service — Axios client for the Flask backend.
+ *
+ * Automatically attaches Azure AD Bearer token and auth headers to every request.
  */
 import axios from 'axios';
 import { API_BASE } from '../utils/constants';
+import { msalInstance } from '../auth/AuthProvider';
 
 const api = axios.create({
   baseURL: API_BASE,
   timeout: 120000,
+});
+
+// ── Auth Interceptor ──────────────────────────────────────────────────────────
+// Attaches the Azure AD ID token and role metadata to every API request.
+api.interceptors.request.use(async (config) => {
+  try {
+    const accounts = msalInstance.getAllAccounts();
+    if (accounts.length > 0) {
+      const account = accounts[0];
+
+      // Acquire token silently (from cache or refresh)
+      const tokenResponse = await msalInstance.acquireTokenSilent({
+        scopes: ['openid', 'profile', 'email', 'User.Read'],
+        account,
+      });
+
+      if (tokenResponse?.idToken) {
+        config.headers.Authorization = `Bearer ${tokenResponse.idToken}`;
+        config.headers['X-Auth-Source'] = 'azure-ad';
+      }
+
+      // Fallback headers (used if backend token doesn't contain groups)
+      const storedRole = localStorage.getItem('eom_resolved_role');
+      if (storedRole) {
+        try {
+          const resolved = JSON.parse(storedRole);
+          config.headers['X-User-Role'] = resolved.role || '';
+          config.headers['X-User-Branches'] = (resolved.branchNames || []).join(',');
+          config.headers['X-User-BU'] = (resolved.businessUnits || []).join(',');
+        } catch { /* ignore parse errors */ }
+      }
+    }
+  } catch (err) {
+    // Silent failure — let the request go without auth headers
+    // The backend will return 401 and the frontend will redirect to login
+    console.warn('[API] Failed to acquire token for request:', err);
+  }
+
+  return config;
 });
 
 // ── Types ─────────────────────────────────────────────────────────────────────

@@ -57,5 +57,5 @@ export const msalConfig: Configuration = {
  * - User.Read: read the signed-in user's basic profile from MS Graph
  */
 export const loginRequest = {
-  scopes: ['openid', 'profile', 'email', 'User.Read'],
+  scopes: ['openid', 'profile', 'email', 'User.Read', 'GroupMember.Read.All'],
 };

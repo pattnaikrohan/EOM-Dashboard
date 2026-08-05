@@ -22,7 +22,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     globalDepartments, setGlobalDepartments, availableDepartments,
     syncing, handleSyncSnowflake
   } = useData();
-  const { displayName, email, initials, logout } = useAuth();
+  const { displayName, email, initials, logout, canAccessOpsManager, canUploadData, canEditSettings, role, branchNames } = useAuth();
   const [filterOpen, setFilterOpen] = useState(false);
   const [branchFilterOpen, setBranchFilterOpen] = useState(false);
   const [deptFilterOpen, setDeptFilterOpen] = useState(false);
@@ -132,6 +132,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             )}
           </Link>
 
+          {canAccessOpsManager && (
           <Link
             to="/ops-review"
             title="Ops Manager Review"
@@ -141,6 +142,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <AlertTriangle size={18} color="#f59e0b" />
             <span>Ops Manager</span>
           </Link>
+          )}
 
           <Link
             to="/negative-movement"
@@ -164,6 +166,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
           {/* Bottom nav */}
           <div style={{ marginTop: 'auto' }}>
+            {canUploadData && (
             <Link
               to="/upload"
               title="Upload Data"
@@ -173,6 +176,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <Upload size={18} color="#10b981" />
               <span>Upload Data</span>
             </Link>
+            )}
 
             <Link
               to="/settings"
@@ -184,6 +188,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <span>Settings & Legend</span>
             </Link>
 
+            {canUploadData && (
             <button
               title="Clear Data"
               onClick={() => {
@@ -199,6 +204,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <Trash2 size={18} color="#ef4444" />
               <span>Clear Data</span>
             </button>
+            )}
           </div>
         </nav>
 

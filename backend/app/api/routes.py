@@ -1,14 +1,31 @@
 """
 API Routes for the EOM Review Agent (Flask version).
+
+All routes are protected by Azure AD authentication via the auth middleware.
+User data scope is automatically restricted to their authorized branches.
 """
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, g
 from app.services.parser import parse_excel
 from app.services.data_store import data_store
 from app.services.blob_service import upload_parsed_data, delete_parsed_data
+from app.core.auth_middleware import (
+    require_auth, require_bu_manager, require_settings_admin,
+    get_scoped_branches,
+)
 
 blueprint = Blueprint('api', __name__)
 
+
+# ── User Info Endpoint ─────────────────────────────────────────────────────────
+
+@blueprint.route("/me", methods=["GET"])
+@require_auth
+def get_current_user():
+    """Returns the current user's role, branches, and capabilities."""
+    return jsonify(g.current_user.to_dict())
+
 @blueprint.route("/upload", methods=["POST"])
+@require_bu_manager
 def upload_file():
     if 'files' not in request.files:
         return jsonify({"error": "No files uploaded"}), 400
@@ -66,6 +83,7 @@ def upload_file():
     })
 
 @blueprint.route("/sync", methods=["POST"])
+@require_bu_manager
 def sync_snowflake():
     try:
         from app.services.snowflake_client import fetch_jobs_from_snowflake
@@ -96,6 +114,7 @@ def sync_snowflake():
         return jsonify({"error": f"Snowflake sync failed: {str(e)}"}), 500
 
 @blueprint.route("/clear", methods=["POST"])
+@require_bu_manager
 def clear_data():
     data_store.clear()
     delete_parsed_data()
@@ -105,6 +124,7 @@ def clear_data():
     })
 
 @blueprint.route("/dashboard", methods=["GET"])
+@require_auth
 def get_dashboard():
     if not data_store.is_loaded:
         return jsonify({"error": "No data loaded. Please upload a file first."}), 400
@@ -113,7 +133,8 @@ def get_dashboard():
     flags = flags_param.split(',') if flags_param else None
     
     branches_param = request.args.get('branches')
-    branches = branches_param.split(',') if branches_param else None
+    ui_branches = branches_param.split(',') if branches_param else None
+    branches = get_scoped_branches(g.current_user, ui_branches)
     
     depts_param = request.args.get('departments')
     departments = depts_param.split(',') if depts_param else None
@@ -129,6 +150,7 @@ def get_dashboard():
     })
 
 @blueprint.route("/operators", methods=["GET"])
+@require_auth
 def get_operators():
     if not data_store.is_loaded:
         return jsonify({"error": "No data loaded."}), 400
@@ -137,7 +159,8 @@ def get_operators():
     flags = flags_param.split(',') if flags_param else None
     
     branches_param = request.args.get('branches')
-    branches = branches_param.split(',') if branches_param else None
+    ui_branches = branches_param.split(',') if branches_param else None
+    branches = get_scoped_branches(g.current_user, ui_branches)
     
     depts_param = request.args.get('departments')
     departments = depts_param.split(',') if depts_param else None
@@ -149,6 +172,7 @@ def get_operators():
     })
 
 @blueprint.route("/operator/<code>", methods=["GET"])
+@require_auth
 def get_operator_detail(code):
     if not data_store.is_loaded:
         return jsonify({"error": "No data loaded."}), 400
@@ -157,7 +181,8 @@ def get_operator_detail(code):
     flags = flags_param.split(',') if flags_param else None
     
     branches_param = request.args.get('branches')
-    branches = branches_param.split(',') if branches_param else None
+    ui_branches = branches_param.split(',') if branches_param else None
+    branches = get_scoped_branches(g.current_user, ui_branches)
     
     depts_param = request.args.get('departments')
     departments = depts_param.split(',') if depts_param else None
@@ -176,6 +201,7 @@ def get_operator_detail(code):
     })
 
 @blueprint.route("/jobs", methods=["GET"])
+@require_auth
 def get_jobs():
     if not data_store.is_loaded:
         return jsonify({"error": "No data loaded."}), 400
@@ -185,7 +211,8 @@ def get_jobs():
     flags = flags_param.split(',') if flags_param else None
     
     branches_param = request.args.get('branches') or request.args.get('branch')
-    branches = branches_param.split(',') if branches_param else None
+    ui_branches = branches_param.split(',') if branches_param else None
+    branches = get_scoped_branches(g.current_user, ui_branches)
     
     depts_param = request.args.get('departments') or request.args.get('department')
     departments = depts_param.split(',') if depts_param else None
@@ -215,6 +242,7 @@ def get_jobs():
     })
 
 @blueprint.route("/ops-review", methods=["GET"])
+@require_bu_manager
 def get_ops_review():
     if not data_store.is_loaded:
         return jsonify({"error": "No data loaded."}), 400
@@ -223,7 +251,8 @@ def get_ops_review():
     flags = flags_param.split(',') if flags_param else None
     
     branches_param = request.args.get('branches')
-    branches = branches_param.split(',') if branches_param else None
+    ui_branches = branches_param.split(',') if branches_param else None
+    branches = get_scoped_branches(g.current_user, ui_branches)
     
     depts_param = request.args.get('departments')
     departments = depts_param.split(',') if depts_param else None
@@ -249,10 +278,12 @@ def get_ops_review():
     })
 
 @blueprint.route("/legend", methods=["GET"])
+@require_auth
 def get_legend():
     return jsonify({"legend": data_store.get_legend()})
 
 @blueprint.route("/status", methods=["GET"])
+@require_auth
 def get_status():
     return jsonify({
         "loaded": data_store.is_loaded,
@@ -276,6 +307,7 @@ from app.services.blob_service import (
 
 
 @blueprint.route("/neg-movement/upload", methods=["POST"])
+@require_bu_manager
 def upload_neg_movement():
     if 'files' not in request.files:
         return jsonify({"error": "No files uploaded"}), 400
@@ -318,6 +350,7 @@ def upload_neg_movement():
 
 
 @blueprint.route("/neg-movement/summary", methods=["GET"])
+@require_auth
 def get_neg_movement_summary():
     if not neg_movement_store.is_loaded:
         return jsonify({"error": "No negative movement data loaded."}), 400
@@ -331,6 +364,7 @@ def get_neg_movement_summary():
 
 
 @blueprint.route("/neg-movement/jobs", methods=["GET"])
+@require_auth
 def get_neg_movement_jobs():
     if not neg_movement_store.is_loaded:
         return jsonify({"error": "No negative movement data loaded."}), 400
@@ -339,7 +373,17 @@ def get_neg_movement_jobs():
     status_filter = request.args.get("status")
     branch_filter = request.args.get("branch")
     
+    # Scope neg movement to user's allowed branches
+    allowed_neg_branches = g.current_user.get_neg_movement_branches()
+    if allowed_neg_branches is not None and branch_filter:
+        if branch_filter not in allowed_neg_branches:
+            branch_filter = None  # Reset to allowed scope
+    
     jobs = neg_movement_store.get_jobs(section, status_filter, branch_filter)
+    
+    # Filter jobs by allowed branches if user is not elevated
+    if allowed_neg_branches is not None:
+        jobs = [j for j in jobs if j.get('branch', '') in allowed_neg_branches]
     
     return jsonify({
         "total": len(jobs),
@@ -348,6 +392,7 @@ def get_neg_movement_jobs():
 
 
 @blueprint.route("/neg-movement/comment/<job_number>", methods=["PUT"])
+@require_auth
 def update_neg_movement_comment(job_number):
     if not neg_movement_store.is_loaded:
         return jsonify({"error": "No negative movement data loaded."}), 400
@@ -382,6 +427,7 @@ def update_neg_movement_comment(job_number):
 
 
 @blueprint.route("/neg-movement/overdue", methods=["GET"])
+@require_auth
 def get_neg_movement_overdue():
     if not neg_movement_store.is_loaded:
         return jsonify({"error": "No negative movement data loaded."}), 400
@@ -396,6 +442,7 @@ def get_neg_movement_overdue():
 
 
 @blueprint.route("/neg-movement/clear", methods=["POST"])
+@require_bu_manager
 def clear_neg_movement():
     neg_movement_store.clear()
     delete_neg_movement_data()
@@ -406,6 +453,7 @@ def clear_neg_movement():
 
 
 @blueprint.route("/neg-movement/status", methods=["GET"])
+@require_auth
 def get_neg_movement_status():
     return jsonify({
         "loaded": neg_movement_store.is_loaded,
@@ -416,6 +464,7 @@ def get_neg_movement_status():
 
 
 @blueprint.route("/neg-movement/pl-categories", methods=["PUT"])
+@require_settings_admin
 def update_pl_categories():
     body = request.get_json()
     if not body or "categories" not in body:
