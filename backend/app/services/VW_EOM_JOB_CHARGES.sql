@@ -362,11 +362,12 @@ LEFT JOIN oh AS local_org ON oa_local.OA_OH = local_org.OH_PK
 -- Parent Job (deduped)
 LEFT JOIN jh AS parent ON jh.JH_JH_PARENTJOB = parent.JH_PK
 
--- Routing: Shipment (deduped) — TODO: JS_PK=JH_PK returns 0 matches (no FK exists)
-LEFT JOIN js AS ship ON ship.JS_PK = jh.JH_PK
+-- Routing: Shipment (deduped, FK: JH_PARENTID = JS_PK when JH_PARENTTABLECODE = 'JS')
+LEFT JOIN js AS ship ON ship.JS_PK = jh.JH_PARENTID AND jh.JH_PARENTTABLECODE = 'JS'
 
--- Routing: Declaration (deduped) — TODO: JE_PK=JH_PK returns 0 matches (no FK exists)
-LEFT JOIN je AS decl ON decl.JE_PK = jh.JH_PK
+-- Routing: Declaration (deduped, FK: JH_PARENTID = JE_PK when JH_PARENTTABLECODE = 'JE')
+LEFT JOIN je AS decl ON decl.JE_PK = jh.JH_PARENTID AND jh.JH_PARENTTABLECODE = 'JE'
+
 
 -- WIP Recognition (latest per job, deduped)
 LEFT JOIN wrr ON wrr.D3_JH = jh.JH_PK
@@ -416,18 +417,19 @@ oh_dedup AS (
 ),
 oh AS (SELECT * FROM oh_dedup WHERE _rn = 1),
 
--- JOBSHIPMENT: CDC dedup — TODO: no FK to JOBHEADER exists in this ETL schema
+-- JOBSHIPMENT: CDC dedup (valid only)
 js_dedup AS (
     SELECT *, ROW_NUMBER() OVER (PARTITION BY JS_PK ORDER BY CRE_DT DESC) AS _rn
     FROM PROD.CORE.JOBSHIPMENT WHERE ACTV_IND = TRUE AND JS_ISVALID = TRUE
 ),
 js AS (SELECT * FROM js_dedup WHERE _rn = 1),
 
--- JOBDECLARATION: CDC dedup — TODO: no FK to JOBHEADER exists in this ETL schema
+-- JOBDECLARATION: CDC dedup (valid, not cancelled)
 je_dedup AS (
     SELECT *, ROW_NUMBER() OVER (PARTITION BY JE_PK ORDER BY CRE_DT DESC) AS _rn
     FROM PROD.CORE.JOBDECLARATION WHERE ACTV_IND = TRUE AND JE_ISVALID = TRUE AND JE_ISCANCELLED = FALSE
 ),
+
 je AS (SELECT * FROM je_dedup WHERE _rn = 1),
 
 wrr_dedup AS (
@@ -547,8 +549,9 @@ LEFT JOIN oh AS agent_org ON oa_agent.OA_OH = agent_org.OH_PK
 LEFT JOIN oa AS oa_local ON jh.JH_OA_LOCALCHARGESADDR = oa_local.OA_PK
 LEFT JOIN oh AS local_org ON oa_local.OA_OH = local_org.OH_PK
 LEFT JOIN jh AS parent ON jh.JH_JH_PARENTJOB = parent.JH_PK
-LEFT JOIN js AS ship ON ship.JS_PK = jh.JH_PK
-LEFT JOIN je AS decl ON decl.JE_PK = jh.JH_PK
+LEFT JOIN js AS ship ON ship.JS_PK = jh.JH_PARENTID AND jh.JH_PARENTTABLECODE = 'JS'
+LEFT JOIN je AS decl ON decl.JE_PK = jh.JH_PARENTID AND jh.JH_PARENTTABLECODE = 'JE'
+
 LEFT JOIN wrr ON wrr.D3_JH = jh.JH_PK
 LEFT JOIN agg ON agg.JR_JH = jh.JH_PK
 ;
