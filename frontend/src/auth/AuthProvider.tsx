@@ -10,7 +10,6 @@ import type { ReactNode } from 'react';
 import {
   PublicClientApplication,
   type AccountInfo,
-  type AuthenticationResult,
 } from '@azure/msal-browser';
 import { MsalProvider, useMsal, useIsAuthenticated } from '@azure/msal-react';
 import { msalConfig, loginRequest } from './authConfig';

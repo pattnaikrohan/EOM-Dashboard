@@ -22,7 +22,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     globalDepartments, setGlobalDepartments, availableDepartments,
     syncing, handleSyncSnowflake
   } = useData();
-  const { displayName, email, initials, logout, canAccessOpsManager, canUploadData, canEditSettings, role, branchNames } = useAuth();
+  const { displayName, email, initials, logout, canAccessOpsManager, canUploadData } = useAuth();
   const [filterOpen, setFilterOpen] = useState(false);
   const [branchFilterOpen, setBranchFilterOpen] = useState(false);
   const [deptFilterOpen, setDeptFilterOpen] = useState(false);
