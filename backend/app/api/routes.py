@@ -181,16 +181,22 @@ def get_jobs():
         return jsonify({"error": "No data loaded."}), 400
 
     operator = request.args.get('operator')
-    flag = request.args.get('flag')
+    flags_param = request.args.get('flags') or request.args.get('flag')
+    flags = flags_param.split(',') if flags_param else None
+    
+    branches_param = request.args.get('branches') or request.args.get('branch')
+    branches = branches_param.split(',') if branches_param else None
+    
+    depts_param = request.args.get('departments') or request.args.get('department')
+    departments = depts_param.split(',') if depts_param else None
+
     status = request.args.get('status')
     direction = request.args.get('direction')
     sort_by = request.args.get('sort_by', 'job_number')
     sort_dir = request.args.get('sort_dir', 'asc')
 
-    jobs = data_store.get_all_jobs(operator)
+    jobs = data_store.get_all_jobs(operator=operator, flags=flags, branches=branches, departments=departments)
 
-    if flag:
-        jobs = [j for j in jobs if flag in j.get("flags", [])]
     if status:
         jobs = [j for j in jobs if j.get("job_status", "").upper() == status.upper()]
     if direction:
