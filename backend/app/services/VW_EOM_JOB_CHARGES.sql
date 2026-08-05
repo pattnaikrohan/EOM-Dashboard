@@ -97,7 +97,10 @@ oh_dedup AS (
 ),
 oh AS (SELECT * FROM oh_dedup WHERE _rn = 1),
 
--- JOBSHIPMENT: latest version per JS_PK (valid only)
+-- JOBSHIPMENT: CDC dedup (valid only)
+-- TODO: JS_PK=JH_PK returns 0 matches. Correct path requires:
+--   JOBCONSHIPLINK(JN_JK=JK_PK) -> JOBCONSOL -> JOBCONSOLTRANSPORT(JW_PARENTGUID=JK_PK)
+-- No direct FK exists from JOBSHIPMENT to JOBHEADER in this ETL schema.
 js_dedup AS (
     SELECT *, ROW_NUMBER() OVER (PARTITION BY JS_PK ORDER BY CRE_DT DESC) AS _rn
     FROM PROD.CORE.JOBSHIPMENT
@@ -105,7 +108,8 @@ js_dedup AS (
 ),
 js AS (SELECT * FROM js_dedup WHERE _rn = 1),
 
--- JOBDECLARATION: latest version per JE_PK (valid, not cancelled)
+-- JOBDECLARATION: CDC dedup (valid, not cancelled)
+-- TODO: Same issue as JOBSHIPMENT — no direct FK to JOBHEADER.
 je_dedup AS (
     SELECT *, ROW_NUMBER() OVER (PARTITION BY JE_PK ORDER BY CRE_DT DESC) AS _rn
     FROM PROD.CORE.JOBDECLARATION
@@ -358,10 +362,10 @@ LEFT JOIN oh AS local_org ON oa_local.OA_OH = local_org.OH_PK
 -- Parent Job (deduped)
 LEFT JOIN jh AS parent ON jh.JH_JH_PARENTJOB = parent.JH_PK
 
--- Routing: Shipment (deduped)
+-- Routing: Shipment (deduped) — TODO: JS_PK=JH_PK returns 0 matches (no FK exists)
 LEFT JOIN js AS ship ON ship.JS_PK = jh.JH_PK
 
--- Routing: Declaration (deduped)
+-- Routing: Declaration (deduped) — TODO: JE_PK=JH_PK returns 0 matches (no FK exists)
 LEFT JOIN je AS decl ON decl.JE_PK = jh.JH_PK
 
 -- WIP Recognition (latest per job, deduped)
@@ -412,12 +416,14 @@ oh_dedup AS (
 ),
 oh AS (SELECT * FROM oh_dedup WHERE _rn = 1),
 
+-- JOBSHIPMENT: CDC dedup — TODO: no FK to JOBHEADER exists in this ETL schema
 js_dedup AS (
     SELECT *, ROW_NUMBER() OVER (PARTITION BY JS_PK ORDER BY CRE_DT DESC) AS _rn
     FROM PROD.CORE.JOBSHIPMENT WHERE ACTV_IND = TRUE AND JS_ISVALID = TRUE
 ),
 js AS (SELECT * FROM js_dedup WHERE _rn = 1),
 
+-- JOBDECLARATION: CDC dedup — TODO: no FK to JOBHEADER exists in this ETL schema
 je_dedup AS (
     SELECT *, ROW_NUMBER() OVER (PARTITION BY JE_PK ORDER BY CRE_DT DESC) AS _rn
     FROM PROD.CORE.JOBDECLARATION WHERE ACTV_IND = TRUE AND JE_ISVALID = TRUE AND JE_ISCANCELLED = FALSE

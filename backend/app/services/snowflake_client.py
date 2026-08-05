@@ -92,14 +92,30 @@ def fetch_jobs_from_snowflake():
         branch_name = job_data.get("BRANCH_NAME") or job_data.get("BRANCH_CODE")
         if not branch_name:
             job_num = (job_data.get("JOB_NUMBER") or "").upper()
-            if job_num.startswith("S"):
-                branch_name = "AAW Global Logistics - Sydney"
-            elif job_num.startswith("B"):
-                branch_name = "AAW Global Logistics - Brisbane"
-            elif job_num.startswith("V") or job_num.startswith("M"):
-                branch_name = "AAW Global Logistics - Melbourne"
-            else:
-                branch_name = "AAW Global Logistics - Unknown"
+            # Map job number prefix → branch name
+            # Check 2-char prefixes first (AK before A) for disambiguation
+            _prefix_map_2 = {
+                "AK": "AAW Global Logistics - Auckland",
+                "CB": "Coastalbridge",
+                "BL": "AAW Bulk Liquid Logistics Team",
+                "PR": "AAW Project Logistics",
+                "PI": "PIL Logistics Australia",
+            }
+            _prefix_map_1 = {
+                "S":  "AAW Global Logistics - Sydney",
+                "B":  "AAW Global Logistics - Brisbane",
+                "V":  "AAW Global Logistics - Melbourne",
+                "M":  "AAW Global Logistics - Melbourne",
+                "F":  "AAW Global Logistics - Fremantle",
+                "A":  "AAW Global Logistics - Adelaide",
+                "N":  "AAW Global Logistics - Auckland",
+                "P":  "AAW Project Logistics",
+                "C":  "AAW Customs Brokerage",
+                "H":  "AAW Group Holdings",
+            }
+            prefix2 = job_num[:2] if len(job_num) >= 2 else ""
+            branch_name = _prefix_map_2.get(prefix2) or _prefix_map_1.get(job_num[:1], "AAW Global Logistics - Unknown")
+
                 
         job = {
             "job_number":     job_data.get("JOB_NUMBER", ""),
