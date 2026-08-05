@@ -3,10 +3,13 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.backends import default_backend
 import os
 
+from app.services.staff_lookup import OPERATOR_NAMES, OPERATOR_BRANCHES
+
 SF_ACCOUNT   = os.environ.get("SF_ACCOUNT", "SGLYREN-GG43054")
 SF_USER      = os.environ.get("SF_USER", "TEST_AI_AUTO")
 SF_WAREHOUSE = os.environ.get("SF_WAREHOUSE", "PROD_COMPUTE_WH")
 SF_ROLE      = os.environ.get("SF_ROLE", "PROD_ENGINEER")
+
 
 PRIVATE_KEY_PEM = """-----BEGIN PRIVATE KEY-----
 MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDFkLT/bHavGuUi
@@ -89,11 +92,20 @@ def fetch_jobs_from_snowflake():
         etd = job_data.get("ROUTING_ETD")
         eta = job_data.get("ROUTING_ETA")
         
+        op_raw = job_data.get("OPERATOR_NAME") or job_data.get("OPERATOR_CODE") or ""
+        op_name = OPERATOR_NAMES.get(op_raw, op_raw)
+        
         branch_name = job_data.get("BRANCH_NAME") or job_data.get("BRANCH_CODE")
-        if not branch_name:
+        
+        # Check operator branch map first for Adelaide, Fremantle, Auckland, etc.
+        if op_name in OPERATOR_BRANCHES:
+            branch_name = OPERATOR_BRANCHES[op_name]
+        elif op_raw in OPERATOR_BRANCHES:
+            branch_name = OPERATOR_BRANCHES[op_raw]
+            
+        if not branch_name or branch_name == "AAW Global Logistics - Unknown":
             job_num = (job_data.get("JOB_NUMBER") or "").upper()
             # Map job number prefix → branch name
-            # Check 2-char prefixes first (AK before A) for disambiguation
             _prefix_map_2 = {
                 "AK": "AAW Global Logistics - Auckland",
                 "CB": "Coastalbridge",
@@ -115,6 +127,7 @@ def fetch_jobs_from_snowflake():
             }
             prefix2 = job_num[:2] if len(job_num) >= 2 else ""
             branch_name = _prefix_map_2.get(prefix2) or _prefix_map_1.get(job_num[:1], "AAW Global Logistics - Unknown")
+
 
                 
         job = {

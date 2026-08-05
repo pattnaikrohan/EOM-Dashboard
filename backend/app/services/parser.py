@@ -12,7 +12,8 @@ from openpyxl import load_workbook
 from io import BytesIO
 
 from app.services.rules import get_flags, priority_flag, get_ops_section, is_export_dept
-from app.services.staff_lookup import OPERATOR_NAMES, BRANCH_NAMES
+from app.services.staff_lookup import OPERATOR_NAMES, BRANCH_NAMES, OPERATOR_BRANCHES
+
 
 
 def _parse_number(val) -> float:
@@ -162,14 +163,17 @@ def parse_wip_review(file_bytes: bytes) -> dict:
             
             branch_code = str(_get("branch") or "").strip()
             op_code = str(_get("operator") or sheet_name).strip()
+            op = OPERATOR_NAMES.get(op_code, op_code)
+            job_branch = OPERATOR_BRANCHES.get(op, OPERATOR_BRANCHES.get(op_code, BRANCH_NAMES.get(branch_code, branch_code)))
             
             job = {
                 "job_number":     job_num,
                 "job_status":     str(_get("job_status") or "").strip(),
-                "branch":         BRANCH_NAMES.get(branch_code, branch_code),
+                "branch":         job_branch,
                 "department":     dept,
                 "open_date":      _parse_date_str(open_date_raw),
-                "operator":       OPERATOR_NAMES.get(op_code, op_code),
+                "operator":       op,
+
                 "sales_rep":      str(_get("sales_rep") or "").strip(),
                 "local_charges":  str(_get("local_charges") or "").strip(),
                 "overseas_agent": str(_get("overseas_agent") or "").strip(),
@@ -307,11 +311,13 @@ def parse_cargowise_export(file_bytes: bytes, **kwargs) -> dict:
             operators_set.add(op)
             
         branch_code = str(_g(branch_col) or branch).strip()
+        job_branch = OPERATOR_BRANCHES.get(op, OPERATOR_BRANCHES.get(op_code, BRANCH_NAMES.get(branch_code, branch_code)))
         
         job = {
             "job_number":     job_id,
             "job_status":     str(_g(status_col) or "").strip(),
-            "branch":         BRANCH_NAMES.get(branch_code, branch_code),
+            "branch":         job_branch,
+
             "department":     dept,
             "open_date":      _parse_date_str(open_date_raw),
             "operator":       op,

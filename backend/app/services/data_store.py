@@ -6,6 +6,8 @@ from __future__ import annotations
 import functools
 from typing import Optional
 from app.services.rules import FLAG_COLOURS, FLAG_PRIORITY
+from app.services.staff_lookup import OPERATOR_BRANCHES
+
 
 
 class DataStore:
@@ -197,8 +199,11 @@ class DataStore:
             if len(jobs) == 0:
                 continue
                 
-            op_branches = [j.get("branch") for j in jobs if j.get("branch")]
-            op_branch = max(set(op_branches), key=op_branches.count) if op_branches else self.branch or "ALL"
+            op_branch = OPERATOR_BRANCHES.get(op)
+            if not op_branch:
+                op_branches = [j.get("branch") for j in jobs if j.get("branch")]
+                op_branch = max(set(op_branches), key=op_branches.count) if op_branches else self.branch or "ALL"
+
 
             summaries.append({
                 "code":          op,

@@ -69,3 +69,35 @@ BRANCH_NAMES = {
     'FRE': 'Fremantle', 'BN1': 'Brisbane', 'PR1': 'Project Logistics',
     'PIL': 'PIL Logistics Australia'
 }
+
+OPERATOR_BRANCHES = {
+    # Adelaide
+    'KB2': 'AAW Global Logistics - Adelaide', 'Kelly Baugh': 'AAW Global Logistics - Adelaide',
+    'KC': 'AAW Global Logistics - Adelaide', 'Kim Carningham': 'AAW Global Logistics - Adelaide',
+    'DP5': 'AAW Global Logistics - Adelaide', 'David Peake': 'AAW Global Logistics - Adelaide',
+    'HW1': 'AAW Global Logistics - Adelaide', 'Hellen Wang': 'AAW Global Logistics - Adelaide',
+    'LE': 'AAW Global Logistics - Adelaide', 'Lina Emelianova': 'AAW Global Logistics - Adelaide',
+    'SDA': 'AAW Global Logistics - Adelaide', 'Sean De Asis': 'AAW Global Logistics - Adelaide',
+    'ADL': 'AAW Global Logistics - Adelaide', 'ADL - Branch Account': 'AAW Global Logistics - Adelaide',
+
+    # Fremantle
+    'SL2': 'AAW Global Logistics - Fremantle', 'Stella Lee': 'AAW Global Logistics - Fremantle',
+    'JP': 'AAW Global Logistics - Fremantle', 'Jiri Pelc': 'AAW Global Logistics - Fremantle',
+    'IB1': 'AAW Global Logistics - Fremantle', 'Iesha Bridle': 'AAW Global Logistics - Fremantle',
+    'GK': 'AAW Global Logistics - Fremantle', 'Gareth Knight': 'AAW Global Logistics - Fremantle',
+    'LV2': 'AAW Global Logistics - Fremantle', 'Le Vo': 'AAW Global Logistics - Fremantle',
+    'AW2': 'AAW Global Logistics - Fremantle', 'Alicia Welch': 'AAW Global Logistics - Fremantle',
+    'FRE': 'AAW Global Logistics - Fremantle', 'FRE - Branch Account': 'AAW Global Logistics - Fremantle',
+
+    # Auckland
+    'AAB': 'AAW Global Logistics - Auckland', 'Claire Brotherton': 'AAW Global Logistics - Auckland',
+    'KN1': 'AAW Global Logistics - Auckland', 'Kai Nguyen': 'AAW Global Logistics - Auckland',
+    'LP1': 'AAW Global Logistics - Auckland', 'Leah Purvis': 'AAW Global Logistics - Auckland',
+    'SM7': 'AAW Global Logistics - Auckland', 'Sina Meleisea': 'AAW Global Logistics - Auckland',
+    'JM8': 'AAW Global Logistics - Auckland', 'Jitu Mogre': 'AAW Global Logistics - Auckland',
+    'CN': 'AAW Global Logistics - Auckland', 'Carol Ngo': 'AAW Global Logistics - Auckland',
+    'LV1': 'AAW Global Logistics - Auckland', 'Louise Venables': 'AAW Global Logistics - Auckland',
+    'MW2': 'AAW Global Logistics - Auckland', 'Mareta Chang Wai': 'AAW Global Logistics - Auckland',
+    'AKL': 'AAW Global Logistics - Auckland', 'AKL - Branch Account': 'AAW Global Logistics - Auckland',
+}
+
