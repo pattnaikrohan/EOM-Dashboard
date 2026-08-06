@@ -2,15 +2,34 @@
  * Azure AD Group → EOM Dashboard Role Mapping
  *
  * Maps Azure AD security group IDs to EOM application roles, branches, and capabilities.
- * Reuses existing groups from the Risk & Compliance Hub (Tiers 1, 3, 4).
- * Tier 2 (functional groups) are intentionally excluded per Joe's directive (05/08).
+ * Aligned with the M-Files Incident Management Hub group structure (same tenant).
+ *
+ * Tier 1: Full Access / Global Admin
+ * Tier 2: Functional / Department Groups (cross-branch read access)
+ * Tier 3: BU Manager Groups
+ * Tier 4: Branch Groups
+ * EOM-Specific: Neg Movement Elevated, Settings Admin
  */
 
 // ── Tier 1: Full Access / Global Admin ──────────────────────────────────────
-const FULL_ACCESS_GROUP_IDS = [
-  '893a070a-54ec-42fb-bdda-98066d3a7569', // Risk & Compliance Admin / Full Access
-  'f29747c6-0fb4-4869-b681-0786d602ac29', // Risk & Compliance Global
-];
+const FULL_ACCESS_GROUP_ID = '893a070a-54ec-42fb-bdda-98066d3a7569';
+
+// ── Tier 2: Functional / Department Groups ──────────────────────────────────
+// Cross-branch read access. Aligned with M-Files incident-management.
+const FUNCTIONAL_GROUPS: Record<string, string> = {
+  'f29747c6-0fb4-4869-b681-0786d602ac29': 'risk_compliance',   // Risk & Compliance Global
+  'd8195075-cc4c-4e62-b857-f4cc9c76b380': 'hr_access',         // People & Safety Global
+  'b355c48b-09fc-4d35-b7cc-a80e53d9f3b7': 'it_access',         // IT & Security Global
+  '2dcbf776-a8ce-4316-8dc8-c5aef73409f7': 'finance_access',    // Finance Global
+};
+
+// Display names for matched groups
+const FUNCTIONAL_GROUP_NAMES: Record<string, string> = {
+  'risk_compliance': 'Risk & Compliance Global',
+  'hr_access': 'People & Safety Global',
+  'it_access': 'IT & Security Global',
+  'finance_access': 'Finance Global',
+};
 
 // ── Tier 3: BU Manager Groups ───────────────────────────────────────────────
 const BU_MANAGER_GROUPS: Record<string, string> = {
@@ -86,10 +105,13 @@ const EOM_SETTINGS_ADMIN_GROUP_ID = 'PLACEHOLDER-SETTINGS-ADMIN-ID';
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
+export type EomRole = 'full_access' | 'risk_compliance' | 'bu_access' | 'branch_access' | 'no_access';
+
 export interface EomResolvedRole {
-  role: 'full_access' | 'bu_access' | 'branch_access' | 'no_access';
+  role: EomRole;
   branchNames: string[];
   businessUnits: string[];
+  functionalRoles: string[];
   isBuManager: boolean;
   isNegMovementElevated: boolean;
   isSettingsAdmin: boolean;
@@ -104,8 +126,14 @@ export interface EomResolvedRole {
 
 /**
  * Resolves the EOM Dashboard role from a list of Azure AD group IDs.
+ *
  * Accumulates ALL matching groups across all tiers for cross-tier access.
- * Primary role is set to the highest tier matched.
+ * Primary role is set to the highest tier matched:
+ *   Tier 1: full_access        — everything
+ *   Tier 2: risk_compliance    — cross-branch read access (Dashboard, Ops Manager, Neg Movement, Operators)
+ *   Tier 3: bu_access          — own BU branches (Ops Manager, Upload)
+ *   Tier 4: branch_access      — own branch only (Dashboard, Operators, Neg Movement view)
+ *   None:   no_access
  */
 export function resolveEomRole(groupIds: string[]): EomResolvedRole {
   const groupSet = new Set(groupIds.map(id => id.toLowerCase()));
@@ -115,15 +143,24 @@ export function resolveEomRole(groupIds: string[]): EomResolvedRole {
   let isBuManager = false;
   let isNegMovementElevated = false;
   let isSettingsAdmin = false;
+  const functionalRoles: string[] = [];
   const businessUnits: string[] = [];
   const branchNames: string[] = [];
 
   // ── Collect ALL matches across every tier ──────────────────────────────
 
-  // Tier 1: Full Access
-  if (FULL_ACCESS_GROUP_IDS.some(id => groupSet.has(id.toLowerCase()))) {
+  // Tier 1: Full Access / Global Admin
+  if (FULL_ACCESS_GROUP_ID && groupSet.has(FULL_ACCESS_GROUP_ID.toLowerCase())) {
     isFullAccess = true;
     matchedGroups.push('Full Access / Global Admin');
+  }
+
+  // Tier 2: Functional / Department groups
+  for (const [groupId, funcRole] of Object.entries(FUNCTIONAL_GROUPS)) {
+    if (groupSet.has(groupId.toLowerCase())) {
+      if (!functionalRoles.includes(funcRole)) functionalRoles.push(funcRole);
+      matchedGroups.push(FUNCTIONAL_GROUP_NAMES[funcRole] || funcRole);
+    }
   }
 
   // Tier 3: BU Manager groups
@@ -160,9 +197,12 @@ export function resolveEomRole(groupIds: string[]): EomResolvedRole {
   }
 
   // ── Determine the primary role (highest tier matched) ─────────────────
-  let primaryRole: EomResolvedRole['role'];
+  let primaryRole: EomRole;
   if (isFullAccess) {
     primaryRole = 'full_access';
+  } else if (functionalRoles.includes('risk_compliance')) {
+    // R&C Global gets cross-branch read access (same treatment as M-Files)
+    primaryRole = 'risk_compliance';
   } else if (isBuManager) {
     primaryRole = 'bu_access';
   } else if (branchNames.length > 0) {
@@ -172,15 +212,23 @@ export function resolveEomRole(groupIds: string[]): EomResolvedRole {
     if (matchedGroups.length === 0) matchedGroups.push('(no matching AD group)');
   }
 
-  // ── Derive capabilities ───────────────────────────────────────────────
-  const canAccessOpsManager = primaryRole === 'full_access' || primaryRole === 'bu_access';
-  const canUploadData = primaryRole === 'full_access' || primaryRole === 'bu_access';
+  // ── Derive capabilities from Joe's security model ─────────────────────
+  // Dashboard:       all roles (scoped to own branch/BU)
+  // Ops Manager:     full_access, risk_compliance (read-only), bu_access
+  // Neg Movement:    all roles (scoped), + elevated users see all branches
+  // Operators:       all roles (scoped to own branch)
+  // Upload Data:     full_access, bu_access only
+  // Settings (edit): full_access, settings_admin only
+  // Clear Data:      full_access only
+  const canAccessOpsManager = ['full_access', 'risk_compliance', 'bu_access'].includes(primaryRole);
+  const canUploadData = ['full_access', 'bu_access'].includes(primaryRole);
   const canEditSettings = isFullAccess || isSettingsAdmin;
 
   return {
     role: primaryRole,
     branchNames,
     businessUnits,
+    functionalRoles,
     isBuManager,
     isNegMovementElevated,
     isSettingsAdmin,

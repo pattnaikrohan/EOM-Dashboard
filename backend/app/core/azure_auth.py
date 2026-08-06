@@ -4,10 +4,13 @@ Azure AD Token Validation & Group-Based Role Resolution for EOM Dashboard.
 Validates Azure AD JWT tokens using Microsoft's JWKS endpoint and resolves
 application roles from AD group memberships embedded in token claims.
 
-Reuses existing AD groups from the Risk & Compliance Hub (Tiers 1, 3, 4)
-and adds EOM-specific groups for Negative Movement Elevated and Settings Admin.
+Aligned with the M-Files Incident Management Hub group structure (same tenant).
 
-Tier 2 (functional department groups) are intentionally excluded per Joe's directive.
+Tier 1: Full Access / Global Admin
+Tier 2: Functional / Department Groups (cross-branch read access)
+Tier 3: BU Manager Groups
+Tier 4: Branch Groups
+EOM-Specific: Neg Movement Elevated, Settings Admin
 """
 import time
 import requests
@@ -85,15 +88,16 @@ def validate_azure_token(token: str) -> dict:
 # ══════════════════════════════════════════════════════════════════════════════
 
 # ── Tier 1: Full Access / Global Admin ────────────────────────────────────────
-FULL_ACCESS_GROUP_IDS = [
-    '893a070a-54ec-42fb-bdda-98066d3a7569',  # Risk & Compliance Admin / Full Access
-    'f29747c6-0fb4-4869-b681-0786d602ac29',  # Risk & Compliance Global
-]
+FULL_ACCESS_GROUP_ID = '893a070a-54ec-42fb-bdda-98066d3a7569'
 
-# ── Tier 2: Functional Groups — INTENTIONALLY EXCLUDED ────────────────────────
-# Per Joe (05/08): "For now, they can be excluded although this may change
-# once we have the system embedded and learn new requirements."
-# Risk & Compliance, People & Safety, IT & Security, Finance — not mapped.
+# ── Tier 2: Functional / Department Groups ──────────────────────────────────
+# Cross-branch read access. Aligned with M-Files incident-management.
+FUNCTIONAL_GROUPS = {
+    'f29747c6-0fb4-4869-b681-0786d602ac29': 'risk_compliance',   # Risk & Compliance Global
+    'd8195075-cc4c-4e62-b857-f4cc9c76b380': 'hr_access',         # People & Safety Global
+    'b355c48b-09fc-4d35-b7cc-a80e53d9f3b7': 'it_access',         # IT & Security Global
+    '2dcbf776-a8ce-4316-8dc8-c5aef73409f7': 'finance_access',    # Finance Global
+}
 
 # ── Tier 3: BU Manager Groups ────────────────────────────────────────────────
 BU_MANAGER_GROUPS = {
@@ -175,13 +179,14 @@ def resolve_eom_role(group_ids: list) -> dict:
     multiple groups sees the union of all their memberships.
 
     Returns dict with:
-      role                     – 'full_access', 'bu_access', 'branch_access', or 'no_access'
+      role                     – 'full_access', 'risk_compliance', 'bu_access', 'branch_access', or 'no_access'
       business_units           – list of matched BU names
       branch_names             – list of matched branch names
+      functional_roles         – list of matched department roles (e.g. ['hr_access'])
       is_bu_manager            – True if user has any BU Manager group
       is_neg_movement_elevated – True if user is in the Neg Movement Elevated group
       is_settings_admin        – True if user is in the Settings Admin group
-      can_access_ops_manager   – True if full_access or bu_access (AND has branch groups)
+      can_access_ops_manager   – True if full_access, risk_compliance or bu_access
       can_upload_data          – True if full_access or bu_access
       can_edit_settings        – True if full_access or is_settings_admin
     """
@@ -191,14 +196,21 @@ def resolve_eom_role(group_ids: list) -> dict:
     is_bu_manager = False
     is_neg_movement_elevated = False
     is_settings_admin = False
+    functional_roles = []
     business_units = []
     branch_names = []
 
     # ── Collect ALL matches across every tier ─────────────────────────────
 
     # Tier 1: Full Access / Global Admin
-    if any(gid.lower() in group_set for gid in FULL_ACCESS_GROUP_IDS):
+    if FULL_ACCESS_GROUP_ID and FULL_ACCESS_GROUP_ID.lower() in group_set:
         is_full_access = True
+
+    # Tier 2: Functional / Department groups
+    for gid, func_role in FUNCTIONAL_GROUPS.items():
+        if gid.lower() in group_set:
+            if func_role not in functional_roles:
+                functional_roles.append(func_role)
 
     # Tier 3: BU Manager groups
     for gid, ad_name in BU_MANAGER_GROUPS.items():
@@ -230,12 +242,9 @@ def resolve_eom_role(group_ids: list) -> dict:
     # ── Determine the primary role (highest tier matched) ─────────────────
     if is_full_access:
         primary_role = 'full_access'
-    elif is_bu_manager and not branch_names:
-        # BU Manager without branch group — still gets bu_access for upload etc.
-        # but data scope will be empty (no branch to show)
-        primary_role = 'bu_access'
-    elif is_bu_manager and branch_names:
-        # BU Manager WITH branch group — gets elevated access + branch data scope
+    elif 'risk_compliance' in functional_roles:
+        primary_role = 'risk_compliance'
+    elif is_bu_manager:
         primary_role = 'bu_access'
     elif branch_names:
         primary_role = 'branch_access'
@@ -243,8 +252,7 @@ def resolve_eom_role(group_ids: list) -> dict:
         primary_role = 'no_access'
 
     # ── Derive capabilities from role ────────────────────────────────────
-    # Ops Manager: full_access sees all; bu_access sees own branch (must have branch group)
-    can_access_ops_manager = primary_role in ('full_access', 'bu_access')
+    can_access_ops_manager = primary_role in ('full_access', 'risk_compliance', 'bu_access')
     can_upload_data = primary_role in ('full_access', 'bu_access')
     can_edit_settings = is_full_access or is_settings_admin
 
@@ -252,6 +260,7 @@ def resolve_eom_role(group_ids: list) -> dict:
         'role': primary_role,
         'business_units': business_units,
         'branch_names': branch_names,
+        'functional_roles': functional_roles,
         'is_bu_manager': is_bu_manager,
         'is_neg_movement_elevated': is_neg_movement_elevated,
         'is_settings_admin': is_settings_admin,

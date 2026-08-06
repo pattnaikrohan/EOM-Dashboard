@@ -34,6 +34,7 @@ interface AuthContextType {
   role: EomResolvedRole['role'] | null;
   branchNames: string[];
   businessUnits: string[];
+  functionalRoles: string[];
   canAccessOpsManager: boolean;
   canUploadData: boolean;
   canEditSettings: boolean;
@@ -158,6 +159,7 @@ function AuthContextProvider({ children }: { children: ReactNode }) {
       role: resolvedRole?.role || null,
       branchNames: resolvedRole?.branchNames || [],
       businessUnits: resolvedRole?.businessUnits || [],
+      functionalRoles: resolvedRole?.functionalRoles || [],
       canAccessOpsManager: resolvedRole?.canAccessOpsManager || false,
       canUploadData: resolvedRole?.canUploadData || false,
       canEditSettings: resolvedRole?.canEditSettings || false,

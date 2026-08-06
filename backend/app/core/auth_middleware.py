@@ -26,7 +26,7 @@ STRICT_AUTH = os.environ.get('EOM_STRICT_AUTH', '1') == '1'
 class EomUser:
     """Represents an authenticated EOM Dashboard user."""
 
-    def __init__(self, email, name, role, branch_names, business_units,
+    def __init__(self, email, name, role, branch_names, business_units, functional_roles=None,
                  is_bu_manager=False, is_neg_movement_elevated=False,
                  is_settings_admin=False, can_access_ops_manager=False,
                  can_upload_data=False, can_edit_settings=False):
@@ -35,6 +35,7 @@ class EomUser:
         self.role = role
         self.branch_names = branch_names or []
         self.business_units = business_units or []
+        self.functional_roles = functional_roles or []
         self.is_bu_manager = is_bu_manager
         self.is_neg_movement_elevated = is_neg_movement_elevated
         self.is_settings_admin = is_settings_admin
@@ -45,10 +46,10 @@ class EomUser:
     def get_allowed_branches(self):
         """
         Returns the list of branch names this user is allowed to see.
-        For full_access users, returns None (no restriction).
+        For full_access or risk_compliance users, returns None (no restriction).
         For branch_access / bu_access users, returns their branch_names.
         """
-        if self.role == 'full_access':
+        if self.role in ('full_access', 'risk_compliance'):
             return None  # No restriction
         return self.branch_names if self.branch_names else []
 
@@ -58,7 +59,7 @@ class EomUser:
         Elevated users see all branches (returns None).
         Others see only their own branches.
         """
-        if self.role == 'full_access' or self.is_neg_movement_elevated:
+        if self.role in ('full_access', 'risk_compliance') or self.is_neg_movement_elevated:
             return None  # No restriction
         return self.branch_names if self.branch_names else []
 
@@ -70,6 +71,7 @@ class EomUser:
             'role': self.role,
             'branch_names': self.branch_names,
             'business_units': self.business_units,
+            'functional_roles': self.functional_roles,
             'is_bu_manager': self.is_bu_manager,
             'is_neg_movement_elevated': self.is_neg_movement_elevated,
             'is_settings_admin': self.is_settings_admin,
@@ -87,6 +89,7 @@ def _get_dev_user():
         role='full_access',
         branch_names=[],
         business_units=[],
+        functional_roles=[],
         is_bu_manager=True,
         is_neg_movement_elevated=True,
         is_settings_admin=True,
@@ -137,7 +140,7 @@ def _resolve_user_from_token():
                 if header_bu:
                     resolved['business_units'] = [b.strip() for b in header_bu.split(',') if b.strip()]
                 # Re-derive capabilities
-                resolved['can_access_ops_manager'] = resolved['role'] in ('full_access', 'bu_access')
+                resolved['can_access_ops_manager'] = resolved['role'] in ('full_access', 'risk_compliance', 'bu_access')
                 resolved['can_upload_data'] = resolved['role'] in ('full_access', 'bu_access')
                 resolved['can_edit_settings'] = resolved['role'] == 'full_access' or resolved.get('is_settings_admin', False)
 
@@ -151,6 +154,7 @@ def _resolve_user_from_token():
             role=resolved['role'],
             branch_names=resolved['branch_names'],
             business_units=resolved['business_units'],
+            functional_roles=resolved.get('functional_roles', []),
             is_bu_manager=resolved.get('is_bu_manager', False),
             is_neg_movement_elevated=resolved.get('is_neg_movement_elevated', False),
             is_settings_admin=resolved.get('is_settings_admin', False),
@@ -213,9 +217,9 @@ def require_bu_manager(f):
         if isinstance(result, tuple):
             return result
 
-        if result.role not in ('full_access', 'bu_access'):
+        if not result.can_access_ops_manager:
             return jsonify({
-                'error': 'Access denied. This section requires Branch Manager or Operations Manager permissions.'
+                'error': 'Access denied. This section requires Branch Manager, Operations Manager, or Risk & Compliance permissions.'
             }), 403
 
         g.current_user = result
