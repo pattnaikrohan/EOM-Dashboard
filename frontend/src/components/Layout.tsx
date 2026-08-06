@@ -574,31 +574,31 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   border: '1px solid var(--border-base)',
                   borderRadius: '12px',
                   boxShadow: 'var(--shadow-md)',
-                  padding: '1rem',
+                  padding: '0.75rem',
                   display: 'flex',
                   flexDirection: 'column',
-                  gap: '0.75rem',
-                  minWidth: '340px',
-                  maxWidth: '400px',
+                  gap: '0.5rem',
+                  minWidth: '300px',
+                  maxWidth: '360px',
                   zIndex: 50,
                   animation: 'fadeIn 0.2s ease-out forwards'
                 }}>
                   {/* User identity row */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                     <div style={{ 
-                      width: '42px', height: '42px', borderRadius: '50%', 
+                      width: '36px', height: '36px', borderRadius: '50%', 
                       background: 'linear-gradient(135deg, #60a5fa, #818cf8)', 
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      color: 'white', fontWeight: 700, fontSize: '1.1rem',
+                      color: 'white', fontWeight: 700, fontSize: '0.9rem',
                       flexShrink: 0
                     }}>
                       {initials}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontWeight: 600, color: 'var(--fg-base)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '0.95rem' }}>
+                      <div style={{ fontWeight: 600, color: 'var(--fg-base)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '0.85rem' }}>
                         {displayName}
                       </div>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--fg-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <div style={{ fontSize: '0.72rem', color: 'var(--fg-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {email}
                       </div>
                     </div>
@@ -608,7 +608,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                         background: 'transparent',
                         border: '1px solid rgba(239, 68, 68, 0.3)',
                         cursor: 'pointer',
-                        padding: '0.5rem',
+                        padding: '0.4rem',
                         borderRadius: '8px',
                         color: '#ef4444',
                         display: 'flex',
@@ -621,95 +621,115 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                       onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                       title="Logout"
                     >
-                      <LogOut size={18} />
+                      <LogOut size={16} />
                     </button>
                   </div>
 
-                  {/* Divider */}
-                  <div style={{ height: '1px', background: 'var(--border-base)' }} />
-
                   {/* Role & Permissions */}
                   {resolvedRole && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                      {/* Role Badge */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <span style={{ fontSize: '0.75rem', color: 'var(--fg-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>Role</span>
-                        <span style={{
-                          fontSize: '0.75rem',
-                          fontWeight: 600,
-                          padding: '0.15rem 0.5rem',
-                          borderRadius: '6px',
-                          background: role === 'full_access' ? 'rgba(34, 197, 94, 0.15)' 
-                            : role === 'bu_access' ? 'rgba(59, 130, 246, 0.15)' 
-                            : role === 'branch_access' ? 'rgba(168, 85, 247, 0.15)' 
-                            : 'rgba(239, 68, 68, 0.15)',
-                          color: role === 'full_access' ? '#22c55e' 
-                            : role === 'bu_access' ? '#3b82f6' 
-                            : role === 'branch_access' ? '#a855f7' 
-                            : '#ef4444',
-                          border: `1px solid ${role === 'full_access' ? 'rgba(34, 197, 94, 0.3)' 
-                            : role === 'bu_access' ? 'rgba(59, 130, 246, 0.3)' 
-                            : role === 'branch_access' ? 'rgba(168, 85, 247, 0.3)' 
-                            : 'rgba(239, 68, 68, 0.3)'}`,
-                        }}>
-                          {role === 'full_access' ? 'Full Access' 
-                            : role === 'bu_access' ? 'BU Manager' 
-                            : role === 'branch_access' ? 'Branch Access' 
-                            : 'No Access'}
-                        </span>
-                      </div>
+                    <>
+                      <div style={{ height: '1px', background: 'var(--border-base)' }} />
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                        {/* Role Badge Row */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                          <span style={{
+                            fontSize: '0.68rem',
+                            fontWeight: 600,
+                            padding: '0.12rem 0.45rem',
+                            borderRadius: '5px',
+                            background: role === 'full_access' ? 'rgba(34, 197, 94, 0.15)' 
+                              : role === 'bu_access' ? 'rgba(59, 130, 246, 0.15)' 
+                              : role === 'branch_access' ? 'rgba(168, 85, 247, 0.15)' 
+                              : 'rgba(239, 68, 68, 0.15)',
+                            color: role === 'full_access' ? '#22c55e' 
+                              : role === 'bu_access' ? '#3b82f6' 
+                              : role === 'branch_access' ? '#a855f7' 
+                              : '#ef4444',
+                            border: `1px solid ${role === 'full_access' ? 'rgba(34, 197, 94, 0.3)' 
+                              : role === 'bu_access' ? 'rgba(59, 130, 246, 0.3)' 
+                              : role === 'branch_access' ? 'rgba(168, 85, 247, 0.3)' 
+                              : 'rgba(239, 68, 68, 0.3)'}`,
+                          }}>
+                            {role === 'full_access' ? 'Full Access' 
+                              : role === 'bu_access' ? 'BU Manager' 
+                              : role === 'branch_access' ? 'Branch Access' 
+                              : 'No Access'}
+                          </span>
+                          {role === 'full_access' && (
+                            <span style={{ fontSize: '0.68rem', color: 'var(--fg-muted)' }}>
+                              All Business Units & Branches
+                            </span>
+                          )}
+                        </div>
 
-                      {/* Matched AD Groups */}
-                      {resolvedRole.matchedGroups && resolvedRole.matchedGroups.length > 0 && (
-                        <div>
-                          <div style={{ fontSize: '0.7rem', color: 'var(--fg-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600, marginBottom: '0.25rem' }}>AD Groups</div>
-                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
-                            {resolvedRole.matchedGroups.map((group: string, i: number) => (
+                        {/* AD Groups — compact tag row */}
+                        {resolvedRole.matchedGroups && resolvedRole.matchedGroups.length > 0 && (
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '3px', alignItems: 'center' }}>
+                            <span style={{ fontSize: '0.62rem', color: 'var(--fg-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 600, marginRight: '2px' }}>Groups</span>
+                            {resolvedRole.matchedGroups.slice(0, role === 'full_access' ? 3 : 6).map((group: string, i: number) => (
                               <span key={i} style={{
-                                fontSize: '0.7rem',
-                                padding: '0.1rem 0.4rem',
-                                borderRadius: '4px',
+                                fontSize: '0.6rem',
+                                padding: '1px 5px',
+                                borderRadius: '3px',
                                 background: 'var(--bg-surface)',
                                 border: '1px solid var(--border-base)',
                                 color: 'var(--fg-base)',
-                                whiteSpace: 'nowrap'
+                                whiteSpace: 'nowrap',
+                                lineHeight: '1.4'
                               }}>
                                 {group}
                               </span>
                             ))}
+                            {resolvedRole.matchedGroups.length > (role === 'full_access' ? 3 : 6) && (
+                              <span style={{ fontSize: '0.6rem', color: 'var(--fg-muted)', fontStyle: 'italic' }}>
+                                +{resolvedRole.matchedGroups.length - (role === 'full_access' ? 3 : 6)} more
+                              </span>
+                            )}
                           </div>
-                        </div>
-                      )}
+                        )}
 
-                      {/* Business Units */}
-                      {resolvedRole.businessUnits && resolvedRole.businessUnits.length > 0 && (
-                        <div>
-                          <div style={{ fontSize: '0.7rem', color: 'var(--fg-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600, marginBottom: '0.25rem' }}>Business Units</div>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
+                        {/* Business Units & Branches — only for non-full-access */}
+                        {role !== 'full_access' && resolvedRole.businessUnits && resolvedRole.businessUnits.length > 0 && (
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '3px', alignItems: 'center' }}>
+                            <span style={{ fontSize: '0.62rem', color: 'var(--fg-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 600, marginRight: '2px' }}>BU</span>
                             {resolvedRole.businessUnits.map((bu: string, i: number) => (
-                              <div key={i} style={{ fontSize: '0.8rem', color: 'var(--fg-base)', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                                <Building size={12} style={{ color: 'var(--fg-muted)', flexShrink: 0 }} />
+                              <span key={i} style={{
+                                fontSize: '0.6rem',
+                                padding: '1px 5px',
+                                borderRadius: '3px',
+                                background: 'rgba(59, 130, 246, 0.08)',
+                                border: '1px solid rgba(59, 130, 246, 0.2)',
+                                color: 'var(--fg-base)',
+                                whiteSpace: 'nowrap',
+                                lineHeight: '1.4'
+                              }}>
                                 {bu}
-                              </div>
+                              </span>
                             ))}
                           </div>
-                        </div>
-                      )}
+                        )}
 
-                      {/* Branches */}
-                      {resolvedRole.branchNames && resolvedRole.branchNames.length > 0 && (
-                        <div>
-                          <div style={{ fontSize: '0.7rem', color: 'var(--fg-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600, marginBottom: '0.25rem' }}>Branches</div>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
+                        {role !== 'full_access' && resolvedRole.branchNames && resolvedRole.branchNames.length > 0 && (
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '3px', alignItems: 'center' }}>
+                            <span style={{ fontSize: '0.62rem', color: 'var(--fg-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 600, marginRight: '2px' }}>Branches</span>
                             {resolvedRole.branchNames.map((branch: string, i: number) => (
-                              <div key={i} style={{ fontSize: '0.8rem', color: 'var(--fg-base)', paddingLeft: '0.25rem' }}>
-                                • {branch}
-                              </div>
+                              <span key={i} style={{
+                                fontSize: '0.6rem',
+                                padding: '1px 5px',
+                                borderRadius: '3px',
+                                background: 'rgba(168, 85, 247, 0.08)',
+                                border: '1px solid rgba(168, 85, 247, 0.2)',
+                                color: 'var(--fg-base)',
+                                whiteSpace: 'nowrap',
+                                lineHeight: '1.4'
+                              }}>
+                                {branch}
+                              </span>
                             ))}
                           </div>
-                        </div>
-                      )}
-                    </div>
+                        )}
+                      </div>
+                    </>
                   )}
                 </div>
               )}
