@@ -97,10 +97,9 @@ const BRANCH_TO_BU: Record<string, string> = {
   'Hoyer Logistics Australia': 'Hoyer Logistics Australia',
 };
 
-// ── EOM-Specific Groups ─────────────────────────────────────────────────────
-// TODO: Replace these placeholder UUIDs with actual Object IDs from IT
-const EOM_NEG_MOVEMENT_ELEVATED_GROUP_ID = 'PLACEHOLDER-NEG-MOVEMENT-ELEVATED-ID';
-const EOM_SETTINGS_ADMIN_GROUP_ID = 'PLACEHOLDER-SETTINGS-ADMIN-ID';
+// ── EOM-Specific Groups ──────────────────────────────────────────────────────
+const EOM_NEG_MOVEMENT_ELEVATED_GROUP_ID = 'e0e75905-c0cd-4e63-8bef-6bd814485b4f';
+const EOM_SETTINGS_ADMIN_GROUP_ID = '57886be8-7f5a-45b9-8cb6-96effcc10eb3';
 
 
 // ── Types ───────────────────────────────────────────────────────────────────
