@@ -7,7 +7,10 @@
  */
 
 // ── Tier 1: Full Access / Global Admin ──────────────────────────────────────
-const FULL_ACCESS_GROUP_ID = '893a070a-54ec-42fb-bdda-98066d3a7569';
+const FULL_ACCESS_GROUP_IDS = [
+  '893a070a-54ec-42fb-bdda-98066d3a7569', // Risk & Compliance Admin / Full Access
+  'f29747c6-0fb4-4869-b681-0786d602ac29', // Risk & Compliance Global
+];
 
 // ── Tier 3: BU Manager Groups ───────────────────────────────────────────────
 const BU_MANAGER_GROUPS: Record<string, string> = {
@@ -118,7 +121,7 @@ export function resolveEomRole(groupIds: string[]): EomResolvedRole {
   // ── Collect ALL matches across every tier ──────────────────────────────
 
   // Tier 1: Full Access
-  if (FULL_ACCESS_GROUP_ID && groupSet.has(FULL_ACCESS_GROUP_ID.toLowerCase())) {
+  if (FULL_ACCESS_GROUP_IDS.some(id => groupSet.has(id.toLowerCase()))) {
     isFullAccess = true;
     matchedGroups.push('Full Access / Global Admin');
   }

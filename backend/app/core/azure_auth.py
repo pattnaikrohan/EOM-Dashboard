@@ -85,7 +85,10 @@ def validate_azure_token(token: str) -> dict:
 # ══════════════════════════════════════════════════════════════════════════════
 
 # ── Tier 1: Full Access / Global Admin ────────────────────────────────────────
-FULL_ACCESS_GROUP_ID = '893a070a-54ec-42fb-bdda-98066d3a7569'
+FULL_ACCESS_GROUP_IDS = [
+    '893a070a-54ec-42fb-bdda-98066d3a7569',  # Risk & Compliance Admin / Full Access
+    'f29747c6-0fb4-4869-b681-0786d602ac29',  # Risk & Compliance Global
+]
 
 # ── Tier 2: Functional Groups — INTENTIONALLY EXCLUDED ────────────────────────
 # Per Joe (05/08): "For now, they can be excluded although this may change
@@ -194,7 +197,7 @@ def resolve_eom_role(group_ids: list) -> dict:
     # ── Collect ALL matches across every tier ─────────────────────────────
 
     # Tier 1: Full Access / Global Admin
-    if FULL_ACCESS_GROUP_ID and FULL_ACCESS_GROUP_ID.lower() in group_set:
+    if any(gid.lower() in group_set for gid in FULL_ACCESS_GROUP_IDS):
         is_full_access = True
 
     # Tier 3: BU Manager groups
