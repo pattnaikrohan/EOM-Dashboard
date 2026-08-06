@@ -17,6 +17,11 @@ from jose import JWTError
 # ── Development Mode ──────────────────────────────────────────────────────────
 DEV_MODE = os.environ.get('EOM_DEV_MODE', '0') == '1'
 
+# ── Strict Auth ───────────────────────────────────────────────────────────────
+# When True (default), unauthenticated or no_access users get 401/403.
+# When False, they fall back to a dev user with full_access (for local testing).
+STRICT_AUTH = os.environ.get('EOM_STRICT_AUTH', '1') == '1'
+
 
 class EomUser:
     """Represents an authenticated EOM Dashboard user."""
