@@ -4,7 +4,7 @@
 import { useLocation, Link } from 'react-router-dom';
 import { useState, useRef, useEffect } from 'react';
 import {
-  LayoutDashboard, Upload, Settings,
+  LayoutDashboard, Settings, Database,
   AlertTriangle, TrendingDown, Filter, Building, Trash2, Moon, Sun, LogOut, Users, ChevronRight, RefreshCw
 } from 'lucide-react';
 import { useAuth } from '../auth/AuthProvider';
@@ -169,12 +169,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             {canUploadData && (
             <Link
               to="/upload"
-              title="Upload Data"
+              title="Snowflake Sync"
               className="sidebar__nav-item"
               style={{ fontWeight: isActive('/upload') ? 700 : 500, color: isActive('/upload') ? 'var(--fg-base)' : 'var(--fg-muted)', background: 'transparent' }}
             >
-              <Upload size={18} color="#10b981" />
-              <span>Upload Data</span>
+              <Database size={18} color="#10b981" />
+              <span>Snowflake Sync</span>
             </Link>
             )}
 
