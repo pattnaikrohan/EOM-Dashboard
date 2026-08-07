@@ -5,7 +5,8 @@
  */
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { ChevronRight, User, CheckCircle2, ArrowUpRight, ArrowDownLeft, Repeat, MapPin, Clock, Search } from 'lucide-react';
+import { ChevronRight, User, CheckCircle2, ArrowUpRight, ArrowDownLeft, Repeat, MapPin, Clock, Search, ArrowUp } from 'lucide-react';
+import { createPortal } from 'react-dom';
 import { useData } from '../context/DataContext';
 import { getOperatorDetail } from '../services/api';
 import type { OperatorDetail, Job } from '../services/api';
@@ -417,7 +418,33 @@ export default function OperatorView() {
       </div>
 
       {MONTH_END_CLOSING_FLAGS.map(flag => renderFlagSection(flag))}
+      
+      <ScrollToTop />
     </div>
+  );
+}
+
+// ── Scroll-to-Top Button ──────────────────────────────────────────────────────
+function ScrollToTop() {
+  const handleClick = () => {
+    const scrollContainer = document.querySelector('.content');
+    if (scrollContainer) {
+      scrollContainer.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  return createPortal(
+    <button
+      className="scroll-to-top visible"
+      onClick={handleClick}
+      aria-label="Scroll to top"
+      title="Back to top"
+    >
+      <ArrowUp size={18} strokeWidth={2.5} />
+    </button>,
+    document.body
   );
 }
 
