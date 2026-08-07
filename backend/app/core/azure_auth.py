@@ -247,6 +247,10 @@ def resolve_eom_role(group_ids: list) -> dict:
         primary_role = 'bu_access'
     elif branch_names:
         primary_role = 'branch_access'
+    elif is_neg_movement_elevated or is_settings_admin:
+        # Users like Claire who are only in EOM-specific groups
+        # (Neg Movement Elevated / Settings Admin) but not in any branch/BU/functional group.
+        primary_role = 'eom_elevated'
     else:
         primary_role = 'no_access'
 

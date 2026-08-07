@@ -46,10 +46,10 @@ class EomUser:
     def get_allowed_branches(self):
         """
         Returns the list of branch names this user is allowed to see.
-        For full_access or risk_compliance users, returns None (no restriction).
+        For full_access, risk_compliance, or eom_elevated users, returns None (no restriction).
         For branch_access / bu_access users, returns their branch_names.
         """
-        if self.role in ('full_access', 'risk_compliance'):
+        if self.role in ('full_access', 'risk_compliance', 'eom_elevated'):
             return None  # No restriction
         return self.branch_names if self.branch_names else []
 

@@ -104,7 +104,7 @@ const EOM_SETTINGS_ADMIN_GROUP_ID = '57886be8-7f5a-45b9-8cb6-96effcc10eb3';
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
-export type EomRole = 'full_access' | 'risk_compliance' | 'bu_access' | 'branch_access' | 'no_access';
+export type EomRole = 'full_access' | 'risk_compliance' | 'bu_access' | 'branch_access' | 'eom_elevated' | 'no_access';
 
 export interface EomResolvedRole {
   role: EomRole;
@@ -206,6 +206,11 @@ export function resolveEomRole(groupIds: string[]): EomResolvedRole {
     primaryRole = 'bu_access';
   } else if (branchNames.length > 0) {
     primaryRole = 'branch_access';
+  } else if (isNegMovementElevated || isSettingsAdmin) {
+    // Users like Claire who are only in EOM-specific groups
+    // (Neg Movement Elevated / Settings Admin) but not in any branch/BU/functional group.
+    // They get cross-branch read access for their specific sections.
+    primaryRole = 'eom_elevated';
   } else {
     primaryRole = 'no_access';
     if (matchedGroups.length === 0) matchedGroups.push('(no matching AD group)');

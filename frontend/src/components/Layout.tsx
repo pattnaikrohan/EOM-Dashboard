@@ -641,27 +641,39 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                               : role === 'risk_compliance' ? 'rgba(234, 179, 8, 0.15)' 
                               : role === 'bu_access' ? 'rgba(59, 130, 246, 0.15)' 
                               : role === 'branch_access' ? 'rgba(168, 85, 247, 0.15)' 
+                              : role === 'eom_elevated' ? 'rgba(6, 182, 212, 0.15)' 
                               : 'rgba(239, 68, 68, 0.15)',
                             color: role === 'full_access' ? '#22c55e' 
                               : role === 'risk_compliance' ? '#eab308' 
                               : role === 'bu_access' ? '#3b82f6' 
                               : role === 'branch_access' ? '#a855f7' 
+                              : role === 'eom_elevated' ? '#06b6d4' 
                               : '#ef4444',
                             border: `1px solid ${role === 'full_access' ? 'rgba(34, 197, 94, 0.3)' 
                               : role === 'risk_compliance' ? 'rgba(234, 179, 8, 0.3)' 
                               : role === 'bu_access' ? 'rgba(59, 130, 246, 0.3)' 
                               : role === 'branch_access' ? 'rgba(168, 85, 247, 0.3)' 
+                              : role === 'eom_elevated' ? 'rgba(6, 182, 212, 0.3)' 
                               : 'rgba(239, 68, 68, 0.3)'}`,
                           }}>
                             {role === 'full_access' ? 'Full Access' 
                               : role === 'risk_compliance' ? 'Risk & Compliance' 
                               : role === 'bu_access' ? 'BU Manager' 
                               : role === 'branch_access' ? 'Branch Access' 
+                              : role === 'eom_elevated' ? 'EOM Elevated' 
                               : 'No Access'}
                           </span>
                           {(role === 'full_access' || role === 'risk_compliance') && (
                             <span style={{ fontSize: '0.68rem', color: 'var(--fg-muted)' }}>
                               All Business Units & Branches {role === 'risk_compliance' ? '(Read-only)' : ''}
+                            </span>
+                          )}
+                          {role === 'eom_elevated' && (
+                            <span style={{ fontSize: '0.68rem', color: 'var(--fg-muted)' }}>
+                              {[
+                                resolvedRole?.isSettingsAdmin && 'Settings Admin',
+                                resolvedRole?.isNegMovementElevated && 'Neg Movement',
+                              ].filter(Boolean).join(' · ')}
                             </span>
                           )}
                         </div>
