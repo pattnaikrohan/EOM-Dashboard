@@ -161,6 +161,7 @@ export default function OperatorView() {
     return (
       <div
         key={flag}
+        id={`section-${flag.replace(/\s+/g, '-')}`}
         className="card"
         style={{
           borderLeftColor: flagInfo?.hex,
@@ -327,10 +328,54 @@ export default function OperatorView() {
       {/* KPI Cards */}
       <KPICards kpi={data.kpi} />
 
+      {/* Jump to Section */}
+      <div style={{ marginTop: '1.5rem', marginBottom: '2rem' }}>
+        <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem', paddingLeft: '0.5rem' }}>
+          Jump to Section
+        </div>
+        <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', paddingBottom: '0.75rem' }}>
+          {ALL_CHECKERS.map(name => {
+            const count = (data.jobs_by_flag[name] || []).length;
+            if (count === 0) return null; // Only show sections that have jobs
+
+            const colour = FLAG_COLOURS[name]?.hex || '#6366f1';
+            let shortName = name;
+            if (PENDING_INVOICING_FLAGS.includes(name)) {
+                shortName = name.replace(' Jobs pending invoicing', '');
+            }
+
+            return (
+              <button
+                key={`jump-${name}`}
+                className="jump-pill"
+                onClick={() => {
+                  if (PENDING_INVOICING_FLAGS.includes(name)) {
+                    setPendingInvTab(name);
+                    const el = document.getElementById('pending-invoicing-section');
+                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  } else {
+                    const el = document.getElementById(`section-${name.replace(/\s+/g, '-')}`);
+                    if (el) {
+                      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      if (!expanded[name]) {
+                        setExpanded(prev => ({ ...prev, [name]: true }));
+                      }
+                    }
+                  }
+                }}
+              >
+                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: colour, marginRight: '6px', flexShrink: 0 }} />
+                {shortName}
+                <span className="jump-pill-badge" style={{ marginLeft: '6px' }}>{count}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
 
       {/* ── SECTION 1: GENERAL PENDING INVOICING ── */}
-      <div style={{
+      <div id="pending-invoicing-section" style={{
         margin: '1.5rem 0 0.75rem',
         padding: '0.5rem 0',
       }}>
