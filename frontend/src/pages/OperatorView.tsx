@@ -271,23 +271,27 @@ export default function OperatorView() {
           Filter by Operator
         </div>
         <div className="operator-pills" style={{ 
-          display: 'flex', gap: '0.5rem', flexWrap: 'wrap', paddingBottom: '0.75rem'
+          display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))', gap: '0.6rem', paddingBottom: '0.75rem'
         }}>
           <button 
             className={`operator-pill ${selectedCode === 'ALL' ? 'active' : ''}`}
             onClick={() => setSelectedCode('ALL')}
+            style={{ width: '100%', justifyContent: 'space-between' }}
           >
             All Operators 
-            <span className="operator-pill-badge" style={{ marginLeft: '6px' }}>{operators.reduce((sum, op) => sum + (op.visible_jobs || op.total_jobs), 0)}</span>
+            <span className="operator-pill-badge">{operators.reduce((sum, op) => sum + (op.visible_jobs || op.total_jobs), 0)}</span>
           </button>
-          {operators.map(op => (
+          {[...operators].sort((a, b) => a.code.localeCompare(b.code)).map(op => (
             <button
               key={op.code}
               className={`operator-pill ${selectedCode === op.code ? 'active' : ''}`}
               onClick={() => setSelectedCode(op.code)}
+              style={{ width: '100%', justifyContent: 'space-between' }}
             >
-              {op.code} 
-              <span className="operator-pill-badge" style={{ marginLeft: '6px' }}>{op.visible_jobs !== undefined ? op.visible_jobs : op.total_jobs}</span>
+              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: '0.5rem' }}>
+                {op.code}
+              </span>
+              <span className="operator-pill-badge">{op.visible_jobs !== undefined ? op.visible_jobs : op.total_jobs}</span>
             </button>
           ))}
         </div>
