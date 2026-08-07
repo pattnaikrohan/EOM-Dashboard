@@ -5,7 +5,7 @@
  */
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { ChevronRight, User, CheckCircle2, ArrowUpRight, ArrowDownLeft, Repeat, MapPin, Clock } from 'lucide-react';
+import { ChevronRight, User, CheckCircle2, ArrowUpRight, ArrowDownLeft, Repeat, MapPin, Clock, Search } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { getOperatorDetail } from '../services/api';
 import type { OperatorDetail, Job } from '../services/api';
@@ -94,7 +94,7 @@ export default function OperatorView() {
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [pendingInvTab, setPendingInvTab] = useState<string>('EXPORTS Jobs pending invoicing');
-
+  const [operatorSearch, setOperatorSearch] = useState<string>('');
   useEffect(() => {
     if (!loaded) return;
     setLoading(true);
@@ -267,21 +267,47 @@ export default function OperatorView() {
 
       {/* Operator Filter Tabs */}
       <div style={{ marginTop: '1.5rem', marginBottom: '1.5rem' }}>
-        <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem', paddingLeft: '0.5rem' }}>
-          Filter by Operator
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem', paddingLeft: '0.5rem', paddingRight: '0.25rem' }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            Filter by Operator
+          </div>
+          <div style={{ position: 'relative', width: '220px' }}>
+            <Search size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+            <input 
+              type="text" 
+              placeholder="Search operators..." 
+              value={operatorSearch}
+              onChange={e => setOperatorSearch(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '0.4rem 0.5rem 0.4rem 1.8rem',
+                fontSize: '0.75rem',
+                borderRadius: '8px',
+                border: '1px solid rgba(0,0,0,0.08)',
+                outline: 'none',
+                background: '#ffffff',
+                boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.02)'
+              }}
+            />
+          </div>
         </div>
         <div className="operator-pills" style={{ 
           display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '0.4rem', paddingBottom: '0.75rem'
         }}>
-          <button 
-            className={`operator-pill ${selectedCode === 'ALL' ? 'active' : ''}`}
-            onClick={() => setSelectedCode('ALL')}
-            style={{ width: '100%', justifyContent: 'space-between' }}
-          >
-            All Operators 
-            <span className="operator-pill-badge">{operators.reduce((sum, op) => sum + (op.visible_jobs || op.total_jobs), 0)}</span>
-          </button>
-          {[...operators].sort((a, b) => a.code.localeCompare(b.code)).map(op => (
+          {(!operatorSearch || 'all operators'.includes(operatorSearch.toLowerCase())) && (
+            <button 
+              className={`operator-pill ${selectedCode === 'ALL' ? 'active' : ''}`}
+              onClick={() => setSelectedCode('ALL')}
+              style={{ width: '100%', justifyContent: 'space-between' }}
+            >
+              All Operators 
+              <span className="operator-pill-badge">{operators.reduce((sum, op) => sum + (op.visible_jobs || op.total_jobs), 0)}</span>
+            </button>
+          )}
+          {[...operators]
+            .sort((a, b) => a.code.localeCompare(b.code))
+            .filter(op => op.code.toLowerCase().includes(operatorSearch.toLowerCase()))
+            .map(op => (
             <button
               key={op.code}
               className={`operator-pill ${selectedCode === op.code ? 'active' : ''}`}
