@@ -271,7 +271,7 @@ export default function OperatorView() {
           Filter by Operator
         </div>
         <div className="operator-pills" style={{ 
-          display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))', gap: '0.6rem', paddingBottom: '0.75rem'
+          display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '0.4rem', paddingBottom: '0.75rem'
         }}>
           <button 
             className={`operator-pill ${selectedCode === 'ALL' ? 'active' : ''}`}
