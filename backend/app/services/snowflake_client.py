@@ -97,11 +97,12 @@ def fetch_jobs_from_snowflake():
         
         branch_name = job_data.get("BRANCH_NAME") or job_data.get("BRANCH_CODE")
         
-        # Check operator branch map first for Adelaide, Fremantle, Auckland, etc.
-        if op_name in OPERATOR_BRANCHES:
-            branch_name = OPERATOR_BRANCHES[op_name]
-        elif op_raw in OPERATOR_BRANCHES:
-            branch_name = OPERATOR_BRANCHES[op_raw]
+        # Only use operator branch map as fallback when Snowflake has no branch
+        if not branch_name or branch_name == "AAW Global Logistics - Unknown":
+            if op_name in OPERATOR_BRANCHES:
+                branch_name = OPERATOR_BRANCHES[op_name]
+            elif op_raw in OPERATOR_BRANCHES:
+                branch_name = OPERATOR_BRANCHES[op_raw]
             
         if not branch_name or branch_name == "AAW Global Logistics - Unknown":
             job_num = (job_data.get("JOB_NUMBER") or "").upper()

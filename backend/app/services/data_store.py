@@ -94,7 +94,8 @@ class DataStore:
         from app.services.rules import get_flags, priority_flag, get_ops_section
         for j in self.jobs:
             op = j.get("operator", "")
-            if op in OPERATOR_BRANCHES:
+            # Only use OPERATOR_BRANCHES as a fallback when the job has no branch from Snowflake
+            if not j.get("branch") and op in OPERATOR_BRANCHES:
                 j["branch"] = OPERATOR_BRANCHES[op]
             j["flags"] = get_flags(j, self.period)
             j["primary_flag"] = priority_flag(j["flags"])
