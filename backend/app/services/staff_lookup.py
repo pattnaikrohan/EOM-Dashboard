@@ -63,64 +63,90 @@ OPERATOR_NAMES = {
 }
 
 BRANCH_NAMES = {
+    # Sydney
     'SY1': 'AAW Global Logistics - Sydney',
     'SYD': 'AAW Global Logistics - Sydney',
-    'ME1': 'AAW Global Logistics - Melbourne',
-    'MEL': 'AAW Global Logistics - Melbourne',
-    'BN1': 'AAW Global Logistics - Brisbane',
-    'BNE': 'AAW Global Logistics - Brisbane',
-    'AD1': 'AAW Global Logistics - Adelaide',
-    'ADL': 'AAW Global Logistics - Adelaide',
-    'FR1': 'AAW Global Logistics - Fremantle',
-    'FRE': 'AAW Global Logistics - Fremantle',
-    'AKL': 'AAW Global Logistics - Auckland',
-    'HOZ': 'AAW Global Logistics - Auckland',
-    'BR1': 'AAW Customs Brokerage',
-    'BRK': 'AAW Customs Brokerage',
-    'PR1': 'AAW Project Logistics',
-    'PRJ': 'AAW Project Logistics',
-    'BLL': 'AAW Bulk Liquid Logistics',
-    'HOY': 'AAW Bulk Liquid Logistics',
-    'HLA': 'Hoyer Logistics Australia',
-    'CBG': 'Coastalbridge',
-    'CBR': 'Coastalbridge',
-    'CCC': 'CoastalBridge Agencies for COSCO Shipping',
-    'TFS': 'Coastalbridge Agencies for Toyofuji Shipping',
-    'PIL': 'PIL Logistics Australia',
-    'MIL': 'Regional Shipping Services',
-    'HAU': 'AAW Group Holdings',
-    'HDO': 'AAW Group Holdings',
-}
-
-OPERATOR_BRANCHES = {
-    # Adelaide
-    'KB2': 'AAW Global Logistics - Adelaide', 'Kelly Baugh': 'AAW Global Logistics - Adelaide',
-    'KC': 'AAW Global Logistics - Adelaide', 'Kim Carningham': 'AAW Global Logistics - Adelaide',
-    'DP5': 'AAW Global Logistics - Adelaide', 'David Peake': 'AAW Global Logistics - Adelaide',
-    'HW1': 'AAW Global Logistics - Adelaide', 'Hellen Wang': 'AAW Global Logistics - Adelaide',
-    'LE': 'AAW Global Logistics - Adelaide', 'Lina Emelianova': 'AAW Global Logistics - Adelaide',
-    'ADL': 'AAW Global Logistics - Adelaide', 'ADL - Branch Account': 'AAW Global Logistics - Adelaide',
+    'AAW GLOBAL LOGISTICS - SYDNEY': 'AAW Global Logistics - Sydney',
+    'AAW GLOBAL LOGISTICS - SYDNEY ': 'AAW Global Logistics - Sydney',
 
     # Melbourne
-    'SDA': 'AAW Global Logistics - Melbourne', 'Sean De Asis': 'AAW Global Logistics - Melbourne',
+    'ME1': 'AAW Global Logistics - Melbourne',
+    'MEL': 'AAW Global Logistics - Melbourne',
+    'AAW GLOBAL LOGISTICS - MELBOURNE': 'AAW Global Logistics - Melbourne',
+    'AAW GLOBAL LOGISTICS - MELBOURNE ': 'AAW Global Logistics - Melbourne',
+
+    # Brisbane
+    'BN1': 'AAW Global Logistics - Brisbane',
+    'BNE': 'AAW Global Logistics - Brisbane',
+    'AAW GLOBAL LOGISTICS - BRISBANE': 'AAW Global Logistics - Brisbane',
+    'AAW GLOBAL LOGISTICS - BRISBANE ': 'AAW Global Logistics - Brisbane',
+
+    # Adelaide
+    'AD1': 'AAW Global Logistics - Adelaide',
+    'ADL': 'AAW Global Logistics - Adelaide',
+    'AAW GLOBAL LOGISTICS - ADELAIDE': 'AAW Global Logistics - Adelaide',
+    'AAW GLOBAL LOGISTICS - ADELAIDE ': 'AAW Global Logistics - Adelaide',
 
     # Fremantle
-    'SL2': 'AAW Global Logistics - Fremantle', 'Stella Lee': 'AAW Global Logistics - Fremantle',
-    'JP': 'AAW Global Logistics - Fremantle', 'Jiri Pelc': 'AAW Global Logistics - Fremantle',
-    'IB1': 'AAW Global Logistics - Fremantle', 'Iesha Bridle': 'AAW Global Logistics - Fremantle',
-    'GK': 'AAW Global Logistics - Fremantle', 'Gareth Knight': 'AAW Global Logistics - Fremantle',
-    'LV2': 'AAW Global Logistics - Fremantle', 'Le Vo': 'AAW Global Logistics - Fremantle',
-    'AW2': 'AAW Global Logistics - Fremantle', 'Alicia Welch': 'AAW Global Logistics - Fremantle',
-    'FRE': 'AAW Global Logistics - Fremantle', 'FRE - Branch Account': 'AAW Global Logistics - Fremantle',
+    'FR1': 'AAW Global Logistics - Fremantle',
+    'FRE': 'AAW Global Logistics - Fremantle',
+    'AAW GLOBAL LOGISTICS - FREMANTLE': 'AAW Global Logistics - Fremantle',
+    'AAW GLOBAL LOGISTICS - FREMANTLE ': 'AAW Global Logistics - Fremantle',
 
     # Auckland
-    'AAB': 'AAW Global Logistics - Auckland', 'Claire Brotherton': 'AAW Global Logistics - Auckland',
-    'KN1': 'AAW Global Logistics - Auckland', 'Kai Nguyen': 'AAW Global Logistics - Auckland',
-    'LP1': 'AAW Global Logistics - Auckland', 'Leah Purvis': 'AAW Global Logistics - Auckland',
-    'SM7': 'AAW Global Logistics - Auckland', 'Sina Meleisea': 'AAW Global Logistics - Auckland',
-    'JM8': 'AAW Global Logistics - Auckland', 'Jitu Mogre': 'AAW Global Logistics - Auckland',
-    'CN': 'AAW Global Logistics - Auckland', 'Carol Ngo': 'AAW Global Logistics - Auckland',
-    'LV1': 'AAW Global Logistics - Auckland', 'Louise Venables': 'AAW Global Logistics - Auckland',
-    'MW2': 'AAW Global Logistics - Auckland', 'Mareta Chang Wai': 'AAW Global Logistics - Auckland',
-    'AKL': 'AAW Global Logistics - Auckland', 'AKL - Branch Account': 'AAW Global Logistics - Auckland',
+    'AKL': 'AAW Global Logistics - Auckland',
+    'HOZ': 'AAW Global Logistics - Auckland',
+    'AAW GLOBAL LOGISTICS - AUCKLAND': 'AAW Global Logistics - Auckland',
+    'AAW GLOBAL LOGISTICS (NZ) LIMITED - AUCKLAND': 'AAW Global Logistics - Auckland',
+
+    # Customs Brokerage
+    'BR1': 'AAW Customs Brokerage',
+    'BRK': 'AAW Customs Brokerage',
+    'AAW CUSTOMS BROKERAGE': 'AAW Customs Brokerage',
+
+    # Project Logistics
+    'PR1': 'AAW Project Logistics',
+    'PRJ': 'AAW Project Logistics',
+    'AAW PROJECT LOGISTICS': 'AAW Project Logistics',
+
+    # Bulk Liquid Logistics
+    'BLL': 'AAW Bulk Liquid Logistics',
+    'HOY': 'AAW Bulk Liquid Logistics',
+    'AAW BULK LIQUID LOGISTICS': 'AAW Bulk Liquid Logistics',
+    'HLA': 'Hoyer Logistics Australia',
+
+    # Coastalbridge & Agencies
+    'CBG': 'Coastalbridge',
+    'CBR': 'Coastalbridge',
+    'COASTALBRIDGE': 'Coastalbridge',
+    'CCC': 'CoastalBridge Agencies for COSCO Shipping',
+    'COASTALBRIDGE AGENCIES FOR COSCO SHIPPING': 'CoastalBridge Agencies for COSCO Shipping',
+    'TFS': 'Coastalbridge Agencies for Toyofuji Shipping',
+    'COASTALBRIDGE AGENCIES FOR TOYOFUJI SHIPPING': 'Coastalbridge Agencies for Toyofuji Shipping',
+
+    # PIL & RSS
+    'PIL': 'PIL Logistics Australia',
+    'PIL LOGISTICS AUSTRALIA': 'PIL Logistics Australia',
+    'MIL': 'Regional Shipping Services',
+    'REGIONAL SHIPPING SERVICES': 'Regional Shipping Services',
+    'REGIONAL SHIPPING SERVICES PTY LTD': 'Regional Shipping Services',
+
+    # Holdings
+    'HAU': 'AAW Group Holdings',
+    'HDO': 'AAW Group Holdings',
+    'AAW GROUP HOLDINGS': 'AAW Group Holdings',
 }
+
+# Pre-computed uppercase lookup table for case-insensitive normalization
+BRANCH_MAP_UPPER = {k.strip().upper(): v for k, v in BRANCH_NAMES.items()}
+
+def normalize_branch_name(raw_branch: str) -> str:
+    """Normalize any raw branch code or string to canonical Title Case branch name."""
+    if not raw_branch:
+        return "Unassigned Branch"
+    cleaned = str(raw_branch).strip()
+    upper = cleaned.upper()
+    if upper in BRANCH_MAP_UPPER:
+        return BRANCH_MAP_UPPER[upper]
+    # Return Title Case if not in map
+    return cleaned.title()

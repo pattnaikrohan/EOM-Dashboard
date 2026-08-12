@@ -261,15 +261,17 @@ def get_scoped_branches(user, ui_branches=None):
     If user is full_access → return ui_branches as-is (or None for all).
     If user has branch restrictions → intersect with UI selection.
     """
+    from app.services.staff_lookup import normalize_branch_name
     allowed = user.get_allowed_branches()
 
     if allowed is None:
         # Full access — respect the UI filter or show all
-        return ui_branches
+        return [normalize_branch_name(b) for b in ui_branches] if ui_branches else None
 
+    allowed_norm = [normalize_branch_name(b) for b in allowed]
     if not ui_branches:
         # No UI filter — use user's allowed branches
-        return allowed
+        return allowed_norm
 
     # Intersect: only show branches that are both allowed AND selected
-    return [b for b in ui_branches if b in allowed]
+    return [normalize_branch_name(b) for b in ui_branches if normalize_branch_name(b) in allowed_norm]

@@ -6,7 +6,7 @@ from __future__ import annotations
 import functools
 from typing import Optional
 from app.services.rules import FLAG_COLOURS, FLAG_PRIORITY
-from app.services.staff_lookup import OPERATOR_BRANCHES
+from app.services.staff_lookup import normalize_branch_name
 
 
 
@@ -93,8 +93,7 @@ class DataStore:
         # Always recompute flags and direction, and normalize operator branches for all jobs
         from app.services.rules import get_flags, priority_flag, get_ops_section
         for j in self.jobs:
-            if not j.get("branch"):
-                j["branch"] = "Unassigned Branch"
+            j["branch"] = normalize_branch_name(j.get("branch"))
             j["flags"] = get_flags(j, self.period)
             j["primary_flag"] = priority_flag(j["flags"])
             j["ops_section"] = get_ops_section(j)

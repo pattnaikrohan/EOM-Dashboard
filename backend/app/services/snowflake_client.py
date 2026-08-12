@@ -3,7 +3,7 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.backends import default_backend
 import os
 
-from app.services.staff_lookup import OPERATOR_NAMES, BRANCH_NAMES
+from app.services.staff_lookup import OPERATOR_NAMES, BRANCH_NAMES, normalize_branch_name
 
 SF_ACCOUNT   = os.environ.get("SF_ACCOUNT", "SGLYREN-GG43054")
 SF_USER      = os.environ.get("SF_USER", "TEST_AI_AUTO")
@@ -96,10 +96,7 @@ def fetch_jobs_from_snowflake():
         op_name = OPERATOR_NAMES.get(op_raw, op_raw)
         
         branch_raw = job_data.get("BRANCH_NAME") or job_data.get("BRANCH_CODE") or ""
-        branch_name = BRANCH_NAMES.get(branch_raw, branch_raw)
-        
-        if not branch_name:
-            branch_name = "Unassigned Branch"
+        branch_name = normalize_branch_name(branch_raw)
 
 
                 
