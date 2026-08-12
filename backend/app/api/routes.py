@@ -113,6 +113,12 @@ def sync_snowflake():
         print(f"Snowflake sync failed: {e}")
         return jsonify({"error": f"Snowflake sync failed: {str(e)}"}), 500
 
+@blueprint.route("/sync/progress", methods=["GET"])
+def get_sync_progress():
+    """Returns real-time progress of ongoing Snowflake data sync."""
+    from app.services.snowflake_client import sync_progress
+    return jsonify(sync_progress)
+
 @blueprint.route("/clear", methods=["POST"])
 @require_bu_manager
 def clear_data():

@@ -228,6 +228,20 @@ export async function getOpsReview(flags?: string[], branches?: string[], depart
   return data;
 }
 
+export interface SyncProgress {
+  status: 'idle' | 'running' | 'completed' | 'error';
+  stage: string;
+  percent: number;
+  current: number;
+  total: number;
+  message?: string;
+}
+
+export async function getSyncProgress(): Promise<SyncProgress> {
+  const { data } = await api.get('/sync/progress');
+  return data;
+}
+
 export async function getStatus(): Promise<StatusResponse> {
   const { data } = await api.get('/status');
   return data;

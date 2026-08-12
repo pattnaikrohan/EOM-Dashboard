@@ -2,6 +2,7 @@ import snowflake.connector
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.backends import default_backend
 import os
+import time
 
 from app.services.staff_lookup import OPERATOR_NAMES, BRANCH_NAMES, normalize_branch_name
 
@@ -9,6 +10,24 @@ SF_ACCOUNT   = os.environ.get("SF_ACCOUNT", "SGLYREN-GG43054")
 SF_USER      = os.environ.get("SF_USER", "TEST_AI_AUTO")
 SF_WAREHOUSE = os.environ.get("SF_WAREHOUSE", "PROD_COMPUTE_WH")
 SF_ROLE      = os.environ.get("SF_ROLE", "PROD_ENGINEER")
+
+# Thread-safe global progress dictionary
+sync_progress = {
+    "status": "idle",
+    "stage": "Ready",
+    "percent": 100,
+    "current": 0,
+    "total": 0,
+    "message": ""
+}
+
+def update_sync_progress(stage: str, percent: int, current: int = 0, total: int = 0, status: str = "running", message: str = ""):
+    sync_progress["status"] = status
+    sync_progress["stage"] = stage
+    sync_progress["percent"] = max(0, min(100, percent))
+    sync_progress["current"] = current
+    sync_progress["total"] = total
+    sync_progress["message"] = message
 
 
 PRIVATE_KEY_PEM = """-----BEGIN PRIVATE KEY-----
@@ -30,7 +49,7 @@ b0UKlGxodyelt7MWF8tNRBTkbQKBgQDHAmkrEgQOJ/g/CjHWDcqywQt5JVQGP3ZC
 5Im+C37v/WZge77fg2oYpv0yJ1QIuLiCp8MDRYdLahru0/JUsL8Yu6gb9tXc0MpE
 vxoVJBiCDJfdOSHZs+AOmUDnLBQBoZLHxUbGC6ltwRALSHQGRmH7EPdN4UJg5awJ
 MehRT9zhqwKBgQDiq/AEMkAUrj6gzjs3z7QKvdZlemM8t+uy/osQ3je34R2PGOta
-fxCwhrVlcMXP7P1nsPQ2H5alfIKyX9kMKq5/z3Jc3Q6hU/QeMJZLuo/p0TMnCojN
+fxCwwhrVlcMXP7P1nsPQ2H5alfIKyX9kMKq5/z3Jc3Q6hU/QeMJZLuo/p0TMnCojN
 yZ6HCt2IZysed9DfqGRzKUuJ3mJphebtkqrcrdcnMaeuGfNkMCLHLoMH3QKBgQC5
 AS+9n4DvnA62pAaSZL3kEXxWAfKr4EFTjFvUtaEq/5o15bQa23M9Obg18MO5W+gD
 ZmvvVaqh3CDvl083lhwApStx27UTE3KGGFXqA2VZONXRDbS/Su3nBGeGwL5Uid0H
@@ -65,20 +84,29 @@ def fetch_jobs_from_snowflake():
     
     select_query = query_parts[1].strip().rstrip(';')
     
+    update_sync_progress("Connecting to Snowflake Database...", 10)
     conn = get_connection()
     cur = conn.cursor()
     
+    update_sync_progress("Querying CargoWise Job Tables...", 25)
     print("Fetching jobs from Snowflake (Live)...")
     cur.execute(select_query)
     
     cols = [desc[0] for desc in cur.description]
     rows = cur.fetchall()
+    total_rows = len(rows)
+    update_sync_progress(f"Parsing CargoWise records (0 / {total_rows:,})", 30, current=0, total=total_rows)
     
     jobs = []
     branches = set()
     operators = set()
     
-    for row in rows:
+    step = max(200, total_rows // 50)
+    for idx, row in enumerate(rows, 1):
+        if idx % step == 0 or idx == total_rows:
+            pct = 30 + int((idx / total_rows) * 65)
+            update_sync_progress(f"Parsing CargoWise records ({idx:,} / {total_rows:,})", pct, current=idx, total=total_rows)
+
         job_data = dict(zip(cols, row))
         
         job_direction = job_data.get("JOB_DIRECTION") or ""
@@ -98,8 +126,6 @@ def fetch_jobs_from_snowflake():
         branch_raw = job_data.get("BRANCH_NAME") or job_data.get("BRANCH_CODE") or ""
         branch_name = normalize_branch_name(branch_raw)
 
-
-                
         job = {
             "job_number":     job_data.get("JOB_NUMBER", ""),
             "job_status":     job_data.get("JOB_STATUS", ""),
@@ -135,6 +161,8 @@ def fetch_jobs_from_snowflake():
     cur.close()
     conn.close()
     
+    update_sync_progress("Synchronization Complete", 100, current=total_rows, total=total_rows, status="completed")
+
     return {
         "jobs": jobs,
         "branch": "All Branches (Snowflake)" if len(branches) > 1 else list(branches)[0] if branches else "Unknown",
