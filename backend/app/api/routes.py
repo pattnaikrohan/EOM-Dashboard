@@ -89,27 +89,31 @@ def sync_snowflake():
         from app.services.snowflake_client import fetch_jobs_from_snowflake
         parsed = fetch_jobs_from_snowflake()
         
-        # We can either merge or overwrite. Let's merge for now as requested.
         data_store.load(parsed, merge=True)
         from app.services.neg_movement_store import neg_movement_store
         neg_movement_store.populate_from_snowflake(data_store.jobs, data_store.branch, data_store.period)
         
+        operators_list = list(data_store.operators) if isinstance(data_store.operators, (set, list)) else []
+        
         merged_parsed = {
             "branch": data_store.branch,
             "period": data_store.period,
-            "operators": data_store.operators,
+            "operators": operators_list,
             "jobs": data_store.jobs
         }
         
-        upload_parsed_data(merged_parsed)
-        
+        try:
+            upload_parsed_data(merged_parsed)
+        except Exception as blob_err:
+            print(f"Blob upload warning (non-fatal): {blob_err}")
+
         return jsonify({
             "success": True,
             "message": f"Synced {len(parsed['jobs'])} live jobs from Snowflake! Total in system: {len(data_store.jobs)}",
             "branch": data_store.branch,
             "period": data_store.period,
             "total_jobs": len(data_store.jobs),
-            "operators": data_store.operators,
+            "operators": operators_list,
         })
     except Exception as e:
         print(f"Snowflake sync failed: {e}")
