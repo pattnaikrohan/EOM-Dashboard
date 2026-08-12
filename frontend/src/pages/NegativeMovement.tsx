@@ -14,6 +14,7 @@ import {
 } from '../services/api';
 import type { NegMovementJob, NegMovementSummary, NegMovementSectionSummary } from '../services/api';
 import PremiumLoader from '../components/PremiumLoader';
+import { useData } from '../context/DataContext';
 import { formatCurrency } from '../utils/constants';
 
 // ── Section config ────────────────────────────────────────────────────────────
@@ -56,6 +57,7 @@ type SortDir = 'asc' | 'desc';
 
 // ── Main Component ────────────────────────────────────────────────────────────
 export default function NegativeMovement() {
+  const { globalBranches, getTabCache, setTabCache } = useData();
   const [loaded, setLoaded] = useState(false);
   const [loading, setLoading] = useState(true);
   const [summary, setSummary] = useState<NegMovementSummary | null>(null);
@@ -73,6 +75,19 @@ export default function NegativeMovement() {
   const [uploadMsg, setUploadMsg] = useState('');
 
   const loadData = useCallback(async () => {
+    const cacheKey = `neg_movement_${(globalBranches || []).join(',')}`;
+    const cached = getTabCache('negMovement', cacheKey);
+    if (cached) {
+      setLoaded(cached.loaded);
+      setSummary(cached.summary);
+      setBranch(cached.branch);
+      setPeriod(cached.period);
+      setPlCategories(cached.plCategories);
+      setSectionJobs(cached.sectionJobs);
+      setLoading(false);
+      return;
+    }
+
     try {
       const statusResp = await getNegMovementStatus();
       setLoaded(statusResp.loaded);
@@ -80,24 +95,33 @@ export default function NegativeMovement() {
 
       if (statusResp.loaded) {
         const summaryResp = await getNegMovementSummary();
-        setSummary(summaryResp.summary);
-        setBranch(summaryResp.branch);
-        setPeriod(summaryResp.period);
-        setPlCategories(summaryResp.pl_categories || []);
-
         const jobs: Record<string, NegMovementJob[]> = {};
         for (const sec of SECTIONS) {
           const resp = await getNegMovementJobs(sec.key);
           jobs[sec.key] = resp.jobs;
         }
+
+        setSummary(summaryResp.summary);
+        setBranch(summaryResp.branch);
+        setPeriod(summaryResp.period);
+        setPlCategories(summaryResp.pl_categories || []);
         setSectionJobs(jobs);
+
+        setTabCache('negMovement', cacheKey, {
+          loaded: statusResp.loaded,
+          summary: summaryResp.summary,
+          branch: summaryResp.branch,
+          period: summaryResp.period,
+          plCategories: statusResp.pl_categories || [],
+          sectionJobs: jobs,
+        });
       }
     } catch (err) {
       console.error('Failed to load neg movement data:', err);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [globalBranches, getTabCache, setTabCache]);
 
   useEffect(() => { loadData(); }, [loadData]);
 
