@@ -87,7 +87,7 @@ function CountdownTimer() {
 }
 
 export default function OperatorView() {
-  const { globalFlags, globalBranches, globalDepartments, operators, loaded } = useData();
+  const { globalFlags, globalBranches, globalDepartments, operators, loaded, getTabCache, setTabCache } = useData();
   const [searchParams] = useSearchParams();
   const initialOp = searchParams.get('operator') || 'ALL';
   const [selectedCode, setSelectedCode] = useState<string>(initialOp);
@@ -96,8 +96,18 @@ export default function OperatorView() {
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [pendingInvTab, setPendingInvTab] = useState<string>('EXPORTS Jobs pending invoicing');
   const [operatorSearch, setOperatorSearch] = useState<string>('');
+
   useEffect(() => {
     if (!loaded) return;
+    const cacheKey = `${selectedCode}_${(globalFlags || []).join(',')}_${(globalBranches || []).join(',')}_${(globalDepartments || []).join(',')}`;
+    const cached = getTabCache('opDetail', cacheKey);
+    if (cached) {
+      setData(cached.data);
+      setExpanded(cached.expanded);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     getOperatorDetail(selectedCode, globalFlags, globalBranches, globalDepartments)
       .then(d => {
@@ -109,10 +119,11 @@ export default function OperatorView() {
           exp[f] = jobs.length > 0;
         });
         setExpanded(exp);
+        setTabCache('opDetail', cacheKey, { data: d, expanded: exp });
       })
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, [selectedCode, globalFlags, globalBranches, globalDepartments, loaded]);
+  }, [selectedCode, globalFlags, globalBranches, globalDepartments, loaded, getTabCache, setTabCache]);
 
 
   if (!loaded) {

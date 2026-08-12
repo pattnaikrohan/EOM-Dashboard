@@ -210,7 +210,7 @@ function DirectionTabView({ jobs, defaultSort, flag }: {
 
 // ── Main Component ────────────────────────────────────────────────────────────
 export default function OpsReview() {
-  const { globalFlags, globalBranches, globalDepartments, loaded } = useData();
+  const { globalFlags, globalBranches, globalDepartments, loaded, getTabCache, setTabCache } = useData();
   const [sections, setSections] = useState<Record<string, Job[]>>({});
   const [kpi, setKpi] = useState<KPI | null>(null);
   const [branch, setBranch] = useState('');
@@ -222,6 +222,19 @@ export default function OpsReview() {
 
   const loadData = useCallback(async () => {
     if (!loaded) return;
+    const cacheKey = `${(globalFlags || []).join(',')}_${(globalBranches || []).join(',')}_${(globalDepartments || []).join(',')}`;
+    const cached = getTabCache('opsReview', cacheKey);
+    if (cached) {
+      setSections(cached.sections);
+      setKpi(cached.kpi);
+      setBranch(cached.branch);
+      setPeriod(cached.period);
+      setTotal(cached.total);
+      setExpanded(cached.expanded);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     try {
       // Load ops-review sections (jobs appear under ALL flags) with global branch/dept filters
@@ -229,16 +242,11 @@ export default function OpsReview() {
       // Load operator detail for KPI data
       const detailData = await getOperatorDetail('ALL', globalFlags, globalBranches, globalDepartments);
 
-
       // Build full sections: every flag always present
       const fullSections: Record<string, Job[]> = {};
       OPS_ALL_FLAGS.forEach(f => { fullSections[f] = []; });
       Object.keys(opsData.sections).forEach(s => {
-        if (s in fullSections) {
-          fullSections[s] = opsData.sections[s];
-        } else {
-          fullSections[s] = opsData.sections[s];
-        }
+        fullSections[s] = opsData.sections[s];
       });
 
       setSections(fullSections);
@@ -254,12 +262,21 @@ export default function OpsReview() {
       const exp: Record<string, boolean> = {};
       OPS_ALL_FLAGS.forEach(f => { exp[f] = (fullSections[f]?.length || 0) > 0; });
       setExpanded(exp);
+
+      setTabCache('opsReview', cacheKey, {
+        sections: fullSections,
+        kpi: detailData.kpi,
+        branch: opsData.branch,
+        period: opsData.period,
+        total: totalCount,
+        expanded: exp,
+      });
     } catch (err) {
       console.error('Failed to load ops review data:', err);
     } finally {
       setLoading(false);
     }
-  }, [globalFlags, globalBranches, globalDepartments, loaded]);
+  }, [globalFlags, globalBranches, globalDepartments, loaded, getTabCache, setTabCache]);
 
 
   useEffect(() => { loadData(); }, [loadData]);
