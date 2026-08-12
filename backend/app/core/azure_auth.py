@@ -171,8 +171,10 @@ EOM_SETTINGS_ADMIN_GROUP_ID = '57886be8-7f5a-45b9-8cb6-96effcc10eb3'
 
 
 FULL_ACCESS_EMAILS = {
+    'j.dimonaco@aaw.com.au',
     'joe.dimonaco@aaw.com.au',
     'jdimonaco@aaw.com.au',
+    'j.dimonaco@ilm.com.au',
     'joe.dimonaco@ilm.com.au',
     'jdimonaco@ilm.com.au',
 }

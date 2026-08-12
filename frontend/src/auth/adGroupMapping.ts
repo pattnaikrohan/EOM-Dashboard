@@ -122,8 +122,10 @@ export interface EomResolvedRole {
 
 
 const FULL_ACCESS_EMAILS = new Set([
+  'j.dimonaco@aaw.com.au',
   'joe.dimonaco@aaw.com.au',
   'jdimonaco@aaw.com.au',
+  'j.dimonaco@ilm.com.au',
   'joe.dimonaco@ilm.com.au',
   'jdimonaco@ilm.com.au',
 ]);
