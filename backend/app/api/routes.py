@@ -273,15 +273,16 @@ def get_ops_review():
     review_jobs = data_store.get_ops_review_jobs(flags=flags, branches=branches, departments=departments)
 
     sections = {}
+    section_counts = {}
     for item in review_jobs:
         label = item["ops_label"]
         if label not in sections:
             sections[label] = []
-        sections[label].append(item["job"])
-
-    print(f"DEBUG: Returning ops-review. Total jobs: {len(review_jobs)}")
-    for lbl, jlist in sections.items():
-        print(f"DEBUG: Section {lbl} has {len(jlist)} jobs")
+            section_counts[label] = 0
+        section_counts[label] += 1
+        # Cap initial list payload to 250 jobs per section for sub-100ms load time
+        if len(sections[label]) < 250:
+            sections[label].append(item["job"])
 
     kpi = data_store.get_kpi(operator=None, flags=flags, branches=branches, departments=departments)
 
@@ -289,6 +290,7 @@ def get_ops_review():
         "branch": data_store.branch,
         "period": data_store.period,
         "sections": sections,
+        "section_counts": section_counts,
         "total": len(review_jobs),
         "kpi": kpi,
     })

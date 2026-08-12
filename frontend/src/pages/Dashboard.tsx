@@ -73,7 +73,7 @@ const CustomPieTooltip = ({ active, payload }: any) => {
 };
 
 export default function Dashboard() {
-  const { loaded, dashboard, branch, period, loading } = useData();
+  const { loaded, dashboard, loading } = useData();
   const navigate = useNavigate();
 
   if (loading && !loaded) {
@@ -118,10 +118,10 @@ export default function Dashboard() {
   const sortedOperators = [...operators]
     .filter(op => op.total_jobs > 0)
     .sort((a, b) => b.total_jobs - a.total_jobs);
-  
+
   const topOperators = sortedOperators.slice(0, 20);
   const otherOperators = sortedOperators.slice(20);
-  
+
   const operatorBarData = topOperators.map(op => ({
     name: op.code,
     Jobs: op.total_jobs,
@@ -153,7 +153,7 @@ export default function Dashboard() {
       <div className="page-header">
         <div className="page-header__overline">Branch Overview</div>
         <h1 className="page-header__title">
-          EOM Review — {branch} — {period}
+          EOM Review — Analytics Dashboard
         </h1>
         <p className="page-header__subtitle">
           {kpi.total_jobs} active jobs across {operators.length} operators
@@ -174,19 +174,19 @@ export default function Dashboard() {
             <BarChart data={operatorBarData} barGap={4} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
               <defs>
                 <linearGradient id="colorJobs" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#60a5fa" stopOpacity={1}/>
-                  <stop offset="100%" stopColor="#2563eb" stopOpacity={1}/>
+                  <stop offset="0%" stopColor="#60a5fa" stopOpacity={1} />
+                  <stop offset="100%" stopColor="#2563eb" stopOpacity={1} />
                 </linearGradient>
                 <linearGradient id="colorLoss" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#f87171" stopOpacity={1}/>
-                  <stop offset="100%" stopColor="#dc2626" stopOpacity={1}/>
+                  <stop offset="0%" stopColor="#f87171" stopOpacity={1} />
+                  <stop offset="100%" stopColor="#dc2626" stopOpacity={1} />
                 </linearGradient>
                 <linearGradient id="colorWIP" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#fbbf24" stopOpacity={1}/>
-                  <stop offset="100%" stopColor="#d97706" stopOpacity={1}/>
+                  <stop offset="0%" stopColor="#fbbf24" stopOpacity={1} />
+                  <stop offset="100%" stopColor="#d97706" stopOpacity={1} />
                 </linearGradient>
                 <filter id="barShadow" x="-20%" y="-20%" width="140%" height="140%">
-                  <feDropShadow dx="0" dy="4" stdDeviation="6" floodColor="#000000" floodOpacity="0.08"/>
+                  <feDropShadow dx="0" dy="4" stdDeviation="6" floodColor="#000000" floodOpacity="0.08" />
                 </filter>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" vertical={false} />

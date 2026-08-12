@@ -1,7 +1,7 @@
 /**
- * PremiumLoader — Single Ultra-Premium SVG Snowflake Liquid-Fill Loading Component.
- * Replaces redundant loaders with a single, elegant 6-point Snowflake SVG that fills vertically
- * in 1-to-1 sync with percentage progress, featuring a live row counter and glowing neon ambience.
+ * PremiumLoader — Single Ultra-Premium SVG Snowflake Crystal Liquid-Fill Component.
+ * Features a 3D Glassmorphic Snowflake Crystal emblem, fluid wave surface fill (0-100%),
+ * rotating particle orbit ring, and clean live row counter.
  */
 import { useEffect, useState } from 'react';
 import { getSyncProgress } from '../services/api';
@@ -106,31 +106,31 @@ export default function PremiumLoader({
       justifyContent: 'center',
       minHeight: '400px'
     }}>
-      {/* ── Single Snowflake SVG Liquid Fill Container ── */}
-      <div style={{ position: 'relative', width: '150px', height: '150px', marginBottom: '1.75rem' }}>
-        {/* Neon Ambient Glow ring around Snowflake */}
+      {/* ── Ultra-Premium Snowflake Crystal Emblem ── */}
+      <div style={{ position: 'relative', width: '160px', height: '160px', marginBottom: '1.75rem' }}>
+        {/* Pulsating Neon Glow aura behind crystal */}
         <div style={{
           position: 'absolute',
           top: '50%',
           left: '50%',
           transform: 'translate(-50%, -50%)',
-          width: '120px',
-          height: '120px',
+          width: '130px',
+          height: '130px',
           borderRadius: '50%',
           background: displayPercent === 100
-            ? 'radial-gradient(circle, rgba(16, 185, 129, 0.35) 0%, rgba(16, 185, 129, 0) 70%)'
-            : 'radial-gradient(circle, rgba(59, 130, 246, 0.35) 0%, rgba(139, 92, 246, 0) 70%)',
-          filter: 'blur(15px)',
+            ? 'radial-gradient(circle, rgba(16, 185, 129, 0.4) 0%, rgba(16, 185, 129, 0) 75%)'
+            : 'radial-gradient(circle, rgba(59, 130, 246, 0.4) 0%, rgba(139, 92, 246, 0) 75%)',
+          filter: 'blur(18px)',
           transition: 'all 0.5s ease',
           pointerEvents: 'none'
         }} />
 
-        <svg viewBox="0 0 100 100" width="150" height="150" style={{ filter: 'drop-shadow(0 8px 20px rgba(59, 130, 246, 0.2))' }}>
+        <svg viewBox="0 0 100 100" width="160" height="160" style={{ filter: 'drop-shadow(0 10px 25px rgba(59, 130, 246, 0.25))' }}>
           <defs>
             {/* Liquid Fill Gradients */}
             <linearGradient id="sf-fill-grad" x1="0%" y1="100%" x2="0%" y2="0%">
-              <stop offset="0%" stopColor="#3b82f6" />
-              <stop offset="50%" stopColor="#8b5cf6" />
+              <stop offset="0%" stopColor="#2563eb" />
+              <stop offset="50%" stopColor="#7c3aed" />
               <stop offset="100%" stopColor="#06b6d4" />
             </linearGradient>
 
@@ -173,12 +173,20 @@ export default function PremiumLoader({
             </mask>
           </defs>
 
-          {/* 1. Background Faint Snowflake Track Outline */}
+          {/* 1. Rotating Particle Orbit Ring */}
+          <g style={{ transformOrigin: '50px 50px', animation: 'sf-orbit-spin 7s linear infinite' }}>
+            <circle cx="50" cy="50" r="47" fill="none" stroke="rgba(59, 130, 246, 0.25)" strokeWidth="1.2" strokeDasharray="4 6" />
+            <circle cx="50" cy="3" r="3" fill="#3b82f6" style={{ filter: 'drop-shadow(0 0 6px #3b82f6)' }} />
+            <circle cx="97" cy="50" r="2.5" fill="#8b5cf6" style={{ filter: 'drop-shadow(0 0 6px #8b5cf6)' }} />
+            <circle cx="3" cy="50" r="2.5" fill="#06b6d4" style={{ filter: 'drop-shadow(0 0 6px #06b6d4)' }} />
+          </g>
+
+          {/* 2. Background Faint Snowflake Track Outline */}
           <g mask="url(#snowflake-geometry-mask)">
             <rect x="0" y="0" width="100" height="100" fill="rgba(226, 232, 240, 0.7)" />
           </g>
 
-          {/* 2. Liquid Percentage Fill Bar */}
+          {/* 3. Liquid Percentage Fill Bar with Animated Wave Surface */}
           <g mask="url(#snowflake-geometry-mask)">
             <rect
               x="0"
@@ -197,14 +205,14 @@ export default function PremiumLoader({
           top: '50%',
           left: '50%',
           transform: 'translate(-50%, -50%)',
-          background: 'rgba(255, 255, 255, 0.92)',
-          backdropFilter: 'blur(6px)',
-          WebkitBackdropFilter: 'blur(6px)',
-          padding: '0.2rem 0.65rem',
+          background: 'rgba(255, 255, 255, 0.94)',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
+          padding: '0.22rem 0.7rem',
           borderRadius: '9999px',
-          boxShadow: '0 4px 12px rgba(15, 23, 42, 0.15)',
-          border: '1px solid rgba(226, 232, 240, 0.8)',
-          fontSize: '0.875rem',
+          boxShadow: '0 4px 14px rgba(15, 23, 42, 0.16)',
+          border: '1px solid rgba(226, 232, 240, 0.9)',
+          fontSize: '0.9rem',
           fontWeight: 900,
           color: displayPercent === 100 ? '#10b981' : '#3b82f6',
           fontVariantNumeric: 'tabular-nums',
@@ -241,7 +249,7 @@ export default function PremiumLoader({
       {/* Live Row Counter Badge */}
       <div style={{
         background: '#f8fafc',
-        padding: '0.4rem 1rem',
+        padding: '0.4rem 1.1rem',
         borderRadius: '9999px',
         border: '1px solid #e2e8f0',
         fontSize: '0.8rem',

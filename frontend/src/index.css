@@ -2188,6 +2188,11 @@ h1, h2, h3, h4, h5, h6 {
   50% { opacity: 0.6; transform: scale(0.92); }
 }
 
+@keyframes sf-orbit-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 /* ==========================================================================
    FILTER DROPDOWN ANIMATIONS
    ========================================================================== */
