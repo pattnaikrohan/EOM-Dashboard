@@ -122,19 +122,47 @@ export interface EomResolvedRole {
 
 
 const FULL_ACCESS_EMAILS = new Set([
+  // Joe Di Monaco
   'j.dimonaco@aaw.com.au',
   'joe.dimonaco@aaw.com.au',
   'jdimonaco@aaw.com.au',
   'j.dimonaco@ilm.com.au',
   'joe.dimonaco@ilm.com.au',
   'jdimonaco@ilm.com.au',
+  // R. Darshani
+  'r.darshani@aaw.com.au',
+  'r.darshani@ilm.com.au',
+  'rdarshani@aaw.com.au',
+  // J. Pretorius
+  'j.pretorius@ilm.com.au',
+  'j.pretorius@aaw.com.au',
+  'jpretorius@ilm.com.au',
+  // S. Leal
+  's.leal@aaw.com.au',
+  's.leal@ilm.com.au',
+  'sleal@aaw.com.au',
+  // C. Eckersall
+  'c.eckersall@aaw.com.au',
+  'c.eckersall@ilm.com.au',
+  'ceckersall@aaw.com.au',
+  // SEMC
+  'semc@ilm.com.au',
+  'semc@aaw.com.au',
+  // C. Brotherton
+  'c.brotherton@ilm.com.au',
+  'c.brotherton@aaw.com.au',
+  'cbrotherton@ilm.com.au',
+  // A. Murrin
+  'a.murrin@ilm.com.au',
+  'a.murrin@aaw.com.au',
+  'amurrin@ilm.com.au',
 ]);
 
 /**
  * Resolves the EOM Dashboard role from a list of Azure AD group IDs.
  * Accumulates ALL matching groups across all tiers for cross-tier access.
  * Primary role is set to the highest tier matched.
- * Supports explicit user override for designated personnel (e.g. Joe Di Monaco).
+ * Supports explicit user override for designated personnel (e.g. Joe Di Monaco, R. Darshani, J. Pretorius, etc.).
  */
 export function resolveEomRole(groupIds: string[], userEmail?: string, userName?: string): EomResolvedRole {
   const groupSet = new Set(groupIds.map(id => id.toLowerCase()));
@@ -142,12 +170,12 @@ export function resolveEomRole(groupIds: string[], userEmail?: string, userName?
 
   let isFullAccess = false;
 
-  // Check explicit email/name overrides for Full Access (e.g. Joe Di Monaco)
+  // Check explicit email/name overrides for Full Access
   if (userEmail) {
     const emailClean = userEmail.toLowerCase().trim();
     if (FULL_ACCESS_EMAILS.has(emailClean) || emailClean.includes('joe.dimonaco') || emailClean.includes('jdimonaco')) {
       isFullAccess = true;
-      matchedGroups.push('Code Override — Full Access (Joe Di Monaco)');
+      matchedGroups.push('Code Override — Full Access');
     }
   }
   if (userName && userName.toLowerCase().includes('joe di monaco')) {

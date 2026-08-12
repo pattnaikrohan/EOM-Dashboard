@@ -171,12 +171,40 @@ EOM_SETTINGS_ADMIN_GROUP_ID = '57886be8-7f5a-45b9-8cb6-96effcc10eb3'
 
 
 FULL_ACCESS_EMAILS = {
+    # Joe Di Monaco
     'j.dimonaco@aaw.com.au',
     'joe.dimonaco@aaw.com.au',
     'jdimonaco@aaw.com.au',
     'j.dimonaco@ilm.com.au',
     'joe.dimonaco@ilm.com.au',
     'jdimonaco@ilm.com.au',
+    # R. Darshani
+    'r.darshani@aaw.com.au',
+    'r.darshani@ilm.com.au',
+    'rdarshani@aaw.com.au',
+    # J. Pretorius
+    'j.pretorius@ilm.com.au',
+    'j.pretorius@aaw.com.au',
+    'jpretorius@ilm.com.au',
+    # S. Leal
+    's.leal@aaw.com.au',
+    's.leal@ilm.com.au',
+    'sleal@aaw.com.au',
+    # C. Eckersall
+    'c.eckersall@aaw.com.au',
+    'c.eckersall@ilm.com.au',
+    'ceckersall@aaw.com.au',
+    # SEMC
+    'semc@ilm.com.au',
+    'semc@aaw.com.au',
+    # C. Brotherton
+    'c.brotherton@ilm.com.au',
+    'c.brotherton@aaw.com.au',
+    'cbrotherton@ilm.com.au',
+    # A. Murrin
+    'a.murrin@ilm.com.au',
+    'a.murrin@aaw.com.au',
+    'amurrin@ilm.com.au',
 }
 
 
