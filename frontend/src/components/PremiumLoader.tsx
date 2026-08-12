@@ -1,9 +1,9 @@
 /**
- * PremiumLoader — High-performance loading component with smooth row counter,
- * live stage indicators, glowing animated progress bar, and instant transition when 100% ready.
+ * PremiumLoader — Single Ultra-Premium SVG Snowflake Liquid-Fill Loading Component.
+ * Replaces redundant loaders with a single, elegant 6-point Snowflake SVG that fills vertically
+ * in 1-to-1 sync with percentage progress, featuring a live row counter and glowing neon ambience.
  */
 import { useEffect, useState } from 'react';
-import { Database, CheckCircle2 } from 'lucide-react';
 import { getSyncProgress } from '../services/api';
 
 interface PremiumLoaderProps {
@@ -64,7 +64,7 @@ export default function PremiumLoader({
       };
     }
 
-    // Default page load progress & row counter simulation
+    // Smooth page loading simulation
     const totalTargetRows = customTotal || 49294;
     let currentPct = 12;
     let currentFetchedRows = 0;
@@ -82,7 +82,7 @@ export default function PremiumLoader({
       setRows(currentFetchedRows);
 
       if (currentPct < 35) {
-        setStageText('Connecting to Snowflake Data Store...');
+        setStageText('Connecting to Snowflake Cloud Warehouse...');
       } else if (currentPct < 70) {
         setStageText(`Parsing CargoWise job records...`);
       } else {
@@ -95,105 +95,162 @@ export default function PremiumLoader({
 
   const displayPercent = Math.min(100, Math.max(0, Math.round(percent)));
   const targetTotal = customTotal || 49294;
+  const fillY = 100 - displayPercent;
 
   return (
-    <div className="premium-loader-wrapper fade-in" style={{ padding: '4rem 1.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      {/* 3D Animated Grid Cubes */}
-      <div className="data-flow-grid">
-        <div className="data-cube"></div>
-        <div className="data-cube"></div>
-        <div className="data-cube"></div>
-        <div className="data-cube"></div>
-        <div className="data-cube"></div>
-        <div className="data-cube"></div>
-        <div className="data-cube"></div>
-        <div className="data-cube"></div>
-        <div className="data-cube"></div>
+    <div className="premium-loader-wrapper fade-in" style={{
+      padding: '4rem 1.5rem',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: '400px'
+    }}>
+      {/* ── Single Snowflake SVG Liquid Fill Container ── */}
+      <div style={{ position: 'relative', width: '150px', height: '150px', marginBottom: '1.75rem' }}>
+        {/* Neon Ambient Glow ring around Snowflake */}
+        <div style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: '120px',
+          height: '120px',
+          borderRadius: '50%',
+          background: displayPercent === 100
+            ? 'radial-gradient(circle, rgba(16, 185, 129, 0.35) 0%, rgba(16, 185, 129, 0) 70%)'
+            : 'radial-gradient(circle, rgba(59, 130, 246, 0.35) 0%, rgba(139, 92, 246, 0) 70%)',
+          filter: 'blur(15px)',
+          transition: 'all 0.5s ease',
+          pointerEvents: 'none'
+        }} />
+
+        <svg viewBox="0 0 100 100" width="150" height="150" style={{ filter: 'drop-shadow(0 8px 20px rgba(59, 130, 246, 0.2))' }}>
+          <defs>
+            {/* Liquid Fill Gradients */}
+            <linearGradient id="sf-fill-grad" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#3b82f6" />
+              <stop offset="50%" stopColor="#8b5cf6" />
+              <stop offset="100%" stopColor="#06b6d4" />
+            </linearGradient>
+
+            <linearGradient id="sf-success-grad" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#10b981" />
+              <stop offset="100%" stopColor="#34d399" />
+            </linearGradient>
+
+            {/* Intricate Snowflake Geometry Mask */}
+            <mask id="snowflake-geometry-mask">
+              <g fill="none" stroke="#ffffff" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round">
+                {/* Arm 1 & 4 (Vertical) */}
+                <line x1="50" y1="8" x2="50" y2="92" />
+                <path d="M50 20 L38 10 M50 20 L62 10" />
+                <path d="M50 32 L34 18 M50 32 L66 18" />
+                <path d="M50 80 L38 90 M50 80 L62 90" />
+                <path d="M50 68 L34 82 M50 68 L66 82" />
+
+                {/* Arm 2 & 5 (60 deg) */}
+                <g transform="rotate(60 50 50)">
+                  <line x1="50" y1="8" x2="50" y2="92" />
+                  <path d="M50 20 L38 10 M50 20 L62 10" />
+                  <path d="M50 32 L34 18 M50 32 L66 18" />
+                  <path d="M50 80 L38 90 M50 80 L62 90" />
+                  <path d="M50 68 L34 82 M50 68 L66 82" />
+                </g>
+
+                {/* Arm 3 & 6 (120 deg) */}
+                <g transform="rotate(120 50 50)">
+                  <line x1="50" y1="8" x2="50" y2="92" />
+                  <path d="M50 20 L38 10 M50 20 L62 10" />
+                  <path d="M50 32 L34 18 M50 32 L66 18" />
+                  <path d="M50 80 L38 90 M50 80 L62 90" />
+                  <path d="M50 68 L34 82 M50 68 L66 82" />
+                </g>
+              </g>
+
+              {/* Center Hexagonal Core */}
+              <polygon points="50,40 58.6,45 58.6,55 50,60 41.4,55 41.4,45" fill="#ffffff" />
+            </mask>
+          </defs>
+
+          {/* 1. Background Faint Snowflake Track Outline */}
+          <g mask="url(#snowflake-geometry-mask)">
+            <rect x="0" y="0" width="100" height="100" fill="rgba(226, 232, 240, 0.7)" />
+          </g>
+
+          {/* 2. Liquid Percentage Fill Bar */}
+          <g mask="url(#snowflake-geometry-mask)">
+            <rect
+              x="0"
+              y={fillY}
+              width="100"
+              height={displayPercent}
+              fill={displayPercent === 100 ? "url(#sf-success-grad)" : "url(#sf-fill-grad)"}
+              style={{ transition: 'y 0.35s cubic-bezier(0.4, 0, 0.2, 1), height 0.35s cubic-bezier(0.4, 0, 0.2, 1)' }}
+            />
+          </g>
+        </svg>
+
+        {/* Floating Percentage Badge in Center of Snowflake */}
+        <div style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          background: 'rgba(255, 255, 255, 0.92)',
+          backdropFilter: 'blur(6px)',
+          WebkitBackdropFilter: 'blur(6px)',
+          padding: '0.2rem 0.65rem',
+          borderRadius: '9999px',
+          boxShadow: '0 4px 12px rgba(15, 23, 42, 0.15)',
+          border: '1px solid rgba(226, 232, 240, 0.8)',
+          fontSize: '0.875rem',
+          fontWeight: 900,
+          color: displayPercent === 100 ? '#10b981' : '#3b82f6',
+          fontVariantNumeric: 'tabular-nums',
+          letterSpacing: '-0.02em'
+        }}>
+          {displayPercent}%
+        </div>
       </div>
 
-      {/* Title Header */}
-      <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0f172a', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '1.25rem', textAlign: 'center' }}>
+      {/* ── Status Header & Subtitle ── */}
+      <div style={{
+        fontSize: '0.9rem',
+        fontWeight: 800,
+        color: '#0f172a',
+        letterSpacing: '0.08em',
+        textTransform: 'uppercase',
+        marginBottom: '0.4rem',
+        textAlign: 'center'
+      }}>
         {text}
       </div>
 
-      {/* Main Loader Box */}
+      {/* Live Stage Text */}
       <div style={{
-        width: '100%',
-        maxWidth: '460px',
-        background: '#ffffff',
-        padding: '1.25rem 1.5rem',
-        borderRadius: '16px',
-        boxShadow: '0 12px 35px rgba(15, 23, 42, 0.06), 0 2px 6px rgba(15, 23, 42, 0.03)',
-        border: '1px solid #e2e8f0',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '0.85rem'
+        fontSize: '0.825rem',
+        fontWeight: 600,
+        color: '#64748b',
+        marginBottom: '0.85rem',
+        textAlign: 'center'
       }}>
-        {/* Top Header line */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.825rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', color: displayPercent === 100 ? '#10b981' : '#3b82f6', fontWeight: 700 }}>
-            {displayPercent === 100 ? (
-              <CheckCircle2 size={16} color="#10b981" />
-            ) : (
-              <Database size={16} className="pulse-slow" color="#3b82f6" />
-            )}
-            <span>{displayPercent === 100 ? 'Pipeline Ready' : 'Snowflake Live Pipeline'}</span>
-          </div>
+        {stageText}
+      </div>
 
-          <div style={{
-            background: displayPercent === 100 ? '#10b981' : 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
-            color: '#ffffff',
-            padding: '0.2rem 0.65rem',
-            borderRadius: '9999px',
-            fontSize: '0.775rem',
-            fontWeight: 800,
-            letterSpacing: '0.02em',
-            boxShadow: '0 2px 8px rgba(59, 130, 246, 0.3)',
-            transition: 'all 0.3s ease'
-          }}>
-            {displayPercent}%
-          </div>
-        </div>
-
-        {/* Real Progress Track */}
-        <div style={{
-          width: '100%',
-          height: '10px',
-          background: '#f1f5f9',
-          borderRadius: '9999px',
-          overflow: 'hidden',
-          position: 'relative',
-          boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.06)'
-        }}>
-          <div style={{
-            height: '100%',
-            width: `${displayPercent}%`,
-            background: displayPercent === 100 ? '#10b981' : 'linear-gradient(90deg, #3b82f6 0%, #8b5cf6 50%, #06b6d4 100%)',
-            borderRadius: '9999px',
-            transition: 'width 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-            boxShadow: '0 0 12px rgba(59, 130, 246, 0.4)',
-            position: 'relative'
-          }}>
-            {displayPercent < 100 && (
-              <div style={{
-                position: 'absolute',
-                top: 0, left: 0, right: 0, bottom: 0,
-                background: 'linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.45) 50%, rgba(255,255,255,0) 100%)',
-                animation: 'shimmer-sweep 1.5s infinite'
-              }} />
-            )}
-          </div>
-        </div>
-
-        {/* Footer: Live Row Counter & Stage Text */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.775rem' }}>
-          <div style={{ fontWeight: 600, color: '#475569', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '270px' }}>
-            {stageText}
-          </div>
-          <div style={{ fontWeight: 800, color: '#0f172a', fontVariantNumeric: 'tabular-nums' }}>
-            Fetched {rows.toLocaleString()} / {targetTotal.toLocaleString()} rows
-          </div>
-        </div>
+      {/* Live Row Counter Badge */}
+      <div style={{
+        background: '#f8fafc',
+        padding: '0.4rem 1rem',
+        borderRadius: '9999px',
+        border: '1px solid #e2e8f0',
+        fontSize: '0.8rem',
+        fontWeight: 800,
+        color: '#334155',
+        fontVariantNumeric: 'tabular-nums',
+        boxShadow: '0 2px 6px rgba(0,0,0,0.02)'
+      }}>
+        Fetched {rows.toLocaleString()} / {targetTotal.toLocaleString()} rows
       </div>
     </div>
   );
