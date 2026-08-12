@@ -91,6 +91,8 @@ def sync_snowflake():
         
         # We can either merge or overwrite. Let's merge for now as requested.
         data_store.load(parsed, merge=True)
+        from app.services.neg_movement_store import neg_movement_store
+        neg_movement_store.populate_from_snowflake(data_store.jobs, data_store.branch, data_store.period)
         
         merged_parsed = {
             "branch": data_store.branch,
@@ -366,6 +368,9 @@ def upload_neg_movement():
 @blueprint.route("/neg-movement/summary", methods=["GET"])
 @require_auth
 def get_neg_movement_summary():
+    if not neg_movement_store.is_loaded and data_store.is_loaded:
+        neg_movement_store.populate_from_snowflake(data_store.jobs, data_store.branch, data_store.period)
+    
     if not neg_movement_store.is_loaded:
         return jsonify({"error": "No negative movement data loaded."}), 400
     
@@ -380,6 +385,9 @@ def get_neg_movement_summary():
 @blueprint.route("/neg-movement/jobs", methods=["GET"])
 @require_auth
 def get_neg_movement_jobs():
+    if not neg_movement_store.is_loaded and data_store.is_loaded:
+        neg_movement_store.populate_from_snowflake(data_store.jobs, data_store.branch, data_store.period)
+    
     if not neg_movement_store.is_loaded:
         return jsonify({"error": "No negative movement data loaded."}), 400
     
@@ -469,10 +477,12 @@ def clear_neg_movement():
 @blueprint.route("/neg-movement/status", methods=["GET"])
 @require_auth
 def get_neg_movement_status():
+    if not neg_movement_store.is_loaded and data_store.is_loaded:
+        neg_movement_store.populate_from_snowflake(data_store.jobs, data_store.branch, data_store.period)
     return jsonify({
-        "loaded": neg_movement_store.is_loaded,
-        "branch": neg_movement_store.branch,
-        "period": neg_movement_store.period,
+        "loaded": neg_movement_store.is_loaded or data_store.is_loaded,
+        "branch": neg_movement_store.branch or data_store.branch,
+        "period": neg_movement_store.period or data_store.period,
         "pl_categories": neg_movement_store.pl_categories,
     })
 

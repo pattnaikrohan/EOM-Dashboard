@@ -14,11 +14,11 @@ ACCOUNT_URL = f"https://{ACCOUNT_NAME}.blob.core.windows.net"
 
 logger = logging.getLogger(__name__)
 
-def get_blob_client():
+def get_blob_client(blob_name: str = BLOB_NAME):
     try:
-        service_client = BlobServiceClient(account_url=ACCOUNT_URL, credential=SAS_TOKEN)
+        service_client = BlobServiceClient(account_url=ACCOUNT_URL, credential=SAS_TOKEN, connection_timeout=5, read_timeout=10)
         container_client = service_client.get_container_client(CONTAINER_NAME)
-        blob_client = container_client.get_blob_client(BLOB_NAME)
+        blob_client = container_client.get_blob_client(blob_name)
         return blob_client
     except Exception as e:
         logger.error(f"Failed to create Blob Client: {e}")

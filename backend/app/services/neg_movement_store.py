@@ -41,6 +41,72 @@ class NegMovementStore:
     def is_loaded(self) -> bool:
         return self._loaded
 
+    def populate_from_snowflake(self, jobs: list[dict], branch: str = "", period: str = ""):
+        """Populate Negative Movement sections directly from live Snowflake data."""
+        self.branch = branch or "All Branches (Snowflake)"
+        self.period = period or "Current (Snowflake)"
+
+        neg_jobs = []
+        excess_jobs = []
+        loss_jobs = []
+
+        for j in jobs:
+            job_profit = float(j.get("profit_loss") or 0.0)
+            wip = float(j.get("wip") or 0.0)
+            accrual = float(j.get("accrual") or 0.0)
+            flags = j.get("flags") or []
+
+            # 1. Negative Movement > $250: Accruals > $250 or WIP > $250 or cost variance / loss > $250
+            if accrual >= 250 or wip >= 250 or (job_profit < 0 and abs(job_profit) >= 250) or "Jobs with Aged Accruals" in flags:
+                neg_jobs.append(self._create_neg_job(j, "negative_movement"))
+
+            # 2. Excess Profit > $5,000: Profit >= $5,000
+            if job_profit >= 5000:
+                excess_jobs.append(self._create_neg_job(j, "excess_profit"))
+
+            # 3. Jobs with Losses: Billed/active jobs operating at a financial loss (profit < -$40 or LOSS flag)
+            if job_profit < -40 or "LOSS" in flags or "Billed Jobs with LOSS" in flags or "Unbilled Jobs with LOSS" in flags:
+                loss_jobs.append(self._create_neg_job(j, "jobs_with_losses"))
+
+        self.sections["negative_movement"] = neg_jobs
+        self.sections["excess_profit"] = excess_jobs
+        self.sections["jobs_with_losses"] = loss_jobs
+        self._loaded = True
+
+    def _create_neg_job(self, j: dict, section_name: str) -> dict:
+        job_num = j.get("job_number", "")
+        comment_key = f"{section_name}:{job_num}"
+        saved = self._comments.get(comment_key, {})
+
+        return {
+            "job_number": job_num,
+            "job_local_ref": job_num,
+            "branch": j.get("branch", ""),
+            "department": j.get("department", "") or j.get("job_direction", ""),
+            "status": j.get("job_status", "OPEN"),
+            "transport": j.get("job_direction", ""),
+            "container": "",
+            "sales_rep": j.get("sales_rep", ""),
+            "local_client": j.get("local_client", ""),
+            "origin": j.get("origin", ""),
+            "destination": j.get("destination", ""),
+            "etd": j.get("etd", ""),
+            "eta": j.get("eta", ""),
+            "job_profit": float(j.get("profit_loss") or 0.0),
+            "revenue": float(j.get("revenue") or 0.0),
+            "wip": float(j.get("wip") or 0.0),
+            "cost": float(j.get("cost") or 0.0),
+            "accrual": float(j.get("accrual") or 0.0),
+            "section": section_name,
+            "comment": saved.get("comment", ""),
+            "category": saved.get("category", ""),
+            "notes_ho": saved.get("notes_ho", ""),
+            "resolution_status": saved.get("resolution_status", "pending"),
+            "assigned_to": j.get("operator", "UNASSIGNED"),
+            "updated_at": saved.get("updated_at", ""),
+            "created_at": datetime.now().isoformat(),
+        }
+
     def load(self, parsed: dict):
         """Load parsed Negative Movement data from the Excel parser.
         Preserves any existing comments that match by job_number+section.
