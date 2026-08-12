@@ -206,10 +206,11 @@ class DataStore:
             if len(jobs) == 0:
                 continue
                 
-            op_branch = OPERATOR_BRANCHES.get(op)
-            if not op_branch:
-                op_branches = [j.get("branch") for j in jobs if j.get("branch")]
-                op_branch = max(set(op_branches), key=op_branches.count) if op_branches else self.branch or "ALL"
+            op_branches = [j.get("branch") for j in jobs if j.get("branch") and j.get("branch") != "AAW Global Logistics - Unknown"]
+            if op_branches:
+                op_branch = max(set(op_branches), key=op_branches.count)
+            else:
+                op_branch = OPERATOR_BRANCHES.get(op) or self.branch or "ALL"
 
 
             summaries.append({

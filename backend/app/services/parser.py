@@ -164,7 +164,7 @@ def parse_wip_review(file_bytes: bytes) -> dict:
             branch_code = str(_get("branch") or "").strip()
             op_code = str(_get("operator") or sheet_name).strip()
             op = OPERATOR_NAMES.get(op_code, op_code)
-            job_branch = OPERATOR_BRANCHES.get(op, OPERATOR_BRANCHES.get(op_code, BRANCH_NAMES.get(branch_code, branch_code)))
+            job_branch = BRANCH_NAMES.get(branch_code) or OPERATOR_BRANCHES.get(op) or OPERATOR_BRANCHES.get(op_code) or branch_code
             
             job = {
                 "job_number":     job_num,
@@ -311,7 +311,7 @@ def parse_cargowise_export(file_bytes: bytes, **kwargs) -> dict:
             operators_set.add(op)
             
         branch_code = str(_g(branch_col) or branch).strip()
-        job_branch = OPERATOR_BRANCHES.get(op, OPERATOR_BRANCHES.get(op_code, BRANCH_NAMES.get(branch_code, branch_code)))
+        job_branch = BRANCH_NAMES.get(branch_code) or OPERATOR_BRANCHES.get(op) or OPERATOR_BRANCHES.get(op_code) or branch_code
         
         job = {
             "job_number":     job_id,

@@ -1,7 +1,7 @@
 """
 Staff and Branch Lookup Tables extracted from Staff Listing.xlsx.
 Maps operator codes (e.g. LT7) to full names (e.g. Leonardo Tutaan)
-and branch codes (e.g. SY1) to branch names (e.g. Sydney).
+and branch codes (e.g. SY1) to full branch names.
 """
 
 OPERATOR_NAMES = {
@@ -63,11 +63,33 @@ OPERATOR_NAMES = {
 }
 
 BRANCH_NAMES = {
-    'SY1': 'Sydney', 'BR1': 'Brokerage', 'FR1': 'Fremantle',
-    'AD1': 'Adelaide', 'AKL': 'Auckland', 'CBG': 'Coastalbridge',
-    'ME1': 'Melbourne', 'HAU': 'Head Office', 'BLL': 'Bulk Liquid Logistics',
-    'FRE': 'Fremantle', 'BN1': 'Brisbane', 'PR1': 'Project Logistics',
-    'PIL': 'PIL Logistics Australia'
+    'SY1': 'AAW Global Logistics - Sydney',
+    'SYD': 'AAW Global Logistics - Sydney',
+    'ME1': 'AAW Global Logistics - Melbourne',
+    'MEL': 'AAW Global Logistics - Melbourne',
+    'BN1': 'AAW Global Logistics - Brisbane',
+    'BNE': 'AAW Global Logistics - Brisbane',
+    'AD1': 'AAW Global Logistics - Adelaide',
+    'ADL': 'AAW Global Logistics - Adelaide',
+    'FR1': 'AAW Global Logistics - Fremantle',
+    'FRE': 'AAW Global Logistics - Fremantle',
+    'AKL': 'AAW Global Logistics - Auckland',
+    'HOZ': 'AAW Global Logistics - Auckland',
+    'BR1': 'AAW Customs Brokerage',
+    'BRK': 'AAW Customs Brokerage',
+    'PR1': 'AAW Project Logistics',
+    'PRJ': 'AAW Project Logistics',
+    'BLL': 'AAW Bulk Liquid Logistics',
+    'HOY': 'AAW Bulk Liquid Logistics',
+    'HLA': 'Hoyer Logistics Australia',
+    'CBG': 'Coastalbridge',
+    'CBR': 'Coastalbridge',
+    'CCC': 'CoastalBridge Agencies for COSCO Shipping',
+    'TFS': 'Coastalbridge Agencies for Toyofuji Shipping',
+    'PIL': 'PIL Logistics Australia',
+    'MIL': 'Regional Shipping Services',
+    'HAU': 'AAW Group Holdings',
+    'HDO': 'AAW Group Holdings',
 }
 
 OPERATOR_BRANCHES = {
@@ -77,8 +99,10 @@ OPERATOR_BRANCHES = {
     'DP5': 'AAW Global Logistics - Adelaide', 'David Peake': 'AAW Global Logistics - Adelaide',
     'HW1': 'AAW Global Logistics - Adelaide', 'Hellen Wang': 'AAW Global Logistics - Adelaide',
     'LE': 'AAW Global Logistics - Adelaide', 'Lina Emelianova': 'AAW Global Logistics - Adelaide',
-    'SDA': 'AAW Global Logistics - Adelaide', 'Sean De Asis': 'AAW Global Logistics - Adelaide',
     'ADL': 'AAW Global Logistics - Adelaide', 'ADL - Branch Account': 'AAW Global Logistics - Adelaide',
+
+    # Melbourne
+    'SDA': 'AAW Global Logistics - Melbourne', 'Sean De Asis': 'AAW Global Logistics - Melbourne',
 
     # Fremantle
     'SL2': 'AAW Global Logistics - Fremantle', 'Stella Lee': 'AAW Global Logistics - Fremantle',
@@ -100,4 +124,3 @@ OPERATOR_BRANCHES = {
     'MW2': 'AAW Global Logistics - Auckland', 'Mareta Chang Wai': 'AAW Global Logistics - Auckland',
     'AKL': 'AAW Global Logistics - Auckland', 'AKL - Branch Account': 'AAW Global Logistics - Auckland',
 }
-
