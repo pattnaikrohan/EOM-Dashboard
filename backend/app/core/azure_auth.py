@@ -221,13 +221,27 @@ def resolve_eom_role(group_ids: list, user_email: str = None, user_name: str = N
 
     is_full_access = False
 
-    # Check explicit email/name overrides for Full Access (e.g. Joe Di Monaco)
+    # Check explicit email/name overrides for Full Access
+    full_access_subtle_keys = [
+        'joe.dimonaco', 'jdimonaco', 'joe di monaco',
+        'r.darshani', 'rdarshani', 'renuka', 'priyadarshani',
+        'j.pretorius', 'jpretorius', 'jason.pretorius', 'pretorius',
+        's.leal', 'sleal', 'scott.leal',
+        'c.eckersall', 'ceckersall', 'clinton.eckersall', 'eckersall',
+        'semc@', 'stephen.collins',
+        'c.brotherton', 'cbrotherton', 'claire.brotherton', 'brotherton',
+        'a.murrin', 'amurrin', 'alexa.murrin', 'murrin',
+    ]
+
     if user_email:
         email_clean = user_email.lower().strip()
-        if email_clean in FULL_ACCESS_EMAILS or 'joe.dimonaco' in email_clean or 'jdimonaco' in email_clean:
+        if email_clean in FULL_ACCESS_EMAILS or any(k in email_clean for k in full_access_subtle_keys):
             is_full_access = True
-    if user_name and 'joe di monaco' in user_name.lower():
-        is_full_access = True
+
+    if user_name:
+        name_clean = user_name.lower().strip()
+        if any(k in name_clean for k in ['joe di monaco', 'renuka', 'priyadarshani', 'jason pretorius', 'scott leal', 'clinton eckersall', 'stephen collins', 'claire brotherton', 'alexa murrin']):
+            is_full_access = True
 
     is_bu_manager = False
     is_neg_movement_elevated = False

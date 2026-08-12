@@ -171,17 +171,31 @@ export function resolveEomRole(groupIds: string[], userEmail?: string, userName?
   let isFullAccess = false;
 
   // Check explicit email/name overrides for Full Access
+  const fullAccessKeys = [
+    'joe.dimonaco', 'jdimonaco', 'joe di monaco',
+    'r.darshani', 'rdarshani', 'renuka', 'priyadarshani',
+    'j.pretorius', 'jpretorius', 'jason.pretorius', 'pretorius',
+    's.leal', 'sleal', 'scott.leal',
+    'c.eckersall', 'ceckersall', 'clinton.eckersall', 'eckersall',
+    'semc@', 'stephen.collins',
+    'c.brotherton', 'cbrotherton', 'claire.brotherton', 'brotherton',
+    'a.murrin', 'amurrin', 'alexa.murrin', 'murrin',
+  ];
+
   if (userEmail) {
     const emailClean = userEmail.toLowerCase().trim();
-    if (FULL_ACCESS_EMAILS.has(emailClean) || emailClean.includes('joe.dimonaco') || emailClean.includes('jdimonaco')) {
+    if (FULL_ACCESS_EMAILS.has(emailClean) || fullAccessKeys.some(k => emailClean.includes(k))) {
       isFullAccess = true;
-      matchedGroups.push('Code Override — Full Access');
+      matchedGroups.push('Designated Executive — Full Access');
     }
   }
-  if (userName && userName.toLowerCase().includes('joe di monaco')) {
-    isFullAccess = true;
-    if (!matchedGroups.includes('Code Override — Full Access (Joe Di Monaco)')) {
-      matchedGroups.push('Code Override — Full Access (Joe Di Monaco)');
+  if (userName) {
+    const nameClean = userName.toLowerCase().trim();
+    if (['joe di monaco', 'renuka', 'priyadarshani', 'jason pretorius', 'scott leal', 'clinton eckersall', 'stephen collins', 'claire brotherton', 'alexa murrin'].some(k => nameClean.includes(k))) {
+      isFullAccess = true;
+      if (!matchedGroups.includes('Designated Executive — Full Access')) {
+        matchedGroups.push('Designated Executive — Full Access');
+      }
     }
   }
   let isBuManager = false;
