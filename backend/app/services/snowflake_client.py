@@ -49,7 +49,7 @@ b0UKlGxodyelt7MWF8tNRBTkbQKBgQDHAmkrEgQOJ/g/CjHWDcqywQt5JVQGP3ZC
 5Im+C37v/WZge77fg2oYpv0yJ1QIuLiCp8MDRYdLahru0/JUsL8Yu6gb9tXc0MpE
 vxoVJBiCDJfdOSHZs+AOmUDnLBQBoZLHxUbGC6ltwRALSHQGRmH7EPdN4UJg5awJ
 MehRT9zhqwKBgQDiq/AEMkAUrj6gzjs3z7QKvdZlemM8t+uy/osQ3je34R2PGOta
-fxCwwhrVlcMXP7P1nsPQ2H5alfIKyX9kMKq5/z3Jc3Q6hU/QeMJZLuo/p0TMnCojN
+fxCwhrVlcMXP7P1nsPQ2H5alfIKyX9kMKq5/z3Jc3Q6hU/QeMJZLuo/p0TMnCojN
 yZ6HCt2IZysed9DfqGRzKUuJ3mJphebtkqrcrdcnMaeuGfNkMCLHLoMH3QKBgQC5
 AS+9n4DvnA62pAaSZL3kEXxWAfKr4EFTjFvUtaEq/5o15bQa23M9Obg18MO5W+gD
 ZmvvVaqh3CDvl083lhwApStx27UTE3KGGFXqA2VZONXRDbS/Su3nBGeGwL5Uid0H
@@ -77,12 +77,18 @@ def fetch_jobs_from_snowflake():
     with open(sql_file, 'r', encoding='utf-8') as f:
         sql_content = f.read()
 
+    # Normalize line endings for cross-platform compatibility (Windows vs Azure Linux App Service)
+    sql_content = sql_content.replace('\r\n', '\n')
+
     # Extract the VW_EOM_JOBS_SUMMARY CTE
-    query_parts = sql_content.split('CREATE OR REPLACE VIEW DEV.CORE.VW_EOM_JOBS_SUMMARY\nAS\n')
-    if len(query_parts) < 2:
-        raise Exception("Could not parse SQL file")
-    
-    select_query = query_parts[1].strip().rstrip(';')
+    if 'CREATE OR REPLACE VIEW DEV.CORE.VW_EOM_JOBS_SUMMARY\nAS\n' in sql_content:
+        query_parts = sql_content.split('CREATE OR REPLACE VIEW DEV.CORE.VW_EOM_JOBS_SUMMARY\nAS\n')
+        select_query = query_parts[1].strip().rstrip(';')
+    elif 'VW_EOM_JOBS_SUMMARY' in sql_content and 'SELECT' in sql_content:
+        idx = sql_content.find('SELECT')
+        select_query = sql_content[idx:].strip().rstrip(';')
+    else:
+        select_query = sql_content.strip().rstrip(';')
     
     update_sync_progress("Connecting to Snowflake Database...", 10)
     conn = get_connection()
