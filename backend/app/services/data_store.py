@@ -93,10 +93,8 @@ class DataStore:
         # Always recompute flags and direction, and normalize operator branches for all jobs
         from app.services.rules import get_flags, priority_flag, get_ops_section
         for j in self.jobs:
-            op = j.get("operator", "")
-            # Only use OPERATOR_BRANCHES as a fallback when the job has no branch from Snowflake
-            if not j.get("branch") and op in OPERATOR_BRANCHES:
-                j["branch"] = OPERATOR_BRANCHES[op]
+            if not j.get("branch"):
+                j["branch"] = "Unassigned Branch"
             j["flags"] = get_flags(j, self.period)
             j["primary_flag"] = priority_flag(j["flags"])
             j["ops_section"] = get_ops_section(j)
@@ -206,11 +204,11 @@ class DataStore:
             if len(jobs) == 0:
                 continue
                 
-            op_branches = [j.get("branch") for j in jobs if j.get("branch") and j.get("branch") != "AAW Global Logistics - Unknown"]
+            op_branches = [j.get("branch") for j in jobs if j.get("branch") and j.get("branch") != "Unassigned Branch"]
             if op_branches:
                 op_branch = max(set(op_branches), key=op_branches.count)
             else:
-                op_branch = OPERATOR_BRANCHES.get(op) or self.branch or "ALL"
+                op_branch = self.branch or "Unassigned Branch"
 
 
             summaries.append({

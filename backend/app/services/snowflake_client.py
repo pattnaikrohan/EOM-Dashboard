@@ -3,7 +3,7 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.backends import default_backend
 import os
 
-from app.services.staff_lookup import OPERATOR_NAMES, OPERATOR_BRANCHES, BRANCH_NAMES
+from app.services.staff_lookup import OPERATOR_NAMES, BRANCH_NAMES
 
 SF_ACCOUNT   = os.environ.get("SF_ACCOUNT", "SGLYREN-GG43054")
 SF_USER      = os.environ.get("SF_USER", "TEST_AI_AUTO")
@@ -98,37 +98,8 @@ def fetch_jobs_from_snowflake():
         branch_raw = job_data.get("BRANCH_NAME") or job_data.get("BRANCH_CODE") or ""
         branch_name = BRANCH_NAMES.get(branch_raw, branch_raw)
         
-        # Only use operator branch map as fallback when Snowflake has no branch
-        if not branch_name or branch_name == "AAW Global Logistics - Unknown":
-            if op_name in OPERATOR_BRANCHES:
-                branch_name = OPERATOR_BRANCHES[op_name]
-            elif op_raw in OPERATOR_BRANCHES:
-                branch_name = OPERATOR_BRANCHES[op_raw]
-            
-        if not branch_name or branch_name == "AAW Global Logistics - Unknown":
-            job_num = (job_data.get("JOB_NUMBER") or "").upper()
-            # Map job number prefix → branch name
-            _prefix_map_2 = {
-                "AK": "AAW Global Logistics - Auckland",
-                "CB": "Coastalbridge",
-                "BL": "AAW Bulk Liquid Logistics Team",
-                "PR": "AAW Project Logistics",
-                "PI": "PIL Logistics Australia",
-            }
-            _prefix_map_1 = {
-                "S":  "AAW Global Logistics - Sydney",
-                "B":  "AAW Global Logistics - Brisbane",
-                "V":  "AAW Global Logistics - Melbourne",
-                "M":  "AAW Global Logistics - Melbourne",
-                "F":  "AAW Global Logistics - Fremantle",
-                "A":  "AAW Global Logistics - Adelaide",
-                "N":  "AAW Global Logistics - Auckland",
-                "P":  "AAW Project Logistics",
-                "C":  "AAW Customs Brokerage",
-                "H":  "AAW Group Holdings",
-            }
-            prefix2 = job_num[:2] if len(job_num) >= 2 else ""
-            branch_name = _prefix_map_2.get(prefix2) or _prefix_map_1.get(job_num[:1], "AAW Global Logistics - Unknown")
+        if not branch_name:
+            branch_name = "Unassigned Branch"
 
 
                 
