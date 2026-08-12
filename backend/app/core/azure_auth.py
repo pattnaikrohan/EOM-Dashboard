@@ -170,28 +170,35 @@ EOM_NEG_MOVEMENT_ELEVATED_GROUP_ID = 'e0e75905-c0cd-4e63-8bef-6bd814485b4f'
 EOM_SETTINGS_ADMIN_GROUP_ID = '57886be8-7f5a-45b9-8cb6-96effcc10eb3'
 
 
-def resolve_eom_role(group_ids: list) -> dict:
+FULL_ACCESS_EMAILS = {
+    'joe.dimonaco@aaw.com.au',
+    'jdimonaco@aaw.com.au',
+    'joe.dimonaco@ilm.com.au',
+    'jdimonaco@ilm.com.au',
+}
+
+
+def resolve_eom_role(group_ids: list, user_email: str = None, user_name: str = None) -> dict:
     """
     Resolve EOM Dashboard role from Azure AD group memberships.
 
     Accumulates ALL matching groups across all tiers so that a user in
     multiple groups sees the union of all their memberships.
 
-    Returns dict with:
-      role                     – 'full_access', 'risk_compliance', 'bu_access', 'branch_access', or 'no_access'
-      business_units           – list of matched BU names
-      branch_names             – list of matched branch names
-      functional_roles         – list of matched department roles (e.g. ['hr_access'])
-      is_bu_manager            – True if user has any BU Manager group
-      is_neg_movement_elevated – True if user is in the Neg Movement Elevated group
-      is_settings_admin        – True if user is in the Settings Admin group
-      can_access_ops_manager   – True if full_access, risk_compliance or bu_access
-      can_upload_data          – True if full_access or bu_access
-      can_edit_settings        – True if full_access or is_settings_admin
+    Supports explicit user override for designated personnel (e.g. Joe Di Monaco).
     """
     group_set = {g.lower() for g in group_ids}
 
     is_full_access = False
+
+    # Check explicit email/name overrides for Full Access (e.g. Joe Di Monaco)
+    if user_email:
+        email_clean = user_email.lower().strip()
+        if email_clean in FULL_ACCESS_EMAILS or 'joe.dimonaco' in email_clean or 'jdimonaco' in email_clean:
+            is_full_access = True
+    if user_name and 'joe di monaco' in user_name.lower():
+        is_full_access = True
+
     is_bu_manager = False
     is_neg_movement_elevated = False
     is_settings_admin = False

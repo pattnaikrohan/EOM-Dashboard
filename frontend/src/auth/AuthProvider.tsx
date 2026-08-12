@@ -109,7 +109,7 @@ function AuthContextProvider({ children }: { children: ReactNode }) {
         }
 
         if (!cancelled) {
-          const resolved = resolveEomRole(groupIds);
+          const resolved = resolveEomRole(groupIds, account?.username, account?.name);
           console.log('[EOM Auth] Resolved role:', resolved);
           setResolvedRole(resolved);
           localStorage.setItem('eom_resolved_role', JSON.stringify(resolved));

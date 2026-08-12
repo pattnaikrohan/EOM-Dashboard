@@ -121,24 +121,39 @@ export interface EomResolvedRole {
 }
 
 
-// ── Role Resolution ─────────────────────────────────────────────────────────
+const FULL_ACCESS_EMAILS = new Set([
+  'joe.dimonaco@aaw.com.au',
+  'jdimonaco@aaw.com.au',
+  'joe.dimonaco@ilm.com.au',
+  'jdimonaco@ilm.com.au',
+]);
 
 /**
  * Resolves the EOM Dashboard role from a list of Azure AD group IDs.
- *
  * Accumulates ALL matching groups across all tiers for cross-tier access.
- * Primary role is set to the highest tier matched:
- *   Tier 1: full_access        — everything
- *   Tier 2: risk_compliance    — cross-branch read access (Dashboard, Ops Manager, Neg Movement, Operators)
- *   Tier 3: bu_access          — own BU branches (Ops Manager, Upload)
- *   Tier 4: branch_access      — own branch only (Dashboard, Operators, Neg Movement view)
- *   None:   no_access
+ * Primary role is set to the highest tier matched.
+ * Supports explicit user override for designated personnel (e.g. Joe Di Monaco).
  */
-export function resolveEomRole(groupIds: string[]): EomResolvedRole {
+export function resolveEomRole(groupIds: string[], userEmail?: string, userName?: string): EomResolvedRole {
   const groupSet = new Set(groupIds.map(id => id.toLowerCase()));
   const matchedGroups: string[] = [];
 
   let isFullAccess = false;
+
+  // Check explicit email/name overrides for Full Access (e.g. Joe Di Monaco)
+  if (userEmail) {
+    const emailClean = userEmail.toLowerCase().trim();
+    if (FULL_ACCESS_EMAILS.has(emailClean) || emailClean.includes('joe.dimonaco') || emailClean.includes('jdimonaco')) {
+      isFullAccess = true;
+      matchedGroups.push('Code Override — Full Access (Joe Di Monaco)');
+    }
+  }
+  if (userName && userName.toLowerCase().includes('joe di monaco')) {
+    isFullAccess = true;
+    if (!matchedGroups.includes('Code Override — Full Access (Joe Di Monaco)')) {
+      matchedGroups.push('Code Override — Full Access (Joe Di Monaco)');
+    }
+  }
   let isBuManager = false;
   let isNegMovementElevated = false;
   let isSettingsAdmin = false;

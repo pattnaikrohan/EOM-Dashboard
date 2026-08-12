@@ -123,7 +123,7 @@ def _resolve_user_from_token():
         group_ids = claims.get('groups', [])
 
         # Resolve role from AD group memberships in the token
-        resolved = resolve_eom_role(group_ids)
+        resolved = resolve_eom_role(group_ids, user_email=email, user_name=name)
 
         # If token had no groups (groupMembershipClaims not configured),
         # fall back to frontend-supplied headers (same pattern as R&C Hub)
