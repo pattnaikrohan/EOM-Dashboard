@@ -61,8 +61,6 @@ export default function NegativeMovement() {
   const [loaded, setLoaded] = useState(false);
   const [loading, setLoading] = useState(true);
   const [summary, setSummary] = useState<NegMovementSummary | null>(null);
-  const [branch, setBranch] = useState('');
-  const [period, setPeriod] = useState('');
   const [plCategories, setPlCategories] = useState<string[]>([]);
   const [sectionJobs, setSectionJobs] = useState<Record<string, NegMovementJob[]>>({});
   const [expanded, setExpanded] = useState<Record<string, boolean>>({
@@ -80,8 +78,6 @@ export default function NegativeMovement() {
     if (cached) {
       setLoaded(cached.loaded);
       setSummary(cached.summary);
-      setBranch(cached.branch);
-      setPeriod(cached.period);
       setPlCategories(cached.plCategories);
       setSectionJobs(cached.sectionJobs);
       setLoading(false);
@@ -102,8 +98,6 @@ export default function NegativeMovement() {
         }
 
         setSummary(summaryResp.summary);
-        setBranch(summaryResp.branch);
-        setPeriod(summaryResp.period);
         setPlCategories(summaryResp.pl_categories || []);
         setSectionJobs(jobs);
 
@@ -282,7 +276,7 @@ export default function NegativeMovement() {
           Negative Movement Agent
         </h1>
         <p className="page-header__subtitle">
-          {branch} · {period} · {totalJobs} jobs flagged for review
+          {totalJobs} jobs flagged for review
         </p>
       </div>
 

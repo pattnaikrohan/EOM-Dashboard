@@ -213,8 +213,6 @@ export default function OpsReview() {
   const { globalFlags, globalBranches, globalDepartments, loaded, getTabCache, setTabCache } = useData();
   const [sections, setSections] = useState<Record<string, Job[]>>({});
   const [kpi, setKpi] = useState<KPI | null>(null);
-  const [branch, setBranch] = useState('');
-  const [period, setPeriod] = useState('');
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
@@ -227,8 +225,6 @@ export default function OpsReview() {
     if (cached) {
       setSections(cached.sections);
       setKpi(cached.kpi);
-      setBranch(cached.branch);
-      setPeriod(cached.period);
       setTotal(cached.total);
       setExpanded(cached.expanded);
       setLoading(false);
@@ -249,8 +245,6 @@ export default function OpsReview() {
 
       setSections(fullSections);
       setKpi(opsData.kpi);
-      setBranch(opsData.branch);
-      setPeriod(opsData.period);
 
       // Count total jobs across sections
       const totalCount = Object.values(fullSections).reduce((sum, jobs) => sum + jobs.length, 0);
@@ -418,7 +412,7 @@ export default function OpsReview() {
             Ops Manager Review
           </h1>
           <p className="page-header__subtitle">
-            {branch} · {period} · {total} jobs flagged for management review
+            {total} jobs flagged for management review
           </p>
         </div>
         <CountdownTimer />

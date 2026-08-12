@@ -272,7 +272,7 @@ export default function OperatorView() {
             {selectedCode === 'ALL' ? 'All Operators' : `${selectedCode}'s Workflow`}
           </h1>
           <p className="page-header__subtitle">
-            {data.branch} · {data.period}
+            Operational performance & workload analysis
           </p>
         </div>
         <CountdownTimer />

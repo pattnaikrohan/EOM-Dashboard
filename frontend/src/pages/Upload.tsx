@@ -6,7 +6,7 @@ import { useData } from '../context/DataContext';
 import { useNavigate } from 'react-router-dom';
 
 export default function UploadPage() {
-  const { handleSyncSnowflake, loading, error, loaded, branch, period } = useData();
+  const { handleSyncSnowflake, loading, error, loaded } = useData();
   const navigate = useNavigate();
 
   return (
@@ -70,7 +70,7 @@ export default function UploadPage() {
             <div>
               <div style={{ fontWeight: 700, fontSize: '0.875rem' }}>Data Synced Successfully</div>
               <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '0.25rem' }}>
-                Branch: {branch} · Period: {period}
+                System dataset initialized and ready
               </div>
             </div>
           </div>
