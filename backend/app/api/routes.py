@@ -270,11 +270,14 @@ def get_ops_review():
     for lbl, jlist in sections.items():
         print(f"DEBUG: Section {lbl} has {len(jlist)} jobs")
 
+    kpi = data_store.get_kpi(operator=None, flags=flags, branches=branches, departments=departments)
+
     return jsonify({
         "branch": data_store.branch,
         "period": data_store.period,
         "sections": sections,
         "total": len(review_jobs),
+        "kpi": kpi,
     })
 
 @blueprint.route("/legend", methods=["GET"])

@@ -15,7 +15,7 @@ import {
   ArrowUpRight, ArrowDownLeft, Repeat, MapPin, Clock, ArrowUp,
 } from 'lucide-react';
 import { useData } from '../context/DataContext';
-import { getOpsReview, getOperatorDetail } from '../services/api';
+import { getOpsReview } from '../services/api';
 import type { Job, KPI } from '../services/api';
 import KPICards from '../components/KPICards';
 import JobTable from '../components/JobTable';
@@ -237,10 +237,8 @@ export default function OpsReview() {
 
     setLoading(true);
     try {
-      // Load ops-review sections (jobs appear under ALL flags) with global branch/dept filters
+      // Load ops-review sections and KPI data in a single request
       const opsData = await getOpsReview(globalFlags, globalBranches, globalDepartments);
-      // Load operator detail for KPI data
-      const detailData = await getOperatorDetail('ALL', globalFlags, globalBranches, globalDepartments);
 
       // Build full sections: every flag always present
       const fullSections: Record<string, Job[]> = {};
@@ -250,7 +248,7 @@ export default function OpsReview() {
       });
 
       setSections(fullSections);
-      setKpi(detailData.kpi);
+      setKpi(opsData.kpi);
       setBranch(opsData.branch);
       setPeriod(opsData.period);
 
@@ -265,7 +263,7 @@ export default function OpsReview() {
 
       setTabCache('opsReview', cacheKey, {
         sections: fullSections,
-        kpi: detailData.kpi,
+        kpi: opsData.kpi,
         branch: opsData.branch,
         period: opsData.period,
         total: totalCount,

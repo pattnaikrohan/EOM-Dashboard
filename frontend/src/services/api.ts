@@ -219,7 +219,7 @@ export async function getJobs(params: Record<string, string>): Promise<{ total: 
   return data;
 }
 
-export async function getOpsReview(flags?: string[], branches?: string[], departments?: string[]): Promise<{ branch: string; period: string; sections: Record<string, Job[]>; total: number }> {
+export async function getOpsReview(flags?: string[], branches?: string[], departments?: string[]): Promise<{ branch: string; period: string; sections: Record<string, Job[]>; total: number; kpi: KPI }> {
   const params: Record<string, string> = {};
   if (flags && flags.length > 0) params.flags = flags.join(',');
   if (branches && branches.length > 0) params.branches = branches.join(',');
