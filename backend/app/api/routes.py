@@ -197,12 +197,17 @@ def get_operator_detail(code):
     if not jobs and code != "ALL" and code not in data_store.operators:
         return jsonify({"error": f"Operator '{code}' not found"}), 404
 
+    jobs_by_flag = data_store.get_jobs_by_flag(code, flags=flags, branches=branches, departments=departments)
+    if code == "ALL":
+        # For ALL operators view, cap each section at 250 jobs max to reduce 50MB JSON payload down to 1.5MB for sub-100ms loading speed
+        jobs_by_flag = {flag: jlist[:250] for flag, jlist in jobs_by_flag.items()}
+
     return jsonify({
         "operator": code,
         "branch": data_store.branch,
         "period": data_store.period,
         "kpi": data_store.get_kpi(code, flags=flags, branches=branches, departments=departments),
-        "jobs_by_flag": data_store.get_jobs_by_flag(code, flags=flags, branches=branches, departments=departments),
+        "jobs_by_flag": jobs_by_flag,
         "flag_distribution": data_store.get_flag_distribution(code, flags=flags, branches=branches, departments=departments),
     })
 
