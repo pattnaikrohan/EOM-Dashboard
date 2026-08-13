@@ -23,11 +23,14 @@ const PENDING_INVOICING_FLAGS = [
   'DOMESTIC Jobs pending invoicing',
 ];
 
-// Only operator-visible month-end flags (others are Ops Manager only)
+// Operator month-end closing checkers
 const MONTH_END_CLOSING_FLAGS = [
+  'Unbilled Jobs (No Revenue)',
   'Jobs with WIPs',
   'Jobs at INV Status',
   'Jobs with Aged Accruals',
+  'Billed Loss Jobs',
+  'Low Margin Jobs (<15%)',
 ];
 
 // All 13 checkers in order
