@@ -318,6 +318,7 @@ export default function OperatorView() {
             </button>
           )}
           {[...operators]
+            .filter(op => op.total_jobs > 0)
             .sort((a, b) => a.code.localeCompare(b.code))
             .filter(op => op.code.toLowerCase().includes(operatorSearch.toLowerCase()))
             .map(op => (

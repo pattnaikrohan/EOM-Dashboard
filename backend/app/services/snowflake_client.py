@@ -71,32 +71,30 @@ def get_connection():
         warehouse=SF_WAREHOUSE, role=SF_ROLE)
 
 def fetch_jobs_from_snowflake():
-    # Because we don't have CREATE VIEW permissions in PROD.CORE, we run the raw CTE logic here.
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    sql_file = os.path.join(current_dir, 'VW_EOM_JOB_CHARGES.sql')
-    with open(sql_file, 'r', encoding='utf-8') as f:
-        sql_content = f.read()
-
-    # Normalize line endings for cross-platform compatibility (Windows vs Azure Linux App Service)
-    sql_content = sql_content.replace('\r\n', '\n')
-
-    # Extract the VW_EOM_JOBS_SUMMARY CTE
-    if 'CREATE OR REPLACE VIEW DEV.CORE.VW_EOM_JOBS_SUMMARY\nAS\n' in sql_content:
-        query_parts = sql_content.split('CREATE OR REPLACE VIEW DEV.CORE.VW_EOM_JOBS_SUMMARY\nAS\n')
-        select_query = query_parts[1].strip().rstrip(';')
-    elif 'VW_EOM_JOBS_SUMMARY' in sql_content and 'SELECT' in sql_content:
-        idx = sql_content.find('SELECT')
-        select_query = sql_content[idx:].strip().rstrip(';')
-    else:
-        select_query = sql_content.strip().rstrip(';')
+    # Directly query the pre-compiled Snowflake View in PROD.AI_AUTO schema
+    select_query = "SELECT * FROM PROD.AI_AUTO.VW_EOM_JOBS_SUMMARY"
     
     update_sync_progress("Connecting to Snowflake Database...", 10)
     conn = get_connection()
     cur = conn.cursor()
     
-    update_sync_progress("Querying CargoWise Job Tables...", 25)
-    print("Fetching jobs from Snowflake (Live)...")
-    cur.execute(select_query)
+    update_sync_progress("Querying Snowflake View PROD.AI_AUTO.VW_EOM_JOBS_SUMMARY...", 25)
+    print("Fetching jobs from PROD.AI_AUTO.VW_EOM_JOBS_SUMMARY (Live)...")
+    try:
+        cur.execute(select_query)
+    except Exception as view_err:
+        print(f"Direct view query warning ({view_err}). Falling back to local CTE file...")
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        sql_file = os.path.join(current_dir, 'VW_EOM_JOB_CHARGES.sql')
+        with open(sql_file, 'r', encoding='utf-8') as f:
+            sql_content = f.read().replace('\r\n', '\n')
+        if 'CREATE OR REPLACE VIEW DEV.CORE.VW_EOM_JOBS_SUMMARY\nAS\n' in sql_content:
+            query_parts = sql_content.split('CREATE OR REPLACE VIEW DEV.CORE.VW_EOM_JOBS_SUMMARY\nAS\n')
+            select_query = query_parts[1].strip().rstrip(';')
+        else:
+            idx = sql_content.find('SELECT')
+            select_query = sql_content[idx:].strip().rstrip(';')
+        cur.execute(select_query)
     
     cols = [desc[0] for desc in cur.description]
     rows = cur.fetchall()
