@@ -23,17 +23,10 @@ import JobTable from '../components/JobTable';
 import PremiumLoader from '../components/PremiumLoader';
 import { FLAG_COLOURS, FLAG_DESCRIPTIONS } from '../utils/constants';
 
-const isJobSearchAllowed = (email?: string, displayName?: string) => {
+const ALLOWED_SEARCH_EMAILS = ['c.brotherton@ilm.com.au', 'r.pattnaik@ilm.com.au'];
+const isJobSearchAllowed = (email?: string) => {
   const e = (email || '').toLowerCase().trim();
-  const n = (displayName || '').toLowerCase().trim();
-  return (
-    e.includes('c.brotherton') ||
-    e.includes('r.pattnaik') ||
-    e.includes('pattnaikrohan') ||
-    e.includes('claire') ||
-    n.includes('claire brotherton') ||
-    n.includes('rohan pattnaik')
-  );
+  return ALLOWED_SEARCH_EMAILS.includes(e);
 };
 
 // ── Ops Manager section order (Month End first, then Pending Invoicing) ───────
@@ -225,8 +218,8 @@ function DirectionTabView({ jobs, defaultSort, flag }: {
 // ── Main Component ────────────────────────────────────────────────────────────
 export default function OpsReview() {
   const { globalFlags, globalBranches, globalDepartments, loaded, getTabCache, setTabCache } = useData();
-  const { email, displayName } = useAuth();
-  const isSearchPermitted = isJobSearchAllowed(email, displayName);
+  const { email } = useAuth();
+  const isSearchPermitted = isJobSearchAllowed(email);
   const [jobSearchQuery, setJobSearchQuery] = useState<string>('');
 
   const [sections, setSections] = useState<Record<string, Job[]>>({});
@@ -440,64 +433,45 @@ export default function OpsReview() {
             {total} jobs flagged for management review
           </p>
         </div>
-        <CountdownTimer />
-      </div>
-
-      {isSearchPermitted && (
-        <div style={{
-          marginTop: '1rem',
-          marginBottom: '1rem',
-          padding: '0.75rem 1rem',
-          background: 'linear-gradient(135deg, rgba(245,158,11,0.08) 0%, rgba(217,119,6,0.08) 100%)',
-          borderRadius: '12px',
-          border: '1.5px solid rgba(245,158,11,0.25)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.75rem',
-          boxShadow: '0 4px 12px rgba(245,158,11,0.08)'
-        }}>
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem',
-            fontWeight: 800, color: '#d97706', textTransform: 'uppercase', letterSpacing: '0.05em'
-          }}>
-            <Search size={16} /> Job Search:
-          </div>
-          <input
-            type="text"
-            placeholder="Type Job Number to filter page (e.g. S00166649)..."
-            value={jobSearchQuery}
-            onChange={e => setJobSearchQuery(e.target.value)}
-            style={{
-              flex: 1,
-              padding: '0.4rem 0.75rem',
-              fontSize: '0.82rem',
-              fontWeight: 600,
-              borderRadius: '8px',
-              border: '1px solid rgba(245,158,11,0.2)',
-              outline: 'none',
-              background: '#ffffff',
-              boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.03)'
-            }}
-          />
-          {jobSearchQuery && (
-            <button
-              onClick={() => setJobSearchQuery('')}
-              style={{
-                border: 'none',
-                background: '#ef4444',
-                color: '#fff',
-                borderRadius: '6px',
-                padding: '0.3rem 0.7rem',
-                fontSize: '0.72rem',
-                fontWeight: 700,
-                cursor: 'pointer'
-              }}
-            >
-              Clear Search
-            </button>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.6rem' }}>
+          <CountdownTimer />
+          {isSearchPermitted && (
+            <div style={{ position: 'relative', width: '240px' }}>
+              <Search size={14} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#d97706' }} />
+              <input 
+                type="text" 
+                placeholder="Search Job Number..." 
+                value={jobSearchQuery}
+                onChange={e => setJobSearchQuery(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '0.4rem 2rem 0.4rem 2.2rem',
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  borderRadius: '20px',
+                  border: '1.5px solid rgba(245,158,11,0.35)',
+                  outline: 'none',
+                  background: '#ffffff',
+                  boxShadow: '0 2px 8px rgba(245,158,11,0.12)'
+                }}
+              />
+              {jobSearchQuery && (
+                <button 
+                  onClick={() => setJobSearchQuery('')}
+                  style={{
+                    position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)',
+                    border: 'none', background: '#ef4444', color: '#fff', borderRadius: '50%',
+                    width: '16px', height: '16px', fontSize: '11px', fontWeight: 'bold',
+                    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                  }}
+                >
+                  ×
+                </button>
+              )}
+            </div>
           )}
         </div>
-      )}
+      </div>
 
       {/* KPI Cards */}
       {kpi && <KPICards kpi={kpi} />}

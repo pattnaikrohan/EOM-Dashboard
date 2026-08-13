@@ -16,17 +16,10 @@ import JobTable from '../components/JobTable';
 import PremiumLoader from '../components/PremiumLoader';
 import { FLAG_COLOURS, FLAG_DESCRIPTIONS } from '../utils/constants';
 
-const isJobSearchAllowed = (email?: string, displayName?: string) => {
+const ALLOWED_SEARCH_EMAILS = ['c.brotherton@ilm.com.au', 'r.pattnaik@ilm.com.au'];
+const isJobSearchAllowed = (email?: string) => {
   const e = (email || '').toLowerCase().trim();
-  const n = (displayName || '').toLowerCase().trim();
-  return (
-    e.includes('c.brotherton') ||
-    e.includes('r.pattnaik') ||
-    e.includes('pattnaikrohan') ||
-    e.includes('claire') ||
-    n.includes('claire brotherton') ||
-    n.includes('rohan pattnaik')
-  );
+  return ALLOWED_SEARCH_EMAILS.includes(e);
 };
 
 // ── Section groups ────────────────────────────────────────────────────────────
@@ -105,8 +98,8 @@ function CountdownTimer() {
 
 export default function OperatorView() {
   const { globalFlags, globalBranches, globalDepartments, operators, loaded, getTabCache, setTabCache } = useData();
-  const { email, displayName } = useAuth();
-  const isSearchPermitted = isJobSearchAllowed(email, displayName);
+  const { email } = useAuth();
+  const isSearchPermitted = isJobSearchAllowed(email);
   const [jobSearchQuery, setJobSearchQuery] = useState<string>('');
   const [searchParams] = useSearchParams();
   const initialOp = searchParams.get('operator') || 'ALL';
@@ -117,8 +110,6 @@ export default function OperatorView() {
   const [pendingInvTab, setPendingInvTab] = useState<string>('EXPORTS Jobs pending invoicing');
   const [operatorSearch, setOperatorSearch] = useState<string>('');
 
-  const activeCode = jobSearchQuery.trim() ? 'ALL' : selectedCode;
-
   const filterJobsByNumber = (jobList: Job[]) => {
     if (!jobSearchQuery || !jobSearchQuery.trim()) return jobList;
     const q = jobSearchQuery.toLowerCase().trim();
@@ -127,7 +118,7 @@ export default function OperatorView() {
 
   useEffect(() => {
     if (!loaded) return;
-    const cacheKey = `${activeCode}_${(globalFlags || []).join(',')}_${(globalBranches || []).join(',')}_${(globalDepartments || []).join(',')}`;
+    const cacheKey = `${selectedCode}_${(globalFlags || []).join(',')}_${(globalBranches || []).join(',')}_${(globalDepartments || []).join(',')}`;
     const cached = getTabCache('opDetail', cacheKey);
     if (cached) {
       setData(cached.data);
@@ -137,7 +128,7 @@ export default function OperatorView() {
     }
 
     setLoading(true);
-    getOperatorDetail(activeCode, globalFlags, globalBranches, globalDepartments)
+    getOperatorDetail(selectedCode, globalFlags, globalBranches, globalDepartments)
       .then(d => {
         setData(d);
         // Auto-expand sections that have jobs
@@ -151,7 +142,7 @@ export default function OperatorView() {
       })
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, [activeCode, globalFlags, globalBranches, globalDepartments, loaded, getTabCache, setTabCache]);
+  }, [selectedCode, globalFlags, globalBranches, globalDepartments, loaded, getTabCache, setTabCache]);
 
 
   if (!loaded) {
@@ -297,7 +288,7 @@ export default function OperatorView() {
             }}>
               <User size={24} strokeWidth={2.5} />
             </div>
-            {activeCode === 'ALL' ? 'All Operators' : `${activeCode}'s Workflow`}
+            {selectedCode === 'ALL' ? 'All Operators' : `${selectedCode}'s Workflow`}
           </h1>
           <p className="page-header__subtitle">
             Operational performance & workload analysis
