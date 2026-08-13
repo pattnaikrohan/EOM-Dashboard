@@ -8,12 +8,26 @@ import { useSearchParams } from 'react-router-dom';
 import { ChevronRight, User, CheckCircle2, ArrowUpRight, ArrowDownLeft, Repeat, MapPin, Clock, Search, ArrowUp } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { useData } from '../context/DataContext';
+import { useAuth } from '../auth/AuthProvider';
 import { getOperatorDetail } from '../services/api';
 import type { OperatorDetail, Job } from '../services/api';
 import KPICards from '../components/KPICards';
 import JobTable from '../components/JobTable';
 import PremiumLoader from '../components/PremiumLoader';
 import { FLAG_COLOURS, FLAG_DESCRIPTIONS } from '../utils/constants';
+
+const isJobSearchAllowed = (email?: string, displayName?: string) => {
+  const e = (email || '').toLowerCase().trim();
+  const n = (displayName || '').toLowerCase().trim();
+  return (
+    e.includes('c.brotherton') ||
+    e.includes('r.pattnaik') ||
+    e.includes('pattnaikrohan') ||
+    e.includes('claire') ||
+    n.includes('claire brotherton') ||
+    n.includes('rohan pattnaik')
+  );
+};
 
 // ── Section groups ────────────────────────────────────────────────────────────
 const PENDING_INVOICING_FLAGS = [
@@ -91,6 +105,9 @@ function CountdownTimer() {
 
 export default function OperatorView() {
   const { globalFlags, globalBranches, globalDepartments, operators, loaded, getTabCache, setTabCache } = useData();
+  const { email, displayName } = useAuth();
+  const isSearchPermitted = isJobSearchAllowed(email, displayName);
+  const [jobSearchQuery, setJobSearchQuery] = useState<string>('');
   const [searchParams] = useSearchParams();
   const initialOp = searchParams.get('operator') || 'ALL';
   const [selectedCode, setSelectedCode] = useState<string>(initialOp);
@@ -99,6 +116,12 @@ export default function OperatorView() {
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [pendingInvTab, setPendingInvTab] = useState<string>('EXPORTS Jobs pending invoicing');
   const [operatorSearch, setOperatorSearch] = useState<string>('');
+
+  const filterJobsByNumber = (jobList: Job[]) => {
+    if (!jobSearchQuery || !jobSearchQuery.trim()) return jobList;
+    const q = jobSearchQuery.toLowerCase().trim();
+    return jobList.filter(j => (j.job_number || '').toLowerCase().includes(q));
+  };
 
   useEffect(() => {
     if (!loaded) return;
@@ -167,9 +190,10 @@ export default function OperatorView() {
   };
 
   const renderFlagSection = (flag: string) => {
-    const jobs: Job[] = data.jobs_by_flag[flag] || [];
+    const rawJobs: Job[] = data.jobs_by_flag[flag] || [];
+    const jobs = filterJobsByNumber(rawJobs);
     const flagInfo = FLAG_COLOURS[flag];
-    const isOpen = expanded[flag] ?? false;
+    const isOpen = jobSearchQuery.trim() ? jobs.length > 0 : (expanded[flag] ?? false);
     const isEmpty = jobs.length === 0;
     const flagDefaultSort = getDefaultSort(flag);
     return (
@@ -280,6 +304,62 @@ export default function OperatorView() {
         </div>
         <CountdownTimer />
       </div>
+
+      {isSearchPermitted && (
+        <div style={{
+          marginTop: '1rem',
+          marginBottom: '1rem',
+          padding: '0.75rem 1rem',
+          background: 'linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(168,85,247,0.08) 100%)',
+          borderRadius: '12px',
+          border: '1.5px solid rgba(99,102,241,0.25)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.75rem',
+          boxShadow: '0 4px 12px rgba(99,102,241,0.08)'
+        }}>
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem',
+            fontWeight: 800, color: '#4f46e5', textTransform: 'uppercase', letterSpacing: '0.05em'
+          }}>
+            <Search size={16} /> Job Search:
+          </div>
+          <input
+            type="text"
+            placeholder="Type Job Number to filter page (e.g. S00166649)..."
+            value={jobSearchQuery}
+            onChange={e => setJobSearchQuery(e.target.value)}
+            style={{
+              flex: 1,
+              padding: '0.4rem 0.75rem',
+              fontSize: '0.82rem',
+              fontWeight: 600,
+              borderRadius: '8px',
+              border: '1px solid rgba(99,102,241,0.2)',
+              outline: 'none',
+              background: '#ffffff',
+              boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.03)'
+            }}
+          />
+          {jobSearchQuery && (
+            <button
+              onClick={() => setJobSearchQuery('')}
+              style={{
+                border: 'none',
+                background: '#ef4444',
+                color: '#fff',
+                borderRadius: '6px',
+                padding: '0.3rem 0.7rem',
+                fontSize: '0.72rem',
+                fontWeight: 700,
+                cursor: 'pointer'
+              }}
+            >
+              Clear Search
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Operator Filter Tabs */}
       <div style={{ marginTop: '1.5rem', marginBottom: '1.5rem' }}>
