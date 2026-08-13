@@ -117,6 +117,8 @@ export default function OperatorView() {
   const [pendingInvTab, setPendingInvTab] = useState<string>('EXPORTS Jobs pending invoicing');
   const [operatorSearch, setOperatorSearch] = useState<string>('');
 
+  const activeCode = jobSearchQuery.trim() ? 'ALL' : selectedCode;
+
   const filterJobsByNumber = (jobList: Job[]) => {
     if (!jobSearchQuery || !jobSearchQuery.trim()) return jobList;
     const q = jobSearchQuery.toLowerCase().trim();
@@ -125,7 +127,7 @@ export default function OperatorView() {
 
   useEffect(() => {
     if (!loaded) return;
-    const cacheKey = `${selectedCode}_${(globalFlags || []).join(',')}_${(globalBranches || []).join(',')}_${(globalDepartments || []).join(',')}`;
+    const cacheKey = `${activeCode}_${(globalFlags || []).join(',')}_${(globalBranches || []).join(',')}_${(globalDepartments || []).join(',')}`;
     const cached = getTabCache('opDetail', cacheKey);
     if (cached) {
       setData(cached.data);
@@ -135,7 +137,7 @@ export default function OperatorView() {
     }
 
     setLoading(true);
-    getOperatorDetail(selectedCode, globalFlags, globalBranches, globalDepartments)
+    getOperatorDetail(activeCode, globalFlags, globalBranches, globalDepartments)
       .then(d => {
         setData(d);
         // Auto-expand sections that have jobs
@@ -149,7 +151,7 @@ export default function OperatorView() {
       })
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, [selectedCode, globalFlags, globalBranches, globalDepartments, loaded, getTabCache, setTabCache]);
+  }, [activeCode, globalFlags, globalBranches, globalDepartments, loaded, getTabCache, setTabCache]);
 
 
   if (!loaded) {
@@ -168,8 +170,7 @@ export default function OperatorView() {
   if (!data) {
     return (
       <div className="empty-state fade-in">
-        <h2 className="empty-state__title">Data Not Found</h2>
-        <p className="empty-state__text">No data available for operator "{selectedCode}"</p>
+        <h2 className="empty-state__title">No Data Available</h2>
       </div>
     );
   }
@@ -296,70 +297,51 @@ export default function OperatorView() {
             }}>
               <User size={24} strokeWidth={2.5} />
             </div>
-            {selectedCode === 'ALL' ? 'All Operators' : `${selectedCode}'s Workflow`}
+            {activeCode === 'ALL' ? 'All Operators' : `${activeCode}'s Workflow`}
           </h1>
           <p className="page-header__subtitle">
             Operational performance & workload analysis
           </p>
         </div>
-        <CountdownTimer />
-      </div>
-
-      {isSearchPermitted && (
-        <div style={{
-          marginTop: '1rem',
-          marginBottom: '1rem',
-          padding: '0.75rem 1rem',
-          background: 'linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(168,85,247,0.08) 100%)',
-          borderRadius: '12px',
-          border: '1.5px solid rgba(99,102,241,0.25)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.75rem',
-          boxShadow: '0 4px 12px rgba(99,102,241,0.08)'
-        }}>
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem',
-            fontWeight: 800, color: '#4f46e5', textTransform: 'uppercase', letterSpacing: '0.05em'
-          }}>
-            <Search size={16} /> Job Search:
-          </div>
-          <input
-            type="text"
-            placeholder="Type Job Number to filter page (e.g. S00166649)..."
-            value={jobSearchQuery}
-            onChange={e => setJobSearchQuery(e.target.value)}
-            style={{
-              flex: 1,
-              padding: '0.4rem 0.75rem',
-              fontSize: '0.82rem',
-              fontWeight: 600,
-              borderRadius: '8px',
-              border: '1px solid rgba(99,102,241,0.2)',
-              outline: 'none',
-              background: '#ffffff',
-              boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.03)'
-            }}
-          />
-          {jobSearchQuery && (
-            <button
-              onClick={() => setJobSearchQuery('')}
-              style={{
-                border: 'none',
-                background: '#ef4444',
-                color: '#fff',
-                borderRadius: '6px',
-                padding: '0.3rem 0.7rem',
-                fontSize: '0.72rem',
-                fontWeight: 700,
-                cursor: 'pointer'
-              }}
-            >
-              Clear Search
-            </button>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.6rem' }}>
+          <CountdownTimer />
+          {isSearchPermitted && (
+            <div style={{ position: 'relative', width: '240px' }}>
+              <Search size={14} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#6366f1' }} />
+              <input 
+                type="text" 
+                placeholder="Search Job Number..." 
+                value={jobSearchQuery}
+                onChange={e => setJobSearchQuery(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '0.4rem 2rem 0.4rem 2.2rem',
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  borderRadius: '20px',
+                  border: '1.5px solid rgba(99,102,241,0.35)',
+                  outline: 'none',
+                  background: '#ffffff',
+                  boxShadow: '0 2px 8px rgba(99,102,241,0.12)'
+                }}
+              />
+              {jobSearchQuery && (
+                <button 
+                  onClick={() => setJobSearchQuery('')}
+                  style={{
+                    position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)',
+                    border: 'none', background: '#ef4444', color: '#fff', borderRadius: '50%',
+                    width: '16px', height: '16px', fontSize: '11px', fontWeight: 'bold',
+                    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                  }}
+                >
+                  ×
+                </button>
+              )}
+            </div>
           )}
         </div>
-      )}
+      </div>
 
       {/* Operator Filter Tabs */}
       <div style={{ marginTop: '1.5rem', marginBottom: '1.5rem' }}>
