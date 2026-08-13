@@ -403,7 +403,7 @@ export default function OperatorView() {
         </div>
         <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', paddingBottom: '0.75rem' }}>
           {ALL_CHECKERS.map(name => {
-            const count = (data.jobs_by_flag[name] || []).length;
+            const count = filterJobsByNumber(data.jobs_by_flag[name] || []).length;
             if (count === 0) return null; // Only show sections that have jobs
 
             const colour = FLAG_COLOURS[name]?.hex || '#6366f1';
@@ -468,7 +468,7 @@ export default function OperatorView() {
         <div style={{ display: 'flex', gap: '0.5rem', padding: '1rem', background: '#f8fafc', overflowX: 'auto', scrollbarWidth: 'none', borderBottom: '1px solid #e2e8f0' }}>
           {PENDING_INVOICING_FLAGS.map(flag => {
             const isActive = pendingInvTab === flag;
-            const count = (data.jobs_by_flag[flag] || []).length;
+            const count = filterJobsByNumber(data.jobs_by_flag[flag] || []).length;
             const flagInfo = FLAG_COLOURS[flag] || { hex: '#3b82f6' };
             
             let tabName = flag.replace(' Jobs pending invoicing', '');
@@ -506,7 +506,7 @@ export default function OperatorView() {
         {/* Tab Content */}
         <div style={{ padding: '0', background: '#fff' }}>
           <JobTable 
-            jobs={data.jobs_by_flag[pendingInvTab] || []}
+            jobs={filterJobsByNumber(data.jobs_by_flag[pendingInvTab] || [])}
             defaultSort={getDefaultSort(pendingInvTab)}
             hideRevenueProfit
           />

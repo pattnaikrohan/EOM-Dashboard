@@ -483,7 +483,7 @@ export default function OpsReview() {
         </div>
         <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', paddingBottom: '0.75rem' }}>
           {OPS_ALL_FLAGS.map(name => {
-            const count = sections[name]?.length || 0;
+            const count = filterJobsByNumber(sections[name] || []).length;
             const colour = FLAG_COLOURS[name]?.hex || '#6366f1';
             const shortName = SHORT_NAMES[name] || name.replace('Jobs pending invoicing', '').replace('Jobs', '').trim();
 
@@ -570,7 +570,7 @@ export default function OpsReview() {
         <div style={{ display: 'flex', gap: '0.5rem', padding: '1rem', background: '#f8fafc', overflowX: 'auto', scrollbarWidth: 'none', borderBottom: '1px solid #e2e8f0' }}>
           {OPS_PENDING_INVOICING_FLAGS.map(flag => {
             const isActive = pendingInvTab === flag;
-            const count = (sections[flag] || []).length;
+            const count = filterJobsByNumber(sections[flag] || []).length;
             const flagInfo = FLAG_COLOURS[flag] || { hex: '#3b82f6' };
 
             let tabName = flag.replace(' Jobs pending invoicing', '');
@@ -608,7 +608,7 @@ export default function OpsReview() {
         {/* Tab Content */}
         <div style={{ padding: '0', background: '#fff' }}>
           <JobTable
-            jobs={sections[pendingInvTab] || []}
+            jobs={filterJobsByNumber(sections[pendingInvTab] || [])}
             defaultSort={getDefaultSort(pendingInvTab)}
           />
         </div>
