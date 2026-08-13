@@ -331,7 +331,7 @@ export default function OperatorView() {
               <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: '0.5rem' }}>
                 {op.code}
               </span>
-              <span className="operator-pill-badge">{op.visible_jobs !== undefined ? op.visible_jobs : op.total_jobs}</span>
+              <span className="operator-pill-badge">{op.total_jobs}</span>
             </button>
           ))}
         </div>
