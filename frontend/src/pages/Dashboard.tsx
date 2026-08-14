@@ -1,12 +1,13 @@
 /**
- * Dashboard Page — Branch-level global overview.
+ * Dashboard Page — Branch-level global overview with actionable EOM analytics.
  */
 import { useNavigate } from 'react-router-dom';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
-  PieChart, Pie, Cell, Label, Legend as ReLegend
+  PieChart, Pie, Cell, Label,
+  RadialBarChart, RadialBar,
 } from 'recharts';
-import { ArrowUpRight, Upload, Database } from 'lucide-react';
+import { ArrowUpRight, Upload, Database, TrendingUp, AlertTriangle, Shield, Package } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import KPICards from '../components/KPICards';
 import PremiumLoader from '../components/PremiumLoader';
@@ -14,63 +15,87 @@ import { FLAG_COLOURS, FLAG_PRIORITY } from '../utils/constants';
 
 const PIE_COLORS = FLAG_PRIORITY.filter(f => f !== 'CLEAN').map(f => FLAG_COLOURS[f]?.hex || '#ccc');
 
-const CustomBarTooltip = ({ active, payload, label }: any) => {
-  if (active && payload && payload.length) {
-    return (
-      <div style={{
-        background: 'rgba(255, 255, 255, 0.95)',
-        backdropFilter: 'blur(16px)',
-        WebkitBackdropFilter: 'blur(16px)',
-        padding: '16px',
-        border: '1px solid rgba(0, 0, 0, 0.05)',
-        borderRadius: '16px',
-        boxShadow: '0 12px 40px rgba(0, 0, 0, 0.12)',
-        minWidth: '160px'
-      }}>
-        <p style={{ margin: 0, fontWeight: 900, color: '#0f172a', marginBottom: '12px', textTransform: 'uppercase', fontSize: '0.8rem', letterSpacing: '0.1em', borderBottom: '1px solid rgba(0,0,0,0.05)', paddingBottom: '8px' }}>
-          Operator: {label}
-        </p>
-        {payload.map((entry: any, index: number) => (
-          <div key={`item-${index}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: entry.color || entry.fill }}></div>
-              <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 600 }}>{entry.name}</span>
-            </div>
-            <span style={{ fontSize: '0.9rem', color: '#0f172a', fontWeight: 800, marginLeft: '16px' }}>{entry.value}</span>
+/* ── Shared Tooltip Styles ────────────────────────────────────────────────── */
+const tooltipBox: React.CSSProperties = {
+  background: 'rgba(255, 255, 255, 0.96)',
+  backdropFilter: 'blur(16px)',
+  WebkitBackdropFilter: 'blur(16px)',
+  padding: '14px 16px',
+  border: '1px solid rgba(0,0,0,0.06)',
+  borderRadius: '14px',
+  boxShadow: '0 12px 40px rgba(0,0,0,0.10)',
+  minWidth: '150px',
+};
+
+/* ── Custom Tooltips ──────────────────────────────────────────────────────── */
+const RiskTooltip = ({ active, payload, label }: any) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <div style={tooltipBox}>
+      <p style={{ margin: 0, fontWeight: 900, color: '#0f172a', fontSize: '0.78rem', letterSpacing: '0.06em', textTransform: 'uppercase', borderBottom: '1px solid #f1f5f9', paddingBottom: '8px', marginBottom: '8px' }}>
+        {label}
+      </p>
+      {payload.map((e: any, i: number) => (
+        <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: e.color || e.fill }} />
+            <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 600 }}>{e.name}</span>
           </div>
-        ))}
+          <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#0f172a' }}>{e.value}</span>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+const CheckerTooltip = ({ active, payload, label }: any) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <div style={tooltipBox}>
+      <p style={{ margin: 0, fontWeight: 800, color: '#0f172a', fontSize: '0.78rem', borderBottom: '1px solid #f1f5f9', paddingBottom: '6px', marginBottom: '8px' }}>
+        {label}
+      </p>
+      <div style={{ fontSize: '1.4rem', fontWeight: 900, color: payload[0]?.color || '#3b82f6' }}>
+        {payload[0]?.value} <span style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 600 }}>jobs</span>
       </div>
-    );
-  }
-  return null;
+    </div>
+  );
 };
 
 const CustomPieTooltip = ({ active, payload }: any) => {
-  if (active && payload && payload.length) {
-    return (
-      <div style={{
-        background: 'rgba(255, 255, 255, 0.95)',
-        backdropFilter: 'blur(16px)',
-        WebkitBackdropFilter: 'blur(16px)',
-        padding: '16px',
-        border: '1px solid rgba(0, 0, 0, 0.05)',
-        borderRadius: '16px',
-        boxShadow: '0 12px 40px rgba(0, 0, 0, 0.12)',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: payload[0].payload.fill, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}></div>
-          <span style={{ fontSize: '0.9rem', color: '#0f172a', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            {payload[0].name}
-          </span>
-        </div>
-        <div style={{ marginTop: '10px', fontSize: '1.5rem', fontWeight: 900, color: '#0f172a' }}>
-          {payload[0].value} <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 600, marginLeft: '4px' }}>Jobs</span>
-        </div>
+  if (!active || !payload?.length) return null;
+  return (
+    <div style={tooltipBox}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div style={{ width: 12, height: 12, borderRadius: '50%', background: payload[0].payload.fill, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }} />
+        <span style={{ fontSize: '0.85rem', color: '#0f172a', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          {payload[0].name}
+        </span>
       </div>
-    );
-  }
-  return null;
+      <div style={{ marginTop: '10px', fontSize: '1.5rem', fontWeight: 900, color: '#0f172a' }}>
+        {payload[0].value} <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 600, marginLeft: '4px' }}>Jobs</span>
+      </div>
+    </div>
+  );
 };
+
+const DirectionTooltip = ({ active, payload }: any) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <div style={tooltipBox}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+        <div style={{ width: 10, height: 10, borderRadius: '50%', background: payload[0].payload.fill }} />
+        <span style={{ fontWeight: 800, color: '#0f172a', fontSize: '0.85rem' }}>{payload[0].name}</span>
+      </div>
+      <div style={{ fontSize: '1.3rem', fontWeight: 900, color: '#0f172a' }}>
+        {payload[0].value.toLocaleString()} <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>jobs</span>
+      </div>
+    </div>
+  );
+};
+
+/* ── Direction Colors ─────────────────────────────────────────────────────── */
+const DIR_COLORS = ['#3b82f6', '#f59e0b', '#10b981', '#8b5cf6'];
 
 export default function Dashboard() {
   const { loaded, dashboard, loading } = useData();
@@ -114,38 +139,56 @@ export default function Dashboard() {
 
   const { kpi, operators, flag_distribution } = dashboard;
 
-  // Chart data
-  const sortedOperators = [...operators]
+  /* ── EOM Readiness Gauge ────────────────────────────────────────────────── */
+  const cleanPct = kpi.total_jobs > 0 ? Math.round((kpi.clean_jobs / kpi.total_jobs) * 100) : 0;
+  const gaugeData = [{ name: 'Readiness', value: cleanPct, fill: cleanPct >= 80 ? '#22c55e' : cleanPct >= 50 ? '#f59e0b' : '#ef4444' }];
+
+  /* ── Risk Heatmap — Top 10 operators by flagged jobs ────────────────────── */
+  const sortedOps = [...operators]
     .filter(op => op.total_jobs > 0)
-    .sort((a, b) => b.total_jobs - a.total_jobs);
+    .map(op => ({
+      ...op,
+      flagged: op.loss_count + op.wip_count + op.margin_count + op.zero_rev_count,
+    }))
+    .sort((a, b) => b.flagged - a.flagged);
 
-  const topOperators = sortedOperators.slice(0, 20);
-  const otherOperators = sortedOperators.slice(20);
-
-  const operatorBarData = topOperators.map(op => ({
+  const riskData = sortedOps.slice(0, 10).map(op => ({
     name: op.code,
-    Jobs: op.total_jobs,
     Loss: op.loss_count,
     WIP: op.wip_count,
+    'Low Margin': op.margin_count,
+    'No Revenue': op.zero_rev_count,
   }));
 
-  if (otherOperators.length > 0) {
-    operatorBarData.push({
-      name: 'Other',
-      Jobs: otherOperators.reduce((sum, op) => sum + op.total_jobs, 0),
-      Loss: otherOperators.reduce((sum, op) => sum + op.loss_count, 0),
-      WIP: otherOperators.reduce((sum, op) => sum + op.wip_count, 0),
-    });
-  }
+  /* ── Checker Health ─────────────────────────────────────────────────────── */
+  const checkerData = [
+    { name: 'Loss Jobs', value: kpi.loss_jobs, color: '#ef4444' },
+    { name: 'WIP Jobs', value: kpi.has_wip, color: '#f59e0b' },
+    { name: 'No Revenue', value: kpi.no_revenue, color: '#8b5cf6' },
+    { name: 'Margin <5%', value: kpi.margin_below_5, color: '#ec4899' },
+    { name: 'Accrual Check', value: kpi.accrual_check, color: '#06b6d4' },
+    { name: 'JFC Jobs', value: kpi.jfc_jobs, color: '#14b8a6' },
+  ].filter(c => c.value > 0);
 
+  /* ── Direction Split ────────────────────────────────────────────────────── */
+  const directionData = [
+    { name: 'Export', value: kpi.export_jobs },
+    { name: 'Import', value: kpi.import_jobs },
+    { name: 'Cross-Trade', value: kpi.cross_trade_jobs },
+  ].filter(d => d.value > 0);
+
+  /* ── Flag Distribution Pie ─────────────────────────────────────────────── */
   const flagPieData = FLAG_PRIORITY
     .filter(f => f !== 'CLEAN' && (flag_distribution[f] || 0) > 0)
     .map(f => ({
       name: f,
       value: flag_distribution[f] || 0,
     }));
+  const flaggedJobsCount = (kpi.total_jobs || 0) - (kpi.clean_jobs || 0);
 
-  const flaggedJobsCount = (kpi?.total_jobs || 0) - (kpi?.clean_jobs || 0);
+  /* ── Revenue & Profit KPIs ─────────────────────────────────────────────── */
+  const marginPct = kpi.total_revenue > 0 ? ((kpi.total_profit / kpi.total_revenue) * 100).toFixed(1) : '0.0';
+  const avgRevPerJob = kpi.total_jobs > 0 ? kpi.total_revenue / kpi.total_jobs : 0;
 
   return (
     <div className="fade-in">
@@ -156,47 +199,226 @@ export default function Dashboard() {
           EOM Review — Analytics Dashboard
         </h1>
         <p className="page-header__subtitle">
-          {kpi.total_jobs} active jobs across {operators.length} operators
+          {kpi.total_jobs.toLocaleString()} active jobs across {operators.length} operators
         </p>
       </div>
 
       {/* KPI Cards */}
       <KPICards kpi={kpi} />
 
-      {/* Charts Row */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '1.5rem', marginBottom: '2rem' }}>
-        {/* Operator Bar Chart */}
+      {/* ── ROW 1: Mini KPI Stat Cards ────────────────────────────────────── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
+        {/* EOM Readiness */}
+        <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.25rem' }}>
+          <div style={{
+            width: 48, height: 48, borderRadius: 14,
+            background: cleanPct >= 80 ? 'linear-gradient(135deg, #22c55e, #16a34a)' : cleanPct >= 50 ? 'linear-gradient(135deg, #f59e0b, #d97706)' : 'linear-gradient(135deg, #ef4444, #dc2626)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff',
+            boxShadow: '0 6px 16px rgba(0,0,0,0.12)',
+          }}>
+            <Shield size={22} strokeWidth={2.5} />
+          </div>
+          <div>
+            <div style={{ fontSize: '1.6rem', fontWeight: 900, color: 'var(--fg-base)', lineHeight: 1 }}>{cleanPct}%</div>
+            <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: '2px' }}>EOM Ready</div>
+          </div>
+        </div>
+
+        {/* Overall Margin */}
+        <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.25rem' }}>
+          <div style={{
+            width: 48, height: 48, borderRadius: 14,
+            background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff',
+            boxShadow: '0 6px 16px rgba(59,130,246,0.2)',
+          }}>
+            <TrendingUp size={22} strokeWidth={2.5} />
+          </div>
+          <div>
+            <div style={{ fontSize: '1.6rem', fontWeight: 900, color: 'var(--fg-base)', lineHeight: 1 }}>{marginPct}%</div>
+            <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: '2px' }}>Overall Margin</div>
+          </div>
+        </div>
+
+        {/* Jobs at Risk */}
+        <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.25rem' }}>
+          <div style={{
+            width: 48, height: 48, borderRadius: 14,
+            background: 'linear-gradient(135deg, #ef4444, #dc2626)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff',
+            boxShadow: '0 6px 16px rgba(239,68,68,0.2)',
+          }}>
+            <AlertTriangle size={22} strokeWidth={2.5} />
+          </div>
+          <div>
+            <div style={{ fontSize: '1.6rem', fontWeight: 900, color: 'var(--fg-base)', lineHeight: 1 }}>{flaggedJobsCount.toLocaleString()}</div>
+            <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: '2px' }}>Flagged Jobs</div>
+          </div>
+        </div>
+
+        {/* Avg Revenue/Job */}
+        <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.25rem' }}>
+          <div style={{
+            width: 48, height: 48, borderRadius: 14,
+            background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff',
+            boxShadow: '0 6px 16px rgba(139,92,246,0.2)',
+          }}>
+            <Package size={22} strokeWidth={2.5} />
+          </div>
+          <div>
+            <div style={{ fontSize: '1.6rem', fontWeight: 900, color: 'var(--fg-base)', lineHeight: 1 }}>${avgRevPerJob >= 1000 ? `${(avgRevPerJob / 1000).toFixed(1)}k` : avgRevPerJob.toFixed(0)}</div>
+            <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: '2px' }}>Avg Rev/Job</div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── ROW 2: Risk Heatmap + EOM Readiness Gauge ─────────────────────── */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+        {/* Top 10 Operators by Risk */}
         <div className="card">
-          <h3 style={{ fontSize: '0.875rem', fontWeight: 700, marginBottom: '1rem' }}>
-            Jobs by Operator
+          <h3 style={{ fontSize: '0.875rem', fontWeight: 700, marginBottom: '0.25rem' }}>
+            Top 10 Operators by Risk
           </h3>
-          <ResponsiveContainer width="100%" height={320}>
-            <BarChart data={operatorBarData} barGap={4} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+          <p style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: 500, marginBottom: '1rem', marginTop: 0 }}>
+            Operators with the most flagged jobs requiring attention
+          </p>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={riskData} layout="vertical" barGap={2} margin={{ top: 0, right: 20, left: 0, bottom: 0 }}>
               <defs>
-                <linearGradient id="colorJobs" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#60a5fa" stopOpacity={1} />
-                  <stop offset="100%" stopColor="#2563eb" stopOpacity={1} />
+                <linearGradient id="gradLoss" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stopColor="#fca5a5" /><stop offset="100%" stopColor="#ef4444" />
                 </linearGradient>
-                <linearGradient id="colorLoss" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#f87171" stopOpacity={1} />
-                  <stop offset="100%" stopColor="#dc2626" stopOpacity={1} />
+                <linearGradient id="gradWIP" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stopColor="#fde68a" /><stop offset="100%" stopColor="#f59e0b" />
                 </linearGradient>
-                <linearGradient id="colorWIP" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#fbbf24" stopOpacity={1} />
-                  <stop offset="100%" stopColor="#d97706" stopOpacity={1} />
+                <linearGradient id="gradMargin" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stopColor="#f9a8d4" /><stop offset="100%" stopColor="#ec4899" />
                 </linearGradient>
-                <filter id="barShadow" x="-20%" y="-20%" width="140%" height="140%">
-                  <feDropShadow dx="0" dy="4" stdDeviation="6" floodColor="#000000" floodOpacity="0.08" />
-                </filter>
+                <linearGradient id="gradNoRev" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stopColor="#c4b5fd" /><stop offset="100%" stopColor="#8b5cf6" />
+                </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" vertical={false} />
-              <XAxis dataKey="name" tick={{ fontSize: 11, fontWeight: 700, fill: '#64748b' }} axisLine={false} tickLine={false} dy={10} />
-              <YAxis tick={{ fontSize: 11, fontWeight: 600, fill: '#64748b' }} axisLine={false} tickLine={false} />
-              <Tooltip content={<CustomBarTooltip />} cursor={{ fill: 'rgba(59, 130, 246, 0.05)' }} />
-              <ReLegend verticalAlign="top" height={36} iconType="circle" wrapperStyle={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569' }} />
-              <Bar dataKey="Jobs" fill="url(#colorJobs)" radius={[6, 6, 0, 0]} animationDuration={1500} filter="url(#barShadow)" maxBarSize={40} />
-              <Bar dataKey="Loss" fill="url(#colorLoss)" radius={[6, 6, 0, 0]} animationDuration={1500} filter="url(#barShadow)" maxBarSize={40} />
-              <Bar dataKey="WIP" fill="url(#colorWIP)" radius={[6, 6, 0, 0]} animationDuration={1500} filter="url(#barShadow)" maxBarSize={40} />
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.04)" horizontal={false} />
+              <XAxis type="number" tick={{ fontSize: 11, fontWeight: 600, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+              <YAxis dataKey="name" type="category" tick={{ fontSize: 11, fontWeight: 700, fill: '#475569' }} axisLine={false} tickLine={false} width={100} />
+              <Tooltip content={<RiskTooltip />} cursor={{ fill: 'rgba(0,0,0,0.02)' }} />
+              <Bar dataKey="Loss" stackId="risk" fill="url(#gradLoss)" radius={[0, 0, 0, 0]} animationDuration={1200} />
+              <Bar dataKey="WIP" stackId="risk" fill="url(#gradWIP)" radius={[0, 0, 0, 0]} animationDuration={1200} />
+              <Bar dataKey="Low Margin" stackId="risk" fill="url(#gradMargin)" radius={[0, 0, 0, 0]} animationDuration={1200} />
+              <Bar dataKey="No Revenue" stackId="risk" fill="url(#gradNoRev)" radius={[0, 4, 4, 0]} animationDuration={1200} />
+            </BarChart>
+          </ResponsiveContainer>
+          {/* Inline legend */}
+          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '0.75rem' }}>
+            {[
+              { label: 'Loss', color: '#ef4444' },
+              { label: 'WIP', color: '#f59e0b' },
+              { label: 'Low Margin', color: '#ec4899' },
+              { label: 'No Revenue', color: '#8b5cf6' },
+            ].map(l => (
+              <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.7rem', fontWeight: 700, color: '#64748b' }}>
+                <div style={{ width: 8, height: 8, borderRadius: '50%', background: l.color }} />
+                {l.label}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* EOM Readiness Gauge + Direction Split */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          {/* Radial Gauge */}
+          <div className="card" style={{ textAlign: 'center' }}>
+            <h3 style={{ fontSize: '0.875rem', fontWeight: 700, marginBottom: '0.5rem', textAlign: 'left' }}>
+              EOM Readiness
+            </h3>
+            <ResponsiveContainer width="100%" height={170}>
+              <RadialBarChart
+                cx="50%" cy="50%"
+                innerRadius="70%" outerRadius="90%"
+                startAngle={180} endAngle={0}
+                data={gaugeData}
+              >
+                <RadialBar
+                  dataKey="value"
+                  cornerRadius={10}
+                  background={{ fill: '#f1f5f9' }}
+                  animationDuration={1500}
+                />
+                <text x="50%" y="50%" textAnchor="middle" dominantBaseline="central">
+                  <tspan fontSize="2rem" fontWeight="900" fill="var(--fg-base)">{cleanPct}%</tspan>
+                </text>
+                <text x="50%" y="65%" textAnchor="middle">
+                  <tspan fontSize="0.6rem" fontWeight="800" fill="#94a3b8" letterSpacing="0.1em">CLEAN JOBS</tspan>
+                </text>
+              </RadialBarChart>
+            </ResponsiveContainer>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '1.5rem', marginTop: '0.25rem' }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '1.1rem', fontWeight: 900, color: '#22c55e' }}>{kpi.clean_jobs.toLocaleString()}</div>
+                <div style={{ fontSize: '0.65rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase' }}>Clean</div>
+              </div>
+              <div style={{ width: 1, background: '#e2e8f0' }} />
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '1.1rem', fontWeight: 900, color: '#ef4444' }}>{flaggedJobsCount.toLocaleString()}</div>
+                <div style={{ fontSize: '0.65rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase' }}>Flagged</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Direction Split mini donut */}
+          <div className="card">
+            <h3 style={{ fontSize: '0.875rem', fontWeight: 700, marginBottom: '0.5rem' }}>
+              Direction Split
+            </h3>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <div style={{ flex: '1 1 55%' }}>
+                <ResponsiveContainer width="100%" height={130}>
+                  <PieChart>
+                    <Pie data={directionData} cx="50%" cy="50%" innerRadius={35} outerRadius={55} paddingAngle={4} cornerRadius={4} dataKey="value" stroke="none" animationDuration={1200}>
+                      {directionData.map((_e, i) => (
+                        <Cell key={i} fill={DIR_COLORS[i % DIR_COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip content={<DirectionTooltip />} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div style={{ flex: '1 1 45%', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                {directionData.map((d, i) => (
+                  <div key={d.name} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.72rem', fontWeight: 600, color: '#475569' }}>
+                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: DIR_COLORS[i], flexShrink: 0 }} />
+                    <span style={{ flex: 1 }}>{d.name}</span>
+                    <span style={{ fontWeight: 800, color: '#0f172a' }}>{d.value.toLocaleString()}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── ROW 3: Checker Health + Flag Distribution ─────────────────────── */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '2rem' }}>
+        {/* Checker Health */}
+        <div className="card">
+          <h3 style={{ fontSize: '0.875rem', fontWeight: 700, marginBottom: '0.25rem' }}>
+            Month End Checker Health
+          </h3>
+          <p style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: 500, marginBottom: '1rem', marginTop: 0 }}>
+            Jobs flagged per EOM check category
+          </p>
+          <ResponsiveContainer width="100%" height={260}>
+            <BarChart data={checkerData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" vertical={false} />
+              <XAxis dataKey="name" tick={{ fontSize: 10, fontWeight: 700, fill: '#64748b' }} axisLine={false} tickLine={false} dy={8} />
+              <YAxis tick={{ fontSize: 11, fontWeight: 600, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+              <Tooltip content={<CheckerTooltip />} cursor={{ fill: 'rgba(0,0,0,0.03)' }} />
+              <Bar dataKey="value" radius={[8, 8, 0, 0]} animationDuration={1200} maxBarSize={48}>
+                {checkerData.map((entry, i) => (
+                  <Cell key={i} fill={entry.color} fillOpacity={0.85} />
+                ))}
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
         </div>
