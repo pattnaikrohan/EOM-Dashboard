@@ -164,7 +164,7 @@ export default function Dashboard() {
   const checkerData = [
     { name: 'Loss Jobs', value: kpi.loss_jobs, color: '#ef4444' },
     { name: 'WIP Jobs', value: kpi.has_wip, color: '#f59e0b' },
-    { name: 'No Revenue', value: kpi.no_revenue, color: '#8b5cf6' },
+    { name: 'Zero Rev >3M', value: kpi.zero_rev_3m, color: '#8b5cf6' },
     { name: 'Margin <5%', value: kpi.margin_below_5, color: '#ec4899' },
     { name: 'Accrual Check', value: kpi.accrual_check, color: '#06b6d4' },
     { name: 'JFC Jobs', value: kpi.jfc_jobs, color: '#14b8a6' },
@@ -409,7 +409,7 @@ export default function Dashboard() {
             Jobs flagged per EOM check category
           </p>
           <ResponsiveContainer width="100%" height={260}>
-            <BarChart data={checkerData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+            <BarChart data={checkerData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" vertical={false} />
               <XAxis dataKey="name" tick={{ fontSize: 10, fontWeight: 700, fill: '#64748b' }} axisLine={false} tickLine={false} dy={8} />
               <YAxis tick={{ fontSize: 11, fontWeight: 600, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
