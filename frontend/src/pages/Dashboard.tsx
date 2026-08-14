@@ -162,12 +162,10 @@ export default function Dashboard() {
 
   /* ── Checker Health ─────────────────────────────────────────────────────── */
   const checkerData = [
-    { name: 'Loss Jobs', value: kpi.loss_jobs, color: '#ef4444' },
-    { name: 'WIP Jobs', value: kpi.has_wip, color: '#f59e0b' },
-    { name: 'Zero Rev >3M', value: kpi.zero_rev_3m, color: '#8b5cf6' },
-    { name: 'Margin <5%', value: kpi.margin_below_5, color: '#ec4899' },
-    { name: 'Accrual Check', value: kpi.accrual_check, color: '#06b6d4' },
-    { name: 'JFC Jobs', value: kpi.jfc_jobs, color: '#14b8a6' },
+    { name: 'Loss Jobs', value: (flag_distribution['Unbilled Jobs with LOSS'] || 0) + (flag_distribution['Billed Jobs with LOSS'] || 0), color: '#ef4444' },
+    { name: 'WIP Jobs', value: flag_distribution['Jobs with WIPs'] || 0, color: '#f59e0b' },
+    { name: 'Low Margin', value: flag_distribution['Billed Jobs with LOW MARGIN'] || 0, color: '#ec4899' },
+    { name: 'Aged Accruals', value: flag_distribution['Jobs with Aged Accruals'] || 0, color: '#06b6d4' },
   ].filter(c => c.value > 0);
 
   /* ── Direction Split ────────────────────────────────────────────────────── */
