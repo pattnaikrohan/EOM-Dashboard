@@ -8,8 +8,9 @@ import {
   AlertTriangle, TrendingDown, Filter, Building, Trash2, Moon, Sun, LogOut, Users, ChevronRight, RefreshCw
 } from 'lucide-react';
 import { useAuth } from '../auth/AuthProvider';
+import { clearData, clearNegMovementData } from '../services/api';
 import { useData } from '../context/DataContext';
-import { FLAG_PRIORITY, FLAG_COLOURS, API_BASE } from '../utils/constants';
+import { FLAG_PRIORITY, FLAG_COLOURS } from '../utils/constants';
 import logo from '../assets/logo.png';
 import SnowflakeSyncOverlay from './SnowflakeSyncOverlay';
 
@@ -191,11 +192,15 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             {canUploadData && (
             <button
               title="Clear Data"
-              onClick={() => {
+              onClick={async () => {
                 if (window.confirm("Are you sure you want to permanently clear all loaded data? This cannot be undone.")) {
-                  fetch(`${API_BASE}/clear`, { method: 'POST' })
-                    .then(() => window.location.href = '/')
-                    .catch(e => alert("Failed to clear data: " + e));
+                  try {
+                    await clearData();
+                    await clearNegMovementData();
+                    window.location.href = '/';
+                  } catch (e: any) {
+                    alert("Failed to clear data: " + (e.response?.data?.error || e.message));
+                  }
                 }
               }}
               className="sidebar__nav-item"

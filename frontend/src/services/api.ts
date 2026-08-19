@@ -349,6 +349,11 @@ export async function clearNegMovementData(): Promise<any> {
   return data;
 }
 
+export async function clearData(): Promise<any> {
+  const { data } = await api.post('/clear');
+  return data;
+}
+
 export async function updatePlCategories(categories: string[]): Promise<any> {
   const { data } = await api.put('/neg-movement/pl-categories', { categories });
   return data;
