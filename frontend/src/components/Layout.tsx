@@ -4,7 +4,7 @@
 import { useLocation, Link } from 'react-router-dom';
 import { useState, useRef, useEffect } from 'react';
 import {
-  LayoutDashboard, Settings, Database, Upload,
+  LayoutDashboard, Settings, Upload,
   AlertTriangle, TrendingDown, Filter, Building, Trash2, Moon, Sun, LogOut, Users, ChevronRight, RefreshCw
 } from 'lucide-react';
 import { useAuth } from '../auth/AuthProvider';
