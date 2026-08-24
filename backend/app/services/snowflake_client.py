@@ -70,102 +70,227 @@ def get_connection():
         account=SF_ACCOUNT, user=SF_USER, private_key=pkb,
         warehouse=SF_WAREHOUSE, role=SF_ROLE)
 
+def _fmt_date(val):
+    """Convert a Snowflake datetime/date to 'YYYY-MM-DD' string, or return as-is."""
+    if val is None:
+        return ""
+    if hasattr(val, 'strftime'):
+        return val.strftime('%Y-%m-%d')
+    return str(val) if val else ""
+
+
 def fetch_jobs_from_snowflake():
-    # Directly query the pre-compiled Snowflake View in PROD.AI_AUTO schema
-    select_query = "SELECT * FROM PROD.AI_AUTO.VW_EOM_JOBS_SUMMARY"
+    """
+    Fetch charge-level data from VW_EOM_JOB_CHARGES_UPDATED and aggregate
+    into job-level records for the dashboard rules engine.
     
-    update_sync_progress("Connecting to Snowflake Database...", 10)
+    This single view replaces both VW_EOM_JOB_CHARGES and VW_EOM_JOBS_SUMMARY.
+    """
+    from datetime import datetime, timezone
+
+    update_sync_progress("Connecting to Snowflake Database...", 5)
     conn = get_connection()
     cur = conn.cursor()
-    
-    update_sync_progress("Querying Snowflake View PROD.AI_AUTO.VW_EOM_JOBS_SUMMARY...", 25)
-    print("Fetching jobs from PROD.AI_AUTO.VW_EOM_JOBS_SUMMARY (Live)...")
-    try:
-        cur.execute(select_query)
-    except Exception as view_err:
-        print(f"Direct view query warning ({view_err}). Falling back to local CTE file...")
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        sql_file = os.path.join(current_dir, 'VW_EOM_JOB_CHARGES.sql')
-        with open(sql_file, 'r', encoding='utf-8') as f:
-            sql_content = f.read().replace('\r\n', '\n')
-        if 'CREATE OR REPLACE VIEW DEV.CORE.VW_EOM_JOBS_SUMMARY\nAS\n' in sql_content:
-            query_parts = sql_content.split('CREATE OR REPLACE VIEW DEV.CORE.VW_EOM_JOBS_SUMMARY\nAS\n')
-            select_query = query_parts[1].strip().rstrip(';')
-        else:
-            idx = sql_content.find('SELECT')
-            select_query = sql_content[idx:].strip().rstrip(';')
-        cur.execute(select_query)
-    
+
+    # ── Step 1: Fetch charge rows from the single unified view ────────────
+    select_query = """
+        SELECT
+            JOB_NUMBER,
+            JOB_STATUS,
+            JOB_TYPE,
+            JOB_DIRECTION,
+            JOB_OPENED_DATE,
+            JOB_CLOSED_DATE,
+            JOB_AGE_DAYS,
+            JOB_BRANCH_CODE,
+            JOB_BRANCH_NAME,
+            JOB_DEPARTMENT_CODE,
+            JOB_DEPARTMENT_DESCRIPTION,
+            JOB_COMPANY_CODE,
+            JOB_COMPANY_NAME,
+            OPERATOR_FULLNAME,
+            OPERATOR_FRIENDLY_NAME,
+            OPERATOR_CODE,
+            SALES_REP_FULLNAME,
+            SALES_REP_CODE,
+            LOCAL_CLIENT_NAME,
+            LOCAL_CLIENT_CODE,
+            AGENT_ORG_NAME,
+            AGENT_ORG_CODE,
+            SHIPMENT_ORIGIN,
+            SHIPMENT_DESTINATION,
+            SHIPMENT_ETD,
+            SHIPMENT_ETA,
+            DECLARATION_ORIGIN,
+            DECLARATION_FINAL_DEST,
+            DECLARATION_EXPORT_DATE,
+            DECLARATION_ARRIVAL_DATE,
+            SELL_LOCAL_AMT,
+            COST_LOCAL_AMT,
+            IS_WIP_COST,
+            IS_ACCRUED_REVENUE,
+            WIP_RECOGNITION_DATE,
+            CHARGE_DESCRIPTION,
+            CHARGECODE,
+            CHARGECODE_DESC,
+            COST_CREDITOR_ACCOUNT_NAME,
+            SELL_DEBTOR_ACCOUNT_NAME,
+            COST_GST,
+            SELL_GST,
+            COST_AP_POSTING_STATUS,
+            SELL_AR_POSTING_STATUS
+        FROM PROD.AI_AUTO.VW_EOM_JOB_CHARGES_UPDATED
+    """
+
+    update_sync_progress("Querying Snowflake View (charge-level)...", 10)
+    print("Fetching charges from PROD.AI_AUTO.VW_EOM_JOB_CHARGES_UPDATED (Live)...")
+    cur.execute(select_query)
+
     cols = [desc[0] for desc in cur.description]
     rows = cur.fetchall()
     total_rows = len(rows)
-    update_sync_progress(f"Parsing CargoWise records (0 / {total_rows:,})", 30, current=0, total=total_rows)
-    
+    print(f"Fetched {total_rows:,} charge rows from Snowflake.")
+    update_sync_progress(f"Grouping {total_rows:,} charges into jobs...", 30, current=0, total=total_rows)
+
+    # ── Step 2: Group charge rows by job and aggregate ────────────────────
+    jobs_map = {}
+    now = datetime.now()
+
+    step = max(500, total_rows // 40)
+    for idx, raw_row in enumerate(rows, 1):
+        if idx % step == 0 or idx == total_rows:
+            pct = 30 + int((idx / total_rows) * 55)
+            update_sync_progress(f"Processing charges ({idx:,} / {total_rows:,})", pct, current=idx, total=total_rows)
+
+        row = dict(zip(cols, raw_row))
+        job_num = row.get("JOB_NUMBER")
+        if not job_num:
+            continue
+
+        # First time seeing this job — initialise the job record
+        if job_num not in jobs_map:
+            direction = (row.get("JOB_DIRECTION") or "").strip().upper()
+            is_export = direction in ('EXP', 'E')
+
+            # Coalesce routing: Shipment takes priority over Declaration
+            origin = row.get("SHIPMENT_ORIGIN") or row.get("DECLARATION_ORIGIN") or ""
+            dest = row.get("SHIPMENT_DESTINATION") or row.get("DECLARATION_FINAL_DEST") or ""
+            etd = row.get("SHIPMENT_ETD") or row.get("DECLARATION_EXPORT_DATE")
+            eta = row.get("SHIPMENT_ETA") or row.get("DECLARATION_ARRIVAL_DATE")
+
+            # Cross-trade: both origin & dest are non-AU
+            is_cross_trade = False
+            if origin and dest:
+                origin_country = origin[:2].upper()
+                dest_country = dest[:2].upper()
+                if origin_country != 'AU' and dest_country != 'AU':
+                    is_cross_trade = True
+
+            # Operator name resolution
+            op_raw = row.get("OPERATOR_FRIENDLY_NAME") or row.get("OPERATOR_FULLNAME") or row.get("OPERATOR_CODE") or ""
+            op_name = OPERATOR_NAMES.get(op_raw, op_raw) or "Unknown Operator"
+
+            # Branch name resolution
+            branch_raw = row.get("JOB_BRANCH_NAME") or row.get("JOB_BRANCH_CODE") or ""
+            branch_name = normalize_branch_name(branch_raw)
+
+            # Department: use the department code from the view (not direction)
+            dept_code = row.get("JOB_DEPARTMENT_CODE") or direction
+
+            open_date = row.get("JOB_OPENED_DATE")
+
+            jobs_map[job_num] = {
+                "job_number":     job_num,
+                "job_status":     row.get("JOB_STATUS") or "",
+                "branch":         branch_name,
+                "department":     dept_code,
+                "department_name": row.get("JOB_DEPARTMENT_DESCRIPTION") or "",
+                "open_date":      _fmt_date(open_date),
+                "operator":       op_name,
+                "sales_rep":      row.get("SALES_REP_FULLNAME") or row.get("SALES_REP_CODE") or "",
+                "local_client":   row.get("LOCAL_CLIENT_NAME") or row.get("LOCAL_CLIENT_CODE") or "",
+                "local_charges":  "",
+                "overseas_agent": row.get("AGENT_ORG_NAME") or row.get("AGENT_ORG_CODE") or "",
+                "origin":         origin[:2].upper() if origin else "",
+                "destination":    dest[:2].upper() if dest else "",
+                "revenue":        0.0,
+                "wip":            0.0,
+                "cost":           0.0,
+                "accrual":        0.0,
+                "profit_loss":    0.0,
+                "margin_pct":     0.0,
+                "job_age_days":   int(row.get("JOB_AGE_DAYS") or 0),
+                "is_export":      is_export,
+                "is_cross_trade": is_cross_trade,
+                "etd":            _fmt_date(etd),
+                "eta":            _fmt_date(eta),
+                "job_direction":  direction,
+                "source_type":    "snowflake",
+                # Aged accrual tracking (computed from WIP_RECOGNITION_DATE)
+                "has_aged_accruals": False,
+                "_wip_recognition_age_days": 0,
+            }
+
+        # ── Accumulate charge-level financials ────────────────────────────
+        j = jobs_map[job_num]
+        sell = float(row.get("SELL_LOCAL_AMT") or 0.0)
+        cost = float(row.get("COST_LOCAL_AMT") or 0.0)
+        is_wip = bool(row.get("IS_WIP_COST"))
+        is_accrual = bool(row.get("IS_ACCRUED_REVENUE"))
+
+        j["revenue"] += sell
+        j["cost"] += cost
+        if is_wip:
+            j["wip"] += cost
+        if is_accrual:
+            j["accrual"] += sell
+
+        # Track max WIP recognition age (aged accruals check is done in Step 3
+        # after we know whether the job has outstanding accruals)
+        wip_rec_date = row.get("WIP_RECOGNITION_DATE")
+        if wip_rec_date and hasattr(wip_rec_date, 'year'):
+            try:
+                wip_age_days = (now - wip_rec_date).days
+                if wip_age_days > j["_wip_recognition_age_days"]:
+                    j["_wip_recognition_age_days"] = wip_age_days
+            except TypeError:
+                pass
+
+    # ── Step 3: Finalise computed fields ──────────────────────────────────
+    update_sync_progress("Finalising job calculations...", 90, current=total_rows, total=total_rows)
+
     jobs = []
     branches = set()
     operators = set()
-    
-    step = max(200, total_rows // 50)
-    for idx, row in enumerate(rows, 1):
-        if idx % step == 0 or idx == total_rows:
-            pct = 30 + int((idx / total_rows) * 65)
-            update_sync_progress(f"Parsing CargoWise records ({idx:,} / {total_rows:,})", pct, current=idx, total=total_rows)
 
-        job_data = dict(zip(cols, row))
-        
-        job_direction = job_data.get("JOB_DIRECTION") or ""
-        is_cross_trade = job_data.get("IS_CROSS_TRADE", False)
-        
-        is_export = (job_direction.strip().upper() in ('EXP', 'E'))
-        is_domestic = (job_direction.strip().upper() == 'DOM')
-        
-        # VW_EOM_JOBS_SUMMARY date columns
-        open_date = job_data.get("JOB_OPENED_DATE")
-        etd = job_data.get("ROUTING_ETD")
-        eta = job_data.get("ROUTING_ETA")
-        
-        op_raw = job_data.get("OPERATOR_NAME") or job_data.get("OPERATOR_CODE") or ""
-        op_name = OPERATOR_NAMES.get(op_raw, op_raw)
-        
-        branch_raw = job_data.get("BRANCH_NAME") or job_data.get("BRANCH_CODE") or ""
-        branch_name = normalize_branch_name(branch_raw)
+    for j in jobs_map.values():
+        j["revenue"] = round(j["revenue"], 2)
+        j["cost"] = round(j["cost"], 2)
+        j["wip"] = round(j["wip"], 2)
+        j["accrual"] = round(j["accrual"], 2)
+        j["profit_loss"] = round(j["revenue"] - j["cost"], 2)
+        if j["revenue"] != 0:
+            j["margin_pct"] = round((j["profit_loss"] / j["revenue"]) * 100, 2)
 
-        job = {
-            "job_number":     job_data.get("JOB_NUMBER", ""),
-            "job_status":     job_data.get("JOB_STATUS", ""),
-            "branch":         branch_name,
-            "department":     job_direction, # Treat JOB_DIRECTION as the "department" for the rules engine
-            "open_date":      open_date.strftime('%Y-%m-%d') if hasattr(open_date, 'strftime') else open_date,
-            "operator":       job_data.get("OPERATOR_NAME") or job_data.get("OPERATOR_CODE") or "Unknown Operator",
-            "sales_rep":      job_data.get("SALES_REP_NAME") or job_data.get("SALES_REP_CODE") or "",
-            "local_client":   job_data.get("LOCAL_CLIENT_NAME") or job_data.get("LOCAL_CLIENT_CODE") or "",
-            "local_charges":  "",
-            "overseas_agent": job_data.get("OVERSEAS_AGENT_NAME") or job_data.get("OVERSEAS_AGENT_CODE") or "",
-            "origin":         job_data.get("ORIGIN_COUNTRY") or "",
-            "destination":    job_data.get("DEST_COUNTRY") or "",
-            "revenue":        float(job_data.get("TOTAL_REVENUE") or 0.0),
-            "wip":            float(job_data.get("TOTAL_WIP") or 0.0),
-            "cost":           float(job_data.get("TOTAL_COST") or 0.0),
-            "accrual":        float(job_data.get("TOTAL_ACCRUAL") or 0.0),
-            "profit_loss":    float(job_data.get("PROFIT_LOSS") or 0.0),
-            "margin_pct":     float(job_data.get("MARGIN_PCT") or 0.0),
-            "job_age_days":   int(job_data.get("JOB_AGE_DAYS") or 0),
-            "is_export":      is_export,
-            "is_cross_trade": is_cross_trade,
-            "etd":            etd.strftime('%Y-%m-%d') if hasattr(etd, 'strftime') else etd,
-            "eta":            eta.strftime('%Y-%m-%d') if hasattr(eta, 'strftime') else eta,
-            "job_direction":  job_direction,
-            "source_type":    "snowflake",
-        }
-        
-        jobs.append(job)
-        if job["branch"]: branches.add(job["branch"])
-        if job["operator"]: operators.add(job["operator"])
-        
+        # Aged accruals: job must have outstanding accruals AND
+        # WIP recognition must be >= 90 days old
+        if abs(j["accrual"]) > 0 and j["_wip_recognition_age_days"] >= 90:
+            j["has_aged_accruals"] = True
+
+        # Clean up internal tracking field
+        del j["_wip_recognition_age_days"]
+
+        jobs.append(j)
+        if j["branch"]:
+            branches.add(j["branch"])
+        if j["operator"]:
+            operators.add(j["operator"])
+
     cur.close()
     conn.close()
-    
-    update_sync_progress("Synchronization Complete", 100, current=total_rows, total=total_rows, status="completed")
+
+    print(f"Aggregated {total_rows:,} charges into {len(jobs):,} unique jobs.")
+    update_sync_progress("Synchronization Complete", 100, current=len(jobs), total=len(jobs), status="completed")
 
     return {
         "jobs": jobs,
