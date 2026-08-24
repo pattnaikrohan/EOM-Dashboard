@@ -15,7 +15,7 @@ import {
 import type { NegMovementJob, NegMovementSummary, NegMovementSectionSummary } from '../services/api';
 import PremiumLoader from '../components/PremiumLoader';
 import { useData } from '../context/DataContext';
-import { formatCurrency } from '../utils/constants';
+import { formatCurrency, formatDate } from '../utils/constants';
 
 // ── Section config ────────────────────────────────────────────────────────────
 const SECTIONS = [
@@ -770,8 +770,8 @@ function CommentableRow({ job, isExpanded, statusConf, mode, plCategories, onTog
           </span>
         </td>
         <td>{mode}</td>
-        <td>{job.etd || '—'}</td>
-        <td>{job.eta || '—'}</td>
+        <td style={{ whiteSpace: 'nowrap' }}>{formatDate(job.etd)}</td>
+        <td style={{ whiteSpace: 'nowrap' }}>{formatDate(job.eta)}</td>
         <td className="cell-number">{formatCurrency(job.revenue)}</td>
         <td className={`cell-number ${job.cost < 0 ? 'cell-number--negative' : ''}`}>
           {formatCurrency(job.cost)}

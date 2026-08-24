@@ -71,12 +71,15 @@ def get_connection():
         warehouse=SF_WAREHOUSE, role=SF_ROLE)
 
 def _fmt_date(val):
-    """Convert a Snowflake datetime/date to 'YYYY-MM-DD' string, or return as-is."""
+    """Convert a Snowflake datetime/date to 'DD-MM-YYYY' string, or return as-is."""
     if val is None:
         return ""
     if hasattr(val, 'strftime'):
-        return val.strftime('%Y-%m-%d')
-    return str(val) if val else ""
+        return val.strftime('%d-%m-%Y')
+    s = str(val).strip()
+    if len(s) >= 10 and s[4] == '-' and s[7] == '-':
+        return f"{s[8:10]}-{s[5:7]}-{s[0:4]}"
+    return s
 
 
 def fetch_jobs_from_snowflake():

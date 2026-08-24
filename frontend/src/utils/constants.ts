@@ -66,3 +66,25 @@ export function formatCurrency(val: number): string {
 export function formatNumber(val: number, decimals = 2): string {
   return val.toLocaleString('en-AU', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
 }
+
+export function formatDate(val: string | null | undefined): string {
+  if (!val || val === '-' || val === '—' || val === 'None' || val === 'null' || val === 'undefined') return '—';
+  const s = String(val).trim();
+  if (!s) return '—';
+  // Match YYYY-MM-DD or YYYY-MM-DDTHH:MM:SS
+  if (/^\d{4}-\d{2}-\d{2}/.test(s)) {
+    const [yyyy, mm, dd] = s.substring(0, 10).split('-');
+    return `${dd}-${mm}-${yyyy}`;
+  }
+  // Match DD/MM/YYYY
+  if (/^\d{1,2}\/\d{1,2}\/\d{4}/.test(s)) {
+    const [dd, mm, yyyy] = s.split('/');
+    return `${dd.padStart(2, '0')}-${mm.padStart(2, '0')}-${yyyy}`;
+  }
+  // Match DD-MM-YYYY
+  if (/^\d{1,2}-\d{1,2}-\d{4}/.test(s)) {
+    const [dd, mm, yyyy] = s.split('-');
+    return `${dd.padStart(2, '0')}-${mm.padStart(2, '0')}-${yyyy}`;
+  }
+  return s;
+}

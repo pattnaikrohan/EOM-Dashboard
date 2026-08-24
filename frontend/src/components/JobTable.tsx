@@ -6,7 +6,7 @@
 import { useState, Fragment, useEffect } from 'react';
 import { ArrowUp, ArrowDown, ArrowUpDown, ChevronDown, ChevronRight, ChevronLeft, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import type { Job } from '../services/api';
-import { formatCurrency, STATUS_COLOURS } from '../utils/constants';
+import { formatCurrency, formatDate, STATUS_COLOURS } from '../utils/constants';
 import FlagBadge from './FlagBadge';
 
 interface JobTableProps {
@@ -216,9 +216,12 @@ export default function JobTable({ jobs, compact, hideRevenueProfit, defaultSort
                           </td>
                         );
                       }
-                      // Text
+                      // Text & Dates
                       const isDate = dateKeys.has(col.key);
-                      return <td key={col.key} style={isDate ? { whiteSpace: 'nowrap' } : undefined}>{val || '-'}</td>;
+                      if (isDate) {
+                        return <td key={col.key} style={{ whiteSpace: 'nowrap' }}>{formatDate(val)}</td>;
+                      }
+                      return <td key={col.key}>{val || '-'}</td>;
                     })}
                   </tr>
                   {isExpanded && hasSubLines && (
@@ -253,7 +256,7 @@ export default function JobTable({ jobs, compact, hideRevenueProfit, defaultSort
                                   <td className="cell-number" style={{ padding: '0.4rem 0.6rem' }}>{line.ex_rate ? line.ex_rate.toFixed(4) : '1.0000'}</td>
                                   <td className="cell-number" style={{ padding: '0.4rem 0.6rem', fontWeight: 600 }}>{formatCurrency(line.cost_local || 0)}</td>
                                   <td style={{ textAlign: 'center', padding: '0.4rem 0.6rem' }}>{line.has_acr || '-'}</td>
-                                  <td style={{ padding: '0.4rem 0.6rem' }}>{line.acr_recognised || '-'}</td>
+                                  <td style={{ padding: '0.4rem 0.6rem', whiteSpace: 'nowrap' }}>{formatDate(line.acr_recognised)}</td>
                                   <td className="cell-number" style={{ padding: '0.4rem 0.6rem', color: (line.age_days || 0) > 90 ? '#d97706' : undefined, fontWeight: (line.age_days || 0) > 90 ? 700 : 400 }}>
                                     {line.age_days || 0}
                                   </td>

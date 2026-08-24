@@ -65,60 +65,56 @@ def is_export_dept(dept: str) -> bool:
             return False
     return True  # default to export
 
+def _parse_date_robust(date_str: str) -> datetime | None:
+    if not date_str:
+        return None
+    s = str(date_str).strip()
+    for fmt in ("%d-%m-%Y", "%d/%m/%Y", "%Y-%m-%d", "%Y-%m-%d %H:%M:%S", "%d-%m-%Y %H:%M:%S"):
+        try:
+            return datetime.strptime(s[:19], fmt if len(s) >= 19 and " " in fmt else fmt)
+        except ValueError:
+            pass
+    return None
+
 def is_current_month(date_str: str, report_period: str = "") -> bool:
     if not date_str:
         return True
-    try:
-        # Try both formats (Excel DD/MM/YYYY and Snowflake YYYY-MM-DD)
-        try:
-            d = datetime.strptime(date_str, "%d/%m/%Y")
-        except ValueError:
-            d = datetime.strptime(date_str, "%Y-%m-%d")
-            
-        now = datetime.now()
-        if d.year == now.year and d.month == now.month:
-            return True
-        if report_period:
-            # Check against any of the merged periods like "June 2026, July 2026"
-            periods = [p.strip() for p in report_period.split(",")]
-            for p_str in periods:
-                try:
-                    p = datetime.strptime(p_str, "%B %Y")
-                    if d.year == p.year and d.month == p.month:
-                        return True
-                except ValueError:
-                    pass
-        return False
-    except ValueError:
+    d = _parse_date_robust(date_str)
+    if not d:
         return True
+    now = datetime.now()
+    if d.year == now.year and d.month == now.month:
+        return True
+    if report_period:
+        periods = [p.strip() for p in report_period.split(",")]
+        for p_str in periods:
+            try:
+                p = datetime.strptime(p_str, "%B %Y")
+                if d.year == p.year and d.month == p.month:
+                    return True
+            except ValueError:
+                pass
+    return False
 
 def is_current_or_past_month(date_str: str, report_period: str = "") -> bool:
     """True if date is in the current month or any previous month (ETD/ETA has occurred or is occurring)."""
     if not date_str:
         return True  # no date = assume eligible
-    try:
-        # Try both formats (Excel DD/MM/YYYY and Snowflake YYYY-MM-DD)
-        try:
-            d = datetime.strptime(date_str, "%d/%m/%Y")
-        except ValueError:
-            d = datetime.strptime(date_str, "%Y-%m-%d")
-            
-        now = datetime.now()
-        # Current or past: date's year-month <= current year-month
-        if (d.year, d.month) <= (now.year, now.month):
-            return True
-        # Also check against report period(s)
-        if report_period:
-            for p_str in report_period.split(","):
-                try:
-                    p = datetime.strptime(p_str.strip(), "%B %Y")
-                    if (d.year, d.month) <= (p.year, p.month):
-                        return True
-                except ValueError:
-                    pass
-        return False
-    except ValueError:
+    d = _parse_date_robust(date_str)
+    if not d:
         return True
+    now = datetime.now()
+    if (d.year, d.month) <= (now.year, now.month):
+        return True
+    if report_period:
+        for p_str in report_period.split(","):
+            try:
+                p = datetime.strptime(p_str.strip(), "%B %Y")
+                if (d.year, d.month) <= (p.year, p.month):
+                    return True
+            except ValueError:
+                pass
+    return False
 
 def get_flags(job: dict, report_period: str = "") -> list[str]:
     """Compute all applicable V3 flags for a job."""
