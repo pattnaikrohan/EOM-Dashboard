@@ -97,7 +97,7 @@ function CountdownTimer() {
 }
 
 export default function OperatorView() {
-  const { globalFlags, globalBranches, globalDepartments, operators, loaded, getTabCache, setTabCache } = useData();
+  const { globalFlags, globalBranches, globalDepartments, operators, dashboard, loaded, getTabCache, setTabCache } = useData();
   const { email } = useAuth();
   const isSearchPermitted = isJobSearchAllowed(email);
   const [jobSearchQuery, setJobSearchQuery] = useState<string>('');
@@ -155,7 +155,7 @@ export default function OperatorView() {
   }
 
   if (loading) {
-    return <PremiumLoader text="Loading operator data..." />;
+    return <PremiumLoader text="Loading operator data..." total={dashboard?.kpi?.total_jobs} />;
   }
 
   if (!data) {

@@ -217,7 +217,7 @@ function DirectionTabView({ jobs, defaultSort, flag }: {
 
 // ── Main Component ────────────────────────────────────────────────────────────
 export default function OpsReview() {
-  const { globalFlags, globalBranches, globalDepartments, loaded, getTabCache, setTabCache } = useData();
+  const { globalFlags, globalBranches, globalDepartments, dashboard, loaded, getTabCache, setTabCache } = useData();
   const { email } = useAuth();
   const isSearchPermitted = isJobSearchAllowed(email);
   const [jobSearchQuery, setJobSearchQuery] = useState<string>('');
@@ -250,10 +250,8 @@ export default function OpsReview() {
 
     setLoading(true);
     try {
-      // Load ops-review sections and KPI data in a single request
       const opsData = await getOpsReview(globalFlags, globalBranches, globalDepartments);
 
-      // Build full sections: every flag always present
       const fullSections: Record<string, Job[]> = {};
       OPS_ALL_FLAGS.forEach(f => { fullSections[f] = []; });
       Object.keys(opsData.sections).forEach(s => {
@@ -263,25 +261,23 @@ export default function OpsReview() {
       setSections(fullSections);
       setKpi(opsData.kpi);
 
-      // Count total jobs across sections
       const totalCount = Object.values(fullSections).reduce((sum, jobs) => sum + jobs.length, 0);
       setTotal(totalCount);
 
-      // Auto-expand sections that have jobs
-      const exp: Record<string, boolean> = {};
-      OPS_ALL_FLAGS.forEach(f => { exp[f] = (fullSections[f]?.length || 0) > 0; });
-      setExpanded(exp);
+      const autoExpanded: Record<string, boolean> = {};
+      Object.keys(fullSections).forEach(f => {
+        autoExpanded[f] = fullSections[f].length > 0;
+      });
+      setExpanded(autoExpanded);
 
       setTabCache('opsReview', cacheKey, {
         sections: fullSections,
         kpi: opsData.kpi,
-        branch: opsData.branch,
-        period: opsData.period,
         total: totalCount,
-        expanded: exp,
+        expanded: autoExpanded,
       });
     } catch (err) {
-      console.error('Failed to load ops review data:', err);
+      console.error('Failed to load ops review:', err);
     } finally {
       setLoading(false);
     }
@@ -300,7 +296,7 @@ export default function OpsReview() {
   }
 
   if (loading) {
-    return <PremiumLoader text="Loading Ops Manager data..." />;
+    return <PremiumLoader text="Loading Ops Manager data..." total={dashboard?.kpi?.total_jobs} />;
   }
 
   const toggleSection = (flag: string) => {

@@ -21,14 +21,21 @@ export default function PremiumLoader({
   progress: customProgress,
   stage: customStage,
   current: customCurrent,
-  total: customTotal = 49294,
+  total: customTotal,
   livePoll = false,
   onComplete,
 }: PremiumLoaderProps) {
   const [percent, setPercent] = useState<number>(customProgress !== undefined ? customProgress : 10);
   const [rows, setRows] = useState<number>(customCurrent || 0);
-  const [stageText, setStageText] = useState<string>(customStage || 'Fetching CargoWise job records...');
+  const [dynamicTotal, setDynamicTotal] = useState<number | undefined>(customTotal);
+  const [stageText, setStageText] = useState<string>(customStage || 'Preparing records...');
   const [isCompleted, setIsCompleted] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (customTotal !== undefined) {
+      setDynamicTotal(customTotal);
+    }
+  }, [customTotal]);
 
   useEffect(() => {
     if (customProgress !== undefined) {
@@ -51,6 +58,9 @@ export default function PremiumLoader({
           if (isMounted && prog && prog.status === 'running') {
             setPercent(prog.percent || 15);
             setRows(prog.current || 0);
+            if (prog.total && prog.total > 0) {
+              setDynamicTotal(prog.total);
+            }
             setStageText(prog.stage || 'Fetching Snowflake records...');
           }
         } catch { /* silent */ }
@@ -64,37 +74,33 @@ export default function PremiumLoader({
       };
     }
 
-    // Smooth page loading simulation
-    const totalTargetRows = customTotal || 49294;
-    let currentPct = 12;
-    let currentFetchedRows = 0;
-
+    // Smooth page loading simulation for local UI transitions
+    let currentPct = 15;
     const timer = setInterval(() => {
-      currentPct += Math.floor(Math.random() * 14) + 8;
-      if (currentPct > 94) {
-        currentPct = 94;
-        currentFetchedRows = Math.floor(totalTargetRows * 0.94);
-      } else {
-        currentFetchedRows = Math.floor(totalTargetRows * (currentPct / 100));
+      currentPct += Math.floor(Math.random() * 15) + 10;
+      if (currentPct > 95) {
+        currentPct = 95;
       }
 
       setPercent(currentPct);
-      setRows(currentFetchedRows);
 
-      if (currentPct < 35) {
-        setStageText('Connecting to Snowflake Cloud Warehouse...');
-      } else if (currentPct < 70) {
-        setStageText(`Parsing CargoWise job records...`);
-      } else {
-        setStageText(`Finalizing KPIs & Flag Rules...`);
+      if (dynamicTotal && dynamicTotal > 0) {
+        setRows(Math.floor(dynamicTotal * (currentPct / 100)));
       }
-    }, 120);
+
+      if (currentPct < 40) {
+        setStageText('Loading workspace metrics...');
+      } else if (currentPct < 75) {
+        setStageText('Analyzing checker flags & KPIs...');
+      } else {
+        setStageText('Finalizing view...');
+      }
+    }, 100);
 
     return () => clearInterval(timer);
-  }, [customProgress, customCurrent, customStage, customTotal, livePoll, onComplete, isCompleted]);
+  }, [customProgress, customCurrent, customStage, customTotal, dynamicTotal, livePoll, onComplete, isCompleted]);
 
   const displayPercent = Math.min(100, Math.max(0, Math.round(percent)));
-  const targetTotal = customTotal || 49294;
   const fillY = 100 - displayPercent;
 
   return (
@@ -259,10 +265,10 @@ export default function PremiumLoader({
         {stageText}
       </div>
 
-      {/* Live Row Counter Pill */}
+      {/* Live Status Pill */}
       <div style={{
         background: '#f8fafc',
-        padding: '0.45rem 1.2rem',
+        padding: '0.45rem 1.25rem',
         borderRadius: '9999px',
         border: '1px solid #e2e8f0',
         fontSize: '0.8rem',
@@ -272,10 +278,19 @@ export default function PremiumLoader({
         boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
         display: 'inline-flex',
         alignItems: 'center',
-        gap: '0.4rem'
+        gap: '0.5rem'
       }}>
-        <span style={{ width: 7, height: 7, borderRadius: '50%', background: displayPercent === 100 ? '#10b981' : '#3b82f6', display: 'inline-block' }} />
-        Fetched {rows.toLocaleString()} / {targetTotal.toLocaleString()} rows
+        <span style={{
+          width: 8, height: 8, borderRadius: '50%',
+          background: displayPercent === 100 ? '#10b981' : '#3b82f6',
+          boxShadow: displayPercent === 100 ? '0 0 8px #10b981' : '0 0 8px #3b82f6',
+          display: 'inline-block'
+        }} />
+        {dynamicTotal && dynamicTotal > 0 ? (
+          <span>{livePoll ? 'Streaming' : 'Loaded'} {rows.toLocaleString()} / {dynamicTotal.toLocaleString()} {livePoll ? 'rows' : 'jobs'}</span>
+        ) : (
+          <span>{displayPercent === 100 ? 'Ready' : 'Analyzing workspace & filters...'}</span>
+        )}
       </div>
     </div>
   );

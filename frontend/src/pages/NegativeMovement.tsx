@@ -305,23 +305,25 @@ export default function NegativeMovement() {
 
       {/* KPI Cards */}
       <div style={{
-        display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-        gap: '1rem', marginBottom: '1.5rem',
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+        gap: '1.25rem',
+        marginBottom: '2rem',
       }}>
         <KPICard
           title="Negative Movement"
           value={formatCurrency(neg?.total_profit || 0)}
           count={neg?.count || 0}
           colour="#ef4444"
-          gradient="linear-gradient(135deg, #ef4444, #dc2626)"
+          gradient="linear-gradient(135deg, #ef4444 0%, #dc2626 100%)"
           icon={<TrendingDown size={20} />}
         />
         <KPICard
           title="Excess Profit"
           value={formatCurrency(exc?.total_profit || 0)}
           count={exc?.count || 0}
-          colour="#22c55e"
-          gradient="linear-gradient(135deg, #22c55e, #16a34a)"
+          colour="#10b981"
+          gradient="linear-gradient(135deg, #10b981 0%, #059669 100%)"
           icon={<TrendingUp size={20} />}
         />
         <KPICard
@@ -329,27 +331,92 @@ export default function NegativeMovement() {
           value={formatCurrency(loss?.total_profit || 0)}
           count={loss?.count || 0}
           colour="#f59e0b"
-          gradient="linear-gradient(135deg, #f59e0b, #d97706)"
+          gradient="linear-gradient(135deg, #f59e0b 0%, #d97706 100%)"
           icon={<AlertTriangle size={20} />}
         />
-        <div className="card" style={{ padding: '1.25rem' }}>
-          <div style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--fg-muted)', letterSpacing: '0.04em', marginBottom: '0.75rem' }}>
-            RESOLUTION PROGRESS
-          </div>
-          <div style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--fg-base)', marginBottom: '0.5rem' }}>
-            {totalResolved} / {totalJobs}
-          </div>
-          <div style={{
-            height: 8, borderRadius: 4, background: 'var(--bg-subtle)', overflow: 'hidden',
-          }}>
+        <div className="card" style={{
+          padding: '1.4rem',
+          position: 'relative',
+          overflow: 'hidden',
+          borderRadius: '16px',
+          background: 'var(--bg-base)',
+          border: '1px solid var(--border-base)',
+          boxShadow: '0 8px 24px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.02)',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+        }}>
+          <div>
             <div style={{
-              height: '100%', borderRadius: 4, width: `${progressPct}%`,
-              background: 'linear-gradient(90deg, #3b82f6, #22c55e)',
-              transition: 'width 0.5s ease',
-            }} />
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: '0.75rem',
+            }}>
+              <div style={{
+                fontSize: '0.7rem',
+                fontWeight: 800,
+                color: 'var(--fg-muted)',
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase'
+              }}>
+                Resolution Progress
+              </div>
+              <span style={{
+                fontSize: '0.72rem',
+                fontWeight: 800,
+                padding: '0.2rem 0.6rem',
+                borderRadius: '9999px',
+                background: progressPct === 100 ? 'rgba(16,185,129,0.12)' : 'rgba(59,130,246,0.12)',
+                color: progressPct === 100 ? '#10b981' : '#3b82f6',
+              }}>
+                {progressPct}% Done
+              </span>
+            </div>
+            <div style={{
+              fontSize: 'clamp(1.4rem, 2vw, 1.85rem)',
+              fontWeight: 900,
+              color: 'var(--fg-base)',
+              fontVariantNumeric: 'tabular-nums',
+              letterSpacing: '-0.02em',
+              marginBottom: '0.75rem',
+            }}>
+              {totalResolved.toLocaleString()} <span style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--fg-muted)' }}>/ {totalJobs.toLocaleString()}</span>
+            </div>
           </div>
-          <div style={{ fontSize: '0.7rem', color: 'var(--fg-muted)', marginTop: '0.4rem' }}>
-            {progressPct}% resolved · {summary?.overdue_count || 0} overdue
+          <div>
+            <div style={{
+              height: 8,
+              borderRadius: 9999,
+              background: 'var(--bg-subtle)',
+              overflow: 'hidden',
+              boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.06)',
+            }}>
+              <div style={{
+                height: '100%',
+                borderRadius: 9999,
+                width: `${progressPct}%`,
+                background: 'linear-gradient(90deg, #3b82f6 0%, #10b981 100%)',
+                boxShadow: '0 0 12px rgba(59,130,246,0.5)',
+                transition: 'width 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+              }} />
+            </div>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              fontSize: '0.725rem',
+              color: 'var(--fg-muted)',
+              marginTop: '0.5rem',
+              fontWeight: 600,
+            }}>
+              <span>{totalJobs - totalResolved} jobs remaining</span>
+              {summary?.overdue_count ? (
+                <span style={{ color: '#ef4444', fontWeight: 700 }}>{summary.overdue_count} overdue</span>
+              ) : (
+                <span style={{ color: '#10b981', fontWeight: 700 }}>0 overdue</span>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -430,28 +497,84 @@ function KPICard({ title, value, count, colour, gradient, icon }: {
   title: string; value: string; count: number; colour: string; gradient: string; icon: React.ReactNode;
 }) {
   return (
-    <div className="card" style={{ padding: '1.25rem', position: 'relative', overflow: 'hidden' }}>
+    <div className="card" style={{
+      padding: '1.4rem',
+      position: 'relative',
+      overflow: 'hidden',
+      borderRadius: '16px',
+      background: 'var(--bg-base)',
+      border: '1px solid var(--border-base)',
+      boxShadow: '0 8px 24px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.02)',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'space-between',
+      transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+    }}>
+      {/* Ambient background glow */}
       <div style={{
-        position: 'absolute', top: -10, right: -10, width: 60, height: 60,
-        borderRadius: '50%', background: `${colour}08`,
+        position: 'absolute', top: -15, right: -15, width: 85, height: 85,
+        borderRadius: '50%', background: `${colour}12`, filter: 'blur(10px)',
+        pointerEvents: 'none',
       }} />
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.75rem' }}>
+
+      {/* Top accent bar */}
+      <div style={{
+        position: 'absolute', top: 0, left: 0, right: 0, height: 3,
+        background: gradient,
+      }} />
+
+      <div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.85rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+            <div style={{
+              width: 36, height: 36, borderRadius: 10, background: gradient,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff',
+              boxShadow: `0 4px 14px ${colour}35`,
+            }}>
+              {icon}
+            </div>
+            <div style={{
+              fontSize: '0.72rem',
+              fontWeight: 800,
+              color: 'var(--fg-muted)',
+              letterSpacing: '0.06em',
+              textTransform: 'uppercase'
+            }}>
+              {title}
+            </div>
+          </div>
+        </div>
+
+        {/* Responsive, unclipped value */}
         <div style={{
-          width: 32, height: 32, borderRadius: 10, background: gradient,
-          display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff',
-          boxShadow: `0 4px 12px ${colour}30`,
-        }}>
-          {icon}
-        </div>
-        <div style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--fg-muted)', letterSpacing: '0.04em' }}>
-          {title.toUpperCase()}
+          fontSize: 'clamp(1.25rem, 1.8vw, 1.7rem)',
+          fontWeight: 900,
+          color: 'var(--fg-base)',
+          fontVariantNumeric: 'tabular-nums',
+          letterSpacing: '-0.02em',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          marginBottom: '0.5rem',
+        }} title={value}>
+          {value}
         </div>
       </div>
-      <div style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--fg-base)', marginBottom: '0.25rem' }}>
-        {value}
-      </div>
-      <div style={{ fontSize: '0.7rem', color: 'var(--fg-muted)' }}>
-        {count} {count === 1 ? 'job' : 'jobs'} flagged
+
+      <div style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '0.35rem',
+        fontSize: '0.73rem',
+        fontWeight: 700,
+        color: colour,
+        background: `${colour}12`,
+        padding: '0.2rem 0.6rem',
+        borderRadius: '9999px',
+        width: 'fit-content',
+      }}>
+        <span>●</span>
+        <span>{count.toLocaleString()} {count === 1 ? 'job' : 'jobs'} flagged</span>
       </div>
     </div>
   );
