@@ -233,6 +233,7 @@ def fetch_jobs_from_snowflake():
                 # Aged accrual tracking (from WIP_AGE_DAYS, only valid on WIP/accrual rows)
                 "has_aged_accruals": False,
                 "_acr_age_days": 0,
+                "accrual_lines": [],
             }
 
         # ── Accumulate charge-level financials ────────────────────────────
@@ -256,6 +257,20 @@ def fetch_jobs_from_snowflake():
             if wip_age > 0 and wip_age < 36500:  # Filter out sentinel values (>100 years)
                 if wip_age > j["_acr_age_days"]:
                     j["_acr_age_days"] = wip_age
+
+            # Collect accrual line detail for dropdown expand
+            wip_rec_date = row.get("WIP_RECOGNITION_DATE")
+            j["accrual_lines"].append({
+                "charge_code": row.get("CHARGECODE") or row.get("CHARGECODE_DESC") or "",
+                "creditor": row.get("COST_CREDITOR_ACCOUNT_NAME") or "",
+                "os_cur": "",
+                "os_amount": 0.0,
+                "ex_rate": 1.0,
+                "cost_local": cost,
+                "has_acr": "Y" if is_accrual else "N",
+                "acr_recognised": _fmt_date(wip_rec_date) if wip_rec_date and hasattr(wip_rec_date, 'strftime') and wip_rec_date.year > 1900 else "",
+                "age_days": wip_age if (wip_age > 0 and wip_age < 36500) else 0,
+            })
 
     # ── Step 3: Finalise computed fields ──────────────────────────────────
     update_sync_progress("Finalising job calculations...", 90, current=total_rows, total=total_rows)
