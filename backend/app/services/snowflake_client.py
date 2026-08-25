@@ -21,6 +21,22 @@ sync_progress = {
     "message": ""
 }
 
+# CargoWise Job Status Lifecycle progression ranking
+STATUS_RANK = {
+    'JRA': 1,   # Job Requested/Authorized
+    'JRB': 2,   # Job Booked
+    'WRK': 3,   # Working
+    'IHL': 4,   # In Handling
+    'CUS': 5,   # Customs
+    'RDD': 6,   # Ready for Delivery/Dispatch
+    'WHL': 7,   # Wheels (in transit)
+    'JFC': 8,   # Job Fully Confirmed/Costed
+    'CMP': 9,   # Complete
+    'INV': 10,  # Invoiced
+    'CLS': 11,  # Closed
+    'ARC': 12,  # Archived
+}
+
 def update_sync_progress(stage: str, percent: int, current: int = 0, total: int = 0, status: str = "running", message: str = ""):
     sync_progress["status"] = status
     sync_progress["stage"] = stage
@@ -247,6 +263,11 @@ def fetch_jobs_from_snowflake():
         debtor_name = row.get("SELL_DEBTOR_ACCOUNT_NAME")
         if debtor_name:
             j["local_client"] = debtor_name
+
+        # Resolve job_status to the most progressed lifecycle status (e.g. CLS > INV > CMP > WRK)
+        row_status = (row.get("JOB_STATUS") or "").strip().upper()
+        if row_status and STATUS_RANK.get(row_status, 0) > STATUS_RANK.get(j.get("job_status", "").upper(), 0):
+            j["job_status"] = row_status
 
         j["revenue"] += sell
         j["cost"] += cost
