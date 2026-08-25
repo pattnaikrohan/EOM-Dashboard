@@ -513,7 +513,7 @@ export default function OperatorView() {
           <JobTable 
             jobs={filterJobsByNumber(data.jobs_by_flag[pendingInvTab] || [])}
             defaultSort={getDefaultSort(pendingInvTab)}
-            hideRevenueProfit
+            compact
           />
         </div>
       </div>
@@ -666,7 +666,6 @@ function DirectionTabView({ jobs, defaultSort, flag }: {
       <JobTable
         jobs={currentJobs}
         compact
-        hideRevenueProfit
         defaultSort={getSort()}
       />
     </>
