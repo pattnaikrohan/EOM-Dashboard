@@ -143,11 +143,11 @@ def fetch_jobs_from_snowflake():
             SELL_GST,
             COST_AP_POSTING_STATUS,
             SELL_AR_POSTING_STATUS
-        FROM PROD.AI_AUTO.VW_EOM_JOB_CHARGES_UPDATED
+        FROM PROD.AI_AUTO.VW_EOM_JOB_CHARGES_UPDATED_v2
     """
 
     update_sync_progress("Querying Snowflake View (charge-level)...", 10)
-    print("Fetching charges from PROD.AI_AUTO.VW_EOM_JOB_CHARGES_UPDATED (Live)...")
+    print("Fetching charges from PROD.AI_AUTO.VW_EOM_JOB_CHARGES_UPDATED_v2 (Live)...")
     cur.execute(select_query)
 
     cols = [desc[0] for desc in cur.description]
