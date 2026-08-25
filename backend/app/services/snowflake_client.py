@@ -163,13 +163,128 @@ def fetch_jobs_from_snowflake():
     """
 
     update_sync_progress("Querying Snowflake View (charge-level)...", 10)
-    print("Fetching charges from PROD.AI_AUTO.VW_EOM_JOB_CHARGES_UPDATED_v2 (Live)...")
-    cur.execute(select_query)
+    print("Fetching charges from Snowflake View...")
+    try:
+        cur.execute(select_query)
+    except Exception as e:
+        print(f"v2 view query failed ({e}), falling back to PROD.AI_AUTO.VW_EOM_JOB_CHARGES_UPDATED...")
+        select_query = select_query.replace("PROD.AI_AUTO.VW_EOM_JOB_CHARGES_UPDATED_v2", "PROD.AI_AUTO.VW_EOM_JOB_CHARGES_UPDATED")
+        cur.execute(select_query)
 
     cols = [desc[0] for desc in cur.description]
     rows = cur.fetchall()
     total_rows = len(rows)
     print(f"Fetched {total_rows:,} charge rows from Snowflake.")
+
+    # ── Step 1b: Fetch authoritative job statuses (Lifecycle Progression) ─────
+    update_sync_progress("Resolving true job statuses...", 18)
+    print("Resolving true job statuses via lifecycle progression...")
+    try:
+        cur.execute("""
+            WITH jh_dedup AS (
+                SELECT 
+                    JH_JOBNUM,
+                    JH_STATUS,
+                    ROW_NUMBER() OVER (
+                        PARTITION BY JH_JOBNUM
+                        ORDER BY 
+                            JH_SYSTEMCREATETIMEUTC DESC,
+                            CASE UPPER(TRIM(JH_STATUS))
+                                WHEN 'ARC' THEN 12
+                                WHEN 'CLS' THEN 11
+                                WHEN 'INV' THEN 10
+                                WHEN 'CMP' THEN 9
+                                WHEN 'JFC' THEN 8
+                                WHEN 'WHL' THEN 7
+                                WHEN 'RDD' THEN 6
+                                WHEN 'CUS' THEN 5
+                                WHEN 'IHL' THEN 4
+                                WHEN 'WRK' THEN 3
+                                WHEN 'JRB' THEN 2
+                                WHEN 'JRA' THEN 1
+                                ELSE 0
+                            END DESC,
+                            HASH(OBJECT_CONSTRUCT_KEEP_NULL(*)) DESC
+                    ) AS _rn
+                FROM CORE.JOBHEADER_DEDUP
+                WHERE JH_ISVALID = TRUE
+            )
+            SELECT JH_JOBNUM, JH_STATUS FROM jh_dedup WHERE _rn = 1
+        """)
+        status_map = {r[0]: r[1] for r in cur.fetchall() if r[0]}
+        print(f"Resolved statuses for {len(status_map):,} jobs.")
+    except Exception as e:
+        print(f"Warning: could not fetch status_map: {e}")
+        status_map = {}
+
+    # ── Step 1c: Fetch unposted accruals detail from ACCTRANSACTIONLINES ───────
+    update_sync_progress("Fetching unposted accruals detail...", 25)
+    print("Fetching unposted accruals detail from ACCTRANSACTIONLINES...")
+    try:
+        cur.execute("""
+            WITH al_dedup AS (
+                SELECT *, ROW_NUMBER() OVER (PARTITION BY AL_PK
+                         ORDER BY AL_SYSTEMCREATETIMEUTC DESC, HASH(OBJECT_CONSTRUCT_KEEP_NULL(*)) DESC) AS _rn
+                FROM CORE.ACCTRANSACTIONLINES_DEDUP
+                WHERE AL_LINETYPE = 'ACR'
+            ),
+            al AS (SELECT * FROM al_dedup WHERE _rn = 1),
+            jh_dedup AS (
+                SELECT *, ROW_NUMBER() OVER (PARTITION BY JH_PK
+                         ORDER BY JH_SYSTEMCREATETIMEUTC DESC, HASH(OBJECT_CONSTRUCT_KEEP_NULL(*)) DESC) AS _rn
+                FROM CORE.JOBHEADER_DEDUP
+                WHERE JH_ISVALID = TRUE
+            ),
+            jh AS (SELECT * FROM jh_dedup WHERE _rn = 1),
+            ac_dedup AS (
+                SELECT *, ROW_NUMBER() OVER (PARTITION BY AC_PK 
+                         ORDER BY AC_SYSTEMLASTEDITTIMEUTC DESC, HASH(OBJECT_CONSTRUCT_KEEP_NULL(*)) DESC) AS _rn
+                FROM CORE.ACCCHARGECODE_DEDUP
+            ),
+            ac AS (SELECT * FROM ac_dedup WHERE _rn = 1),
+            oh_dedup AS (
+                SELECT *, ROW_NUMBER() OVER (PARTITION BY OH_PK 
+                         ORDER BY OH_SYSTEMCREATETIMEUTC DESC, HASH(OBJECT_CONSTRUCT_KEEP_NULL(*)) DESC) AS _rn
+                FROM CORE.ORGHEADER_DEDUP
+            ),
+            oh AS (SELECT * FROM oh_dedup WHERE _rn = 1)
+            SELECT 
+                jh.JH_JOBNUM,
+                ac.AC_CODE,
+                al.AL_DESC,
+                oh.OH_CODE,
+                oh.OH_FULLNAME,
+                al.AL_LINEAMOUNT,
+                al.AL_POSTDATE,
+                DATEDIFF('day', al.AL_POSTDATE, CURRENT_DATE()) AS AGE_DAYS
+            FROM al
+            JOIN jh ON al.AL_JH = jh.JH_PK
+            LEFT JOIN ac ON al.AL_AC = ac.AC_PK
+            LEFT JOIN oh ON al.AL_OH = oh.OH_PK
+        """)
+        accrual_rows = cur.fetchall()
+        job_accruals = {}
+        for jnum, code, desc, oh_code, oh_name, amt, postdate, age in accrual_rows:
+            if not jnum:
+                continue
+            if jnum not in job_accruals:
+                job_accruals[jnum] = []
+            job_accruals[jnum].append({
+                "charge_code": code or desc or "",
+                "creditor": oh_name or oh_code or "",
+                "os_cur": "",
+                "os_amount": 0.0,
+                "ex_rate": 1.0,
+                "cost_local": float(amt or 0),
+                "has_acr": "Y",
+                "acr_recognised": _fmt_date(postdate),
+                "age_days": int(age or 0)
+            })
+        print(f"Loaded accrual details for {len(job_accruals):,} jobs.")
+    except Exception as e:
+        print(f"Warning: could not fetch job_accruals: {e}")
+        job_accruals = {}
+
     update_sync_progress(f"Grouping {total_rows:,} charges into jobs...", 30, current=0, total=total_rows)
 
     # ── Step 2: Group charge rows by job and aggregate ────────────────────
@@ -305,7 +420,20 @@ def fetch_jobs_from_snowflake():
     branches = set()
     operators = set()
 
-    for j in jobs_map.values():
+    for jnum, j in jobs_map.items():
+        # Authoritative status override from lifecycle ranking
+        if jnum in status_map and status_map[jnum]:
+            j["job_status"] = status_map[jnum]
+
+        # Authoritative accrual lines override from ACCTRANSACTIONLINES
+        if jnum in job_accruals and job_accruals[jnum]:
+            j["accrual_lines"] = job_accruals[jnum]
+            total_acr = sum(item["cost_local"] for item in job_accruals[jnum])
+            max_acr_age = max((item["age_days"] for item in job_accruals[jnum]), default=0)
+            if j["accrual"] == 0:
+                j["accrual"] = round(total_acr, 2)
+            j["_acr_age_days"] = max_acr_age
+
         j["revenue"] = round(j["revenue"], 2)
         j["cost"] = round(j["cost"], 2)
         j["wip"] = round(j["wip"], 2)
@@ -315,8 +443,8 @@ def fetch_jobs_from_snowflake():
             j["margin_pct"] = round((j["profit_loss"] / j["revenue"]) * 100, 2)
 
         # Aged accruals: job must have outstanding accruals AND
-        # accrual/WIP age (WIP_AGE_DAYS) must be >= 90 days old
-        if abs(j["accrual"]) > 0 and j["_acr_age_days"] >= 90:
+        # accrual/WIP age must be >= 90 days old
+        if (abs(j["accrual"]) > 0 or len(j.get("accrual_lines", [])) > 0) and j["_acr_age_days"] >= 90:
             j["has_aged_accruals"] = True
 
         # Persist accrual age for frontend display, then clean up internal field
