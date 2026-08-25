@@ -268,10 +268,12 @@ SELECT
     parent.JH_STATUS                            AS PARENT_JOB_STATUS,
     parent.JH_DIRECTION                         AS PARENT_JOB_DIRECTION,
 
-    -- ── WIP RECOGNITION ──────────────────────────────────────────────────
+    -- ── WIP / ACCRUAL RECOGNITION ────────────────────────────────────────
     wrr.D3_PK                                   AS WIP_RECOGNITION_PK,
     wrr.D3_RECOGNITIONTYPE                      AS WIP_RECOGNITION_TYPE,
     wrr.D3_RECOGNITIONDATE                      AS WIP_RECOGNITION_DATE,
+    wrr.D3_RECOGNITIONTYPE                      AS ACR_RECOGNITION_TYPE,
+    wrr.D3_RECOGNITIONDATE                      AS ACR_RECOGNITION_DATE,
 
     -- ── ROUTING: JOBSHIPMENT ─────────────────────────────────────────────
     ship.JS_PK                                  AS SHIPMENT_PK,
@@ -332,7 +334,9 @@ SELECT
     DATEDIFF('day', jh.JH_A_JOP, COALESCE(jh.JH_A_JCL, CURRENT_TIMESTAMP()))
                                                 AS JOB_AGE_DAYS,
     DATEDIFF('day', wrr.D3_RECOGNITIONDATE, CURRENT_TIMESTAMP())
-                                                AS WIP_RECOGNITION_AGE_DAYS
+                                                AS WIP_RECOGNITION_AGE_DAYS,
+    DATEDIFF('day', wrr.D3_RECOGNITIONDATE, CURRENT_TIMESTAMP())
+                                                AS ACR_RECOGNITION_AGE_DAYS
 
 FROM jr
 
@@ -517,9 +521,11 @@ SELECT
         THEN TRUE ELSE FALSE
     END                                         AS IS_CROSS_TRADE,
 
-    -- WIP recognition
+    -- WIP / Accrual recognition
     wrr.D3_RECOGNITIONTYPE                      AS WIP_RECOGNITION_TYPE,
     wrr.D3_RECOGNITIONDATE                      AS WIP_RECOGNITION_DATE,
+    wrr.D3_RECOGNITIONTYPE                      AS ACR_RECOGNITION_TYPE,
+    wrr.D3_RECOGNITIONDATE                      AS ACR_RECOGNITION_DATE,
 
     -- Aggregated financials
     COALESCE(agg.TOTAL_REVENUE, 0)              AS TOTAL_REVENUE,

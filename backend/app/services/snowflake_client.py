@@ -229,9 +229,9 @@ def fetch_jobs_from_snowflake():
                 "eta":            _fmt_date(eta),
                 "job_direction":  direction,
                 "source_type":    "snowflake",
-                # Aged accrual tracking (computed from WIP_RECOGNITION_DATE)
+                # Aged accrual tracking (computed from ACR_RECOGNITION_DATE)
                 "has_aged_accruals": False,
-                "_wip_recognition_age_days": 0,
+                "_acr_recognition_age_days": 0,
             }
 
         # ── Accumulate charge-level financials ────────────────────────────
@@ -248,14 +248,14 @@ def fetch_jobs_from_snowflake():
         if is_accrual:
             j["accrual"] += sell
 
-        # Track max WIP recognition age (aged accruals check is done in Step 3
+        # Track max ACR recognition age (aged accruals check is done in Step 3
         # after we know whether the job has outstanding accruals)
-        wip_rec_date = row.get("WIP_RECOGNITION_DATE")
-        if wip_rec_date and hasattr(wip_rec_date, 'year'):
+        acr_rec_date = row.get("ACR_RECOGNITION_DATE") or row.get("WIP_RECOGNITION_DATE")
+        if acr_rec_date and hasattr(acr_rec_date, 'year'):
             try:
-                wip_age_days = (now - wip_rec_date).days
-                if wip_age_days > j["_wip_recognition_age_days"]:
-                    j["_wip_recognition_age_days"] = wip_age_days
+                acr_age_days = (now - acr_rec_date).days
+                if acr_age_days > j["_acr_recognition_age_days"]:
+                    j["_acr_recognition_age_days"] = acr_age_days
             except TypeError:
                 pass
 
@@ -276,12 +276,12 @@ def fetch_jobs_from_snowflake():
             j["margin_pct"] = round((j["profit_loss"] / j["revenue"]) * 100, 2)
 
         # Aged accruals: job must have outstanding accruals AND
-        # WIP recognition must be >= 90 days old
-        if abs(j["accrual"]) > 0 and j["_wip_recognition_age_days"] >= 90:
+        # accrual recognition (ACR_RECOGNITION_DATE) must be >= 90 days old
+        if abs(j["accrual"]) > 0 and j["_acr_recognition_age_days"] >= 90:
             j["has_aged_accruals"] = True
 
         # Clean up internal tracking field
-        del j["_wip_recognition_age_days"]
+        del j["_acr_recognition_age_days"]
 
         jobs.append(j)
         if j["branch"]:

@@ -44,7 +44,7 @@ FLAG_COLOURS = {
 FLAG_DESCRIPTIONS = {
     "EXPORTS Jobs pending invoicing":     "Jobs departing this month requiring invoicing",
     "IMPORTS Jobs pending invoicing":     "Jobs arriving this month requiring invoicing",
-    "CROSS-TRADE Jobs pending invoicing": "Jobs arriving this month requiring invoicing",
+    "CROSS-TRADE Jobs pending invoicing": "Jobs departing this month requiring invoicing",
     "DOMESTIC Jobs pending invoicing":    "Jobs departing this month requiring invoicing",
     "Jobs at INV Status":                 "Jobs to be updated to CMP upon invoice completion and accruals entered",
 }
@@ -205,8 +205,8 @@ def get_flags(job: dict, report_period: str = "") -> list[str]:
         job["direction"] = "export"
 
     # ── Pending Invoicing Flags ──────────────────────────────────────────
-    # 1. CROSS-TRADE Jobs pending invoicing (uses ETA — arriving this month)
-    if is_cross_trade and status not in pending_statuses and is_current_or_past_month(eta_str, report_period):
+    # 1. CROSS-TRADE Jobs pending invoicing (uses ETD — departing this month)
+    if is_cross_trade and status not in pending_statuses and is_current_or_past_month(etd_str, report_period):
         flags.append("CROSS-TRADE Jobs pending invoicing")
         
     # 2. EXPORTS Jobs pending invoicing (uses ETD — departing this month)
@@ -253,7 +253,7 @@ def get_flags(job: dict, report_period: str = "") -> list[str]:
     if rev > 0 and pl > 0 and accr == 0 and wip == 0 and status == "CMP":
         flags.append("Jobs at CMP — Ready to CLOSE")
         
-    # 13. Jobs with Aged Accruals — trust source file OR computed age (age ≥ 90 required)
+    # 13. Jobs with Aged Accruals — ABS(Accrual) > 0 AND Age >= 90 days (from ACR_RECOGNITION_DATE)
     if (job.get("has_aged_accruals") and age >= 90) or (abs(accr) > 0 and age >= 90):
         flags.append("Jobs with Aged Accruals")
 

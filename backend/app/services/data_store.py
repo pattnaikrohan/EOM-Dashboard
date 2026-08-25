@@ -267,7 +267,7 @@ class DataStore:
         """Return flag legend definitions."""
         rules = {
             "EXPORTS Jobs pending invoicing": "Jobs departing this month requiring invoicing",
-            "CROSS-TRADE Jobs pending invoicing": "Jobs arriving this month requiring invoicing",
+            "CROSS-TRADE Jobs pending invoicing": "Jobs departing this month requiring invoicing",
             "IMPORTS B Jobs pending invoicing": "Jobs arriving this month requiring invoicing",
             "IMPORTS S Jobs pending invoicing": "Jobs arriving this month requiring invoicing",
             "DOMESTIC Jobs pending invoicing": "Jobs departing this month requiring invoicing",
@@ -279,7 +279,7 @@ class DataStore:
             "Billed Jobs — EXTREME Profit": "Revenue > $0 AND Job Profit >= $5,000 at CMP/IHL",
             "Jobs at INV Status": "Revenue > $0 AND Job Status = INV",
             "Jobs at CMP — Ready to CLOSE": "Revenue > $0, Job Profit > $0, Accrual = 0, WIP = 0 at CMP",
-            "Jobs with Aged Accruals": "Accrual Recognised Date > 90 Days",
+            "Jobs with Aged Accruals": "ABS(Accrual) > 0 AND Age >= 90 days (from ACR_RECOGNITION_DATE)",
         }
         return [
             {

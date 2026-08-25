@@ -1,0 +1,655 @@
+create or replace view VW_EOM_JOB_CHARGES_UPDATED(
+	CHARGE_PK,
+	CHARGE_JOB_FK,
+	CHARGE_CHARGECODE_FK,
+	CHARGE_DESCRIPTION,
+	CHARGE_TYPE,
+	CHARGE_LINE_TYPE,
+	CHARGE_DISPLAY_SEQ,
+	COST_OS_AMT,
+	COST_LOCAL_AMT,
+	COST_CURRENCY,
+	COST_EXCHANGE_RATE,
+	COST_ESTIMATED,
+	COST_GST,
+	COST_GST_AMT,
+	COST_CREDITOR_ACCOUNT_CODE,
+	COST_CREDITOR_ACCOUNT_NAME,
+	COST_AP_POSTING_STATUS,
+	COST_AP_INVOICE_NUM,
+	COST_AP_INVOICE_DATE,
+	SELL_OS_AMT,
+	SELL_LOCAL_AMT,
+	SELL_CURRENCY,
+	SELL_EXCHANGE_RATE,
+	SELL_ESTIMATED_REVENUE,
+	SELL_GST,
+	SELL_GST_RATE,
+	SELL_DEBTOR_ACCOUNT_CODE,
+	SELL_DEBTOR_ACCOUNT_NAME,
+	SELL_AR_POSTING_STATUS,
+	SELL_INVOICE_TYPE,
+	CHARGE_MARGIN_PCT,
+	IS_WIP_COST,
+	IS_ACCRUED_REVENUE,
+	IS_FINALISED,
+	IS_IN_PROFIT_SHARE,
+	CHARGE_IS_ACTIVE,
+	CHARGE_DEPARTMENT_CODE,
+	CHARGE_DEPARTMENT_DESCRIPTION,
+	CHARGE_BRANCH_CODE,
+	CHARGE_BRANCH_NAME,
+	CHARGE_BRANCH_COUNTRY_CODE,
+	CHARGE_COMPANY_CODE,
+	CHARGE_COMPANY_NAME,
+	CHARGE_COMPANY_CITY,
+	CHARGE_COMPANY_STATE,
+	CHARGE_CREATED_UTC,
+	CHARGE_CREATED_BY,
+	CHARGE_LAST_MODIFIED_UTC,
+	CHARGE_LAST_MODIFIED_BY,
+	CHARGECODE_PK,
+	CHARGECODE,
+	CHARGECODE_DESC,
+	CHARGECODE_TYPE,
+	CHARGECODE_GROUP,
+	CHARGECODE_SUBGROUP,
+	CHARGECODE_IS_ACTIVE,
+	GL_REVENUE_ACCOUNT_NUM,
+	GL_REVENUE_ACCOUNT_DESCRIPTION,
+	GL_REVENUE_ACCOUNT_TYPE,
+	GL_REVENUE_ACCOUNT_TRANSACTION_TYPE,
+	GL_COST_ACCOUNT_NUM,
+	GL_COST_ACCOUNT_DESCRIPTION,
+	GL_COST_ACCOUNT_TYPE,
+	GL_COST_ACCOUNT_TRANSACTION_TYPE,
+	GL_WIP_ACCOUNT_NUM,
+	GL_WIP_ACCOUNT_DESCRIPTION,
+	GL_WIP_ACCOUNT_TYPE,
+	GL_WIP_ACCOUNT_TRANSACTION_TYPE,
+	GL_ACCRUAL_ACCOUNT_NUM,
+	GL_ACCRUAL_ACCOUNT_DESCRIPTION,
+	GL_ACCRUAL_ACCOUNT_TYPE,
+	GL_ACCRUAL_ACCOUNT_TRANSACTION_TYPE,
+	JOB_PK,
+	JOB_NUMBER,
+	JOB_NAME,
+	JOB_DESCRIPTION,
+	JOB_STATUS,
+	JOB_TYPE,
+	JOB_DIRECTION,
+	JOB_LOCAL_REF,
+	JOB_PARENT_FK,
+	JOB_HOLD_REASON,
+	JOB_PL_REASON_CODE,
+	JOB_LOCAL_CHARGES_AMT,
+	JOB_OPERATOR_CODE,
+	JOB_SALES_REP_CODE,
+	JOB_OPENED_DATE,
+	JOB_CLOSED_DATE,
+	JOB_IS_ACTIVE,
+	JOB_CREATED_UTC,
+	JOB_CREATED_BY,
+	JOB_LAST_MODIFIED_BY,
+	JOB_DEPARTMENT_CODE,
+	JOB_DEPARTMENT_DESCRIPTION,
+	JOB_BRANCH_CODE,
+	JOB_BRANCH_NAME,
+	JOB_BRANCH_COUNTRY_CODE,
+	JOB_COMPANY_CODE,
+	JOB_COMPANY_NAME,
+	JOB_COMPANY_CITY,
+	JOB_COMPANY_STATE,
+	OPERATOR_CODE,
+	OPERATOR_FULLNAME,
+	OPERATOR_FRIENDLY_NAME,
+	OPERATOR_GIVEN_NAME,
+	OPERATOR_SURNAME,
+	OPERATOR_IS_ACTIVE,
+	SALES_REP_CODE,
+	SALES_REP_FULLNAME,
+	SALES_REP_FRIENDLY_NAME,
+	SALES_REP_GIVEN_NAME,
+	SALES_REP_SURNAME,
+	SALES_REP_IS_ACTIVE,
+	AGENT_ADDR,
+	AGENT_CITY,
+	AGENT_STATE,
+	AGENT_POSTCODE,
+	AGENT_PORT,
+	AGENT_ORG_CODE,
+	AGENT_ORG_NAME,
+	AGENT_IS_FORWARDER,
+	AGENT_ORG_IS_ACTIVE,
+	LOCAL_CLIENT_ADDR,
+	LOCAL_CLIENT_CITY,
+	LOCAL_CLIENT_STATE,
+	LOCAL_CLIENT_POSTCODE,
+	LOCAL_CLIENT_PORT,
+	LOCAL_CLIENT_CODE,
+	LOCAL_CLIENT_NAME,
+	LOCAL_CLIENT_IS_FORWARDER,
+	LOCAL_CLIENT_ORG_IS_ACTIVE,
+	PARENT_JOB_NUMBER,
+	PARENT_JOB_NAME,
+	PARENT_JOB_DESCRIPTION,
+	PARENT_JOB_STATUS,
+	PARENT_JOB_DIRECTION,
+	PARENT_JOB_OPENED_DATE,
+	PARENT_JOB_CLOSED_DATE,
+	PARENT_JOB_LOCAL_CHARGES_AMT,
+	PARENT_JOB_DEPARTMENT_CODE,
+	PARENT_JOB_DEPARTMENT_DESCRIPTION,
+	PARENT_JOB_BRANCH_CODE,
+	PARENT_JOB_BRANCH_NAME,
+	PARENT_JOB_BRANCH_COUNTRY_CODE,
+	PARENT_JOB_COMPANY_CODE,
+	PARENT_JOB_COMPANY_NAME,
+	PARENT_JOB_COMPANY_CITY,
+	PARENT_JOB_COMPANY_STATE,
+	WIP_RECOGNITION_TYPE,
+	WIP_RECOGNITION_DATE,
+	ACR_RECOGNITION_TYPE,
+	ACR_RECOGNITION_DATE,
+	SHIPMENT_ORIGIN,
+	SHIPMENT_DESTINATION,
+	SHIPMENT_ETD,
+	SHIPMENT_ETA,
+	SHIPMENT_TRANSPORT_MODE,
+	SHIPMENT_STATUS,
+	DECLARATION_SHIPMENT_FK,
+	DECLARATION_ORIGIN,
+	DECLARATION_FINAL_DEST,
+	DECLARATION_PORT_OF_LOADING,
+	DECLARATION_PORT_OF_ARRIVAL,
+	DECLARATION_EXPORT_DATE,
+	DECLARATION_ARRIVAL_DATE,
+	DECLARATION_FINAL_DEST_DATE,
+	DECLARATION_TRANSPORT_MODE,
+	DECLARATION_OP_STATUS,
+	DECLARATION_ENTRY_STATUS,
+	DECLARATION_REFERENCE,
+	DECLARATION_BRANCH_CODE,
+	DECLARATION_BRANCH_NAME,
+	DECLARATION_BRANCH_COUNTRY_CODE,
+	DECLARATION_COMPANY_CODE,
+	DECLARATION_COMPANY_NAME,
+	DECLARATION_COMPANY_CITY,
+	DECLARATION_COMPANY_STATE
+) as 
+With
+jh_dedup AS (
+    SELECT *, ROW_NUMBER() OVER (PARTITION BY JH_PK
+             ORDER BY JH_SYSTEMCREATETIMEUTC DESC, HASH(OBJECT_CONSTRUCT_KEEP_NULL(*)) DESC) AS _rn
+    FROM CORE.JOBHEADER_DEDUP
+    WHERE JH_ISVALID = TRUE
+      AND JH_PARENTTABLECODE IN ('JS','JE')
+),
+jh_all AS (SELECT * FROM jh_dedup WHERE _rn = 1),
+
+jh AS (
+    SELECT * FROM jh_all
+    WHERE JH_SYSTEMCREATETIMEUTC >= DATE('2026-04-01')
+      AND JH_ISACTIVE = TRUE
+),
+jr_dedup AS (
+    SELECT *, ROW_NUMBER() OVER (PARTITION BY JR_PK
+             ORDER BY JR_SYSTEMLASTEDITTIMEUTC DESC, HASH(OBJECT_CONSTRUCT_KEEP_NULL(*)) DESC) AS _rn
+    FROM CORE.JOBCHARGE_DEDUP
+    WHERE JR_JH IN (SELECT JH_PK FROM jh)
+    
+),
+jr AS (SELECT * FROM jr_dedup WHERE _rn = 1),
+js_dedup AS (
+    SELECT *, ROW_NUMBER() OVER (PARTITION BY JS_PK
+             ORDER BY JS_SYSTEMLASTEDITTIMEUTC DESC, HASH(OBJECT_CONSTRUCT_KEEP_NULL(*)) DESC) AS _rn
+    FROM CORE.JOBSHIPMENT_DEDUP
+    WHERE JS_ISVALID = TRUE
+      AND JS_PK IN (SELECT JH_PARENTID FROM jh WHERE JH_PARENTTABLECODE = 'JS')
+),
+js AS (SELECT * FROM js_dedup WHERE _rn = 1),
+je_dedup AS (
+    SELECT *, ROW_NUMBER() OVER (PARTITION BY JE_PK
+             ORDER BY JE_SYSTEMLASTEDITTIMEUTC DESC, HASH(OBJECT_CONSTRUCT_KEEP_NULL(*)) DESC) AS _rn
+    FROM CORE.JOBDECLARATION_DEDUP
+    WHERE JE_ISVALID = TRUE
+      AND JE_ISCANCELLED = FALSE
+      AND JE_PK IN (SELECT JH_PARENTID FROM jh WHERE JH_PARENTTABLECODE = 'JE')
+),
+je AS (SELECT * FROM je_dedup WHERE _rn = 1),
+oa_dedup AS (
+    SELECT *, ROW_NUMBER() OVER (PARTITION BY OA_PK
+             ORDER BY OA_SYSTEMCREATETIMEUTC DESC, HASH(OBJECT_CONSTRUCT_KEEP_NULL(*)) DESC) AS _rn
+    FROM CORE.ORGADDRESS_DEDUP
+    WHERE OA_ISVALID = TRUE
+      AND OA_PK IN (
+            SELECT JH_OA_LOCALCHARGESADDR FROM jh WHERE JH_OA_LOCALCHARGESADDR IS NOT NULL
+            UNION
+            SELECT JH_OA_AGENTCOLLECTADDR FROM jh WHERE JH_OA_AGENTCOLLECTADDR IS NOT NULL
+      )
+),
+oa AS (SELECT * FROM oa_dedup WHERE _rn = 1),
+/*
+OA_ADDRESS1,
+OA_ADDRESS2,
+OA_CITY,
+OA_STATE,
+OA_POSTCODE,
+OA_RL_NKRELATEDPORTCODE,
+*/
+
+oh_dedup AS (
+    SELECT *, ROW_NUMBER() OVER (PARTITION BY OH_PK
+             ORDER BY OH_SYSTEMCREATETIMEUTC DESC, HASH(OBJECT_CONSTRUCT_KEEP_NULL(*)) DESC) AS _rn
+    FROM CORE.ORGHEADER_DEDUP
+    --HERE OH_ISVALID = TRUE --COMMENTED AS NO ACTIVE RECORD EXISTS
+    WHERE OH_PK IN (
+            SELECT OA_OH FROM oa WHERE OA_OH IS NOT NULL
+            UNION
+            SELECT JR_OH_COSTACCOUNT FROM jr WHERE JR_OH_COSTACCOUNT IS NOT NULL
+            UNION
+            SELECT JR_OH_SELLACCOUNT FROM jr WHERE JR_OH_SELLACCOUNT IS NOT NULL
+      )
+),
+oh AS (SELECT * FROM oh_dedup WHERE _rn = 1),
+
+-- Revenue (best-effort): JOBCHARGE, JR_ISVALID filter removed (confirmed
+-- unreliable -- see prior investigation: 100% FALSE even on live charges)
+
+
+-- Cost (confirmed exact): ACCTRANSACTIONLINES, AL_LINETYPE = 'CST'
+al_dedup AS (
+    SELECT *, ROW_NUMBER() OVER (PARTITION BY AL_PK
+             ORDER BY AL_SYSTEMCREATETIMEUTC DESC, HASH(OBJECT_CONSTRUCT_KEEP_NULL(*)) DESC) AS _rn
+    FROM CORE.ACCTRANSACTIONLINES_DEDUP
+),
+al AS (SELECT * FROM al_dedup WHERE _rn = 1),
+
+
+rev_agg AS (
+    SELECT JR_JH, SUM(COALESCE(JR_LOCALSELLAMT,0)) AS REVENUE_PROVISIONAL,
+           COUNT(*) AS JR_LINE_COUNT
+    FROM jr
+    GROUP BY JR_JH
+),
+cost_agg AS (
+    SELECT AL_JH, SUM(AL_LINEAMOUNT) AS COST_CONFIRMED,
+           COUNT(*) AS CST_LINE_COUNT
+    FROM al
+    WHERE AL_LINETYPE = 'CST'
+    GROUP BY AL_JH
+),
+
+
+
+-- JOBCHARGEREVRECOGNITION: latest event per job (D3_JH)
+wrr_dedup AS (
+    SELECT *, ROW_NUMBER() OVER (PARTITION BY D3_JH
+             ORDER BY D3_RECOGNITIONDATE DESC, D3_SYSTEMLASTEDITTIMEUTC DESC, HASH(OBJECT_CONSTRUCT_KEEP_NULL(*)) DESC) AS _rn
+    FROM CORE.JOBCHARGEREVRECOGNITION_DEDUP
+    WHERE D3_JH IN (SELECT JH_PK FROM jh)
+),
+wrr AS (SELECT * FROM wrr_dedup WHERE _rn = 1),
+gs_dedup AS (
+    SELECT *, ROW_NUMBER() OVER (PARTITION BY GS_CODE
+             ORDER BY GS_SYSTEMLASTEDITTIMEUTC DESC, HASH(OBJECT_CONSTRUCT_KEEP_NULL(*)) DESC) AS _rn
+    FROM CORE.GLBSTAFF_DEDUP
+),
+gs AS (SELECT * FROM gs_dedup WHERE _rn = 1),
+ac_dedup AS (
+    SELECT *, ROW_NUMBER() OVER (PARTITION BY AC_PK ORDER BY AC_SYSTEMLASTEDITTIMEUTC DESC, HASH(OBJECT_CONSTRUCT_KEEP_NULL(*)) DESC) AS _rn
+    FROM CORE.ACCCHARGECODE_DEDUP
+    
+),
+ac AS (SELECT * FROM ac_dedup WHERE _rn = 1),
+
+acct_transact_dedup as 
+(   
+    SELECT *, ROW_NUMBER() OVER (PARTITION BY AT_PK ORDER BY AT_SYSTEMLASTEDITTIMEUTC DESC, HASH(OBJECT_CONSTRUCT_KEEP_NULL(*)) DESC) AS _rn
+    FROM CORE.ACCTAXRATE_DEDUP
+),
+
+AT as (SELECT * FROM acct_transact_dedup WHERE _rn = 1),
+
+acct_gl_dedup as 
+(   
+    SELECT *, ROW_NUMBER() OVER (PARTITION BY AG_PK ORDER BY AG_SYSTEMLASTEDITTIMEUTC DESC, HASH(OBJECT_CONSTRUCT_KEEP_NULL(*)) DESC) AS _rn
+    FROM CORE.ACCGLHEADER_DEDUP
+),
+
+AG as (SELECT * FROM acct_gl_dedup WHERE _rn = 1)
+/*
+AG_ACCOUNTNUM   AS ACCOUNT_NUM,
+AG_DESCRIPTION AS ACCOUNT_DESCRIPTION,
+AG_ACCOUNTTYPE  AS ACCOUNT_TYPE,
+AG_DEBITCREDIT AS ACCOUNT_TRANS_TYPE,
+*/
+
+
+SELECT
+    -- ── CHARGE LINE (JOBCHARGE) ──────────────────────────────────────────
+    jr.JR_PK                                    AS CHARGE_PK,
+    jr.JR_JH                                    AS CHARGE_JOB_FK,
+    jr.JR_AC                                    AS CHARGE_CHARGECODE_FK,
+    jr.JR_DESC                                  AS CHARGE_DESCRIPTION,
+    jr.JR_CHARGETYPE                            AS CHARGE_TYPE,
+    jr.JR_LINETYPE                              AS CHARGE_LINE_TYPE,
+    jr.JR_DISPLAYSEQUENCE                       AS CHARGE_DISPLAY_SEQ,
+
+    -- Cost side
+    jr.JR_OSCOSTAMT                             AS COST_OS_AMT,
+    jr.JR_LOCALCOSTAMT                          AS COST_LOCAL_AMT,
+    jr.JR_RX_NKCOSTCURRENCY                     AS COST_CURRENCY,
+    jr.JR_OSCOSTEXRATE                          AS COST_EXCHANGE_RATE,
+    jr.JR_ESTIMATEDCOST                         AS COST_ESTIMATED,
+    at_cost.AT_CODE                             AS COST_GST,
+    jr.JR_OSCOSTGSTAMT                          AS COST_GST_AMT,
+    CCA.OH_CODE                                 AS COST_CREDITOR_ACCOUNT_CODE,
+    CCA.OH_FULLNAME                             AS COST_CREDITOR_ACCOUNT_NAME,
+    -- jr.JR_OH_COSTACCOUNT                        AS COST_CREDITOR_ACCOUNT, --Commented out the hashkey col
+    jr.JR_APLINEPOSTINGSTATUS                   AS COST_AP_POSTING_STATUS,
+    jr.JR_APINVOICENUM                          AS COST_AP_INVOICE_NUM,
+    TO_CHAR(jr.JR_APINVOICEDATE, 'DD-MM-YYYY')  AS COST_AP_INVOICE_DATE,
+
+    -- Sell / Revenue side
+    jr.JR_OSSELLAMT                             AS SELL_OS_AMT,
+    jr.JR_LOCALSELLAMT                          AS SELL_LOCAL_AMT,
+    jr.JR_RX_NKSELLCURRENCY                     AS SELL_CURRENCY,
+    jr.JR_OSSELLEXRATE                          AS SELL_EXCHANGE_RATE,
+    jr.JR_ESTIMATEDREVENUE                      AS SELL_ESTIMATED_REVENUE,
+    at_sell.AT_CODE                             AS SELL_GST,
+    jr.JR_AT_SELLGSTRATE                        AS SELL_GST_RATE,
+    SDA.OH_CODE                                 AS SELL_DEBTOR_ACCOUNT_CODE,
+    SDA.OH_FULLNAME                             AS SELL_DEBTOR_ACCOUNT_NAME,
+    -- jr.JR_OH_SELLACCOUNT                        AS SELL_DEBTOR_ACCOUNT, --Commented out the hashkey col
+    jr.JR_ARLINEPOSTINGSTATUS                   AS SELL_AR_POSTING_STATUS,
+    jr.JR_INVOICETYPE                           AS SELL_INVOICE_TYPE,
+
+    -- Margin & proforma flags
+    jr.JR_MARGINPERCENTAGE                      AS CHARGE_MARGIN_PCT,
+    jr.JR_PROFORMACOST                          AS IS_WIP_COST,
+    jr.JR_PROFORMAREVENUE                       AS IS_ACCRUED_REVENUE,
+    CASE
+        WHEN jr.JR_PROFORMACOST = FALSE
+         AND jr.JR_PROFORMAREVENUE = FALSE
+        THEN TRUE ELSE FALSE
+    END                                         AS IS_FINALISED,
+    jr.JR_ISINCLUDEDINPROFITSHARE               AS IS_IN_PROFIT_SHARE,
+    jr.JR_ISVALID                               AS CHARGE_IS_ACTIVE,
+
+    -- Charge org context
+    DEPT_CHARGE.GE_CODE                          AS CHARGE_DEPARTMENT_CODE,
+    DEPT_CHARGE.GE_DESC                          AS CHARGE_DEPARTMENT_DESCRIPTION,
+    
+    BRANCH_CHARGE.GB_CODE                        AS CHARGE_BRANCH_CODE,
+    BRANCH_CHARGE.GB_BRANCHNAME                  AS CHARGE_BRANCH_NAME,
+    BRANCH_CHARGE.GB_RN_NKCOUNTRYCODE            AS CHARGE_BRANCH_COUNTRY_CODE,
+    
+    COMP_CHARGE.GC_CODE                          AS CHARGE_COMPANY_CODE,
+    COMP_CHARGE.GC_NAME                          AS CHARGE_COMPANY_NAME,
+    COMP_CHARGE.GC_CITY                          AS CHARGE_COMPANY_CITY,
+    COMP_CHARGE.GC_STATE                         AS CHARGE_COMPANY_STATE,
+
+    -- Charge audit
+    TO_CHAR(jr.JR_SYSTEMCREATETIMEUTC, 
+    'DD-MM-YYYY')                               AS CHARGE_CREATED_UTC,
+    
+    jr.JR_SYSTEMCREATEUSER                      AS CHARGE_CREATED_BY,
+    TO_CHAR(jr.JR_SYSTEMLASTEDITTIMEUTC, 
+    'DD-MM-YYYY')                               AS CHARGE_LAST_MODIFIED_UTC,
+    
+    jr.JR_SYSTEMLASTEDITUSER                    AS CHARGE_LAST_MODIFIED_BY,
+
+        -- ── CHARGE CODE (ACCCHARGECODE) ──────────────────────────────────────
+    ac.AC_PK                                    AS CHARGECODE_PK,
+    ac.AC_CODE                                  AS CHARGECODE,
+    ac.AC_DESC                                  AS CHARGECODE_DESC,
+    ac.AC_CHARGETYPE                            AS CHARGECODE_TYPE,
+    ac.AC_CHARGEGROUP                           AS CHARGECODE_GROUP,
+    ac.AC_CHARGESUBGROUP                        AS CHARGECODE_SUBGROUP,
+    ac.AC_ISACTIVE                              AS CHARGECODE_IS_ACTIVE,
+    
+    -- ac.AC_AG_REVENUEACCOUNT                     AS GL_REVENUE_ACCOUNT, --Commented out the hashkey col
+    AG_REVENUE.AG_ACCOUNTNUM                    AS GL_REVENUE_ACCOUNT_NUM,
+    AG_REVENUE.AG_DESCRIPTION                   AS GL_REVENUE_ACCOUNT_DESCRIPTION,
+    AG_REVENUE.AG_ACCOUNTTYPE                   AS GL_REVENUE_ACCOUNT_TYPE,
+    AG_REVENUE.AG_DEBITCREDIT                   AS GL_REVENUE_ACCOUNT_TRANSACTION_TYPE,
+    
+    -- ac.AC_AG_COSTACCOUNT                        AS GL_COST_ACCOUNT, --Commented out the hashkey col
+    AG_COST.AG_ACCOUNTNUM                       AS GL_COST_ACCOUNT_NUM,
+    AG_COST.AG_DESCRIPTION                      AS GL_COST_ACCOUNT_DESCRIPTION,
+    AG_COST.AG_ACCOUNTTYPE                      AS GL_COST_ACCOUNT_TYPE,
+    AG_COST.AG_DEBITCREDIT                      AS GL_COST_ACCOUNT_TRANSACTION_TYPE,
+    
+    -- ac.AC_AG_WIPACCOUNT                         AS GL_WIP_ACCOUNT, --Commented out the hashkey col
+    AG_WIP.AG_ACCOUNTNUM                        AS GL_WIP_ACCOUNT_NUM,
+    AG_WIP.AG_DESCRIPTION                       AS GL_WIP_ACCOUNT_DESCRIPTION,
+    AG_WIP.AG_ACCOUNTTYPE                       AS GL_WIP_ACCOUNT_TYPE,
+    AG_WIP.AG_DEBITCREDIT                       AS GL_WIP_ACCOUNT_TRANSACTION_TYPE,
+    
+    -- ac.AC_AG_ACCRUALACCOUNT                     AS GL_ACCRUAL_ACCOUNT, --Commented out the hashkey col
+    AG_ACCRUAL.AG_ACCOUNTNUM                    AS GL_ACCRUAL_ACCOUNT_NUM,
+    AG_ACCRUAL.AG_DESCRIPTION                   AS GL_ACCRUAL_ACCOUNT_DESCRIPTION,
+    AG_ACCRUAL.AG_ACCOUNTTYPE                   AS GL_ACCRUAL_ACCOUNT_TYPE,
+    AG_ACCRUAL.AG_DEBITCREDIT                   AS GL_ACCRUAL_ACCOUNT_TRANSACTION_TYPE,
+
+        -- ── JOB HEADER ───────────────────────────────────────────────────────
+    jh.JH_PK                                    AS JOB_PK,
+    jh.JH_JOBNUM                                AS JOB_NUMBER,
+    jh.JH_NAME                                  AS JOB_NAME,
+    jh.JH_DESCRIPTION                           AS JOB_DESCRIPTION,
+    jh.JH_STATUS                                AS JOB_STATUS,
+    jh.JH_HEADERTYPE                            AS JOB_TYPE,
+    jh.JH_DIRECTION                             AS JOB_DIRECTION,
+    jh.JH_JOBLOCALREFERENCE                     AS JOB_LOCAL_REF,
+    jh.JH_JH_PARENTJOB                          AS JOB_PARENT_FK,
+    jh.JH_HOLDREASON                            AS JOB_HOLD_REASON,
+    jh.JH_PROFITLOSSREASONCODE                  AS JOB_PL_REASON_CODE,
+    jh.JH_LOCALCHARGESCFX                       AS JOB_LOCAL_CHARGES_AMT,
+    jh.JH_GS_NKREPOPS                           AS JOB_OPERATOR_CODE,
+    jh.JH_GS_NKREPSALES                         AS JOB_SALES_REP_CODE,
+    TO_CHAR(jh.JH_A_JOP, 
+    'DD-MM-YYYY')                               AS JOB_OPENED_DATE,
+    TO_CHAR(jh.JH_A_JCL, 
+    'DD-MM-YYYY')                               AS JOB_CLOSED_DATE,
+    jh.JH_ISACTIVE                              AS JOB_IS_ACTIVE,
+    TO_CHAR(jh.JH_SYSTEMCREATETIMEUTC, 
+    'DD-MM-YYYY')                               AS JOB_CREATED_UTC,
+    jh.JH_SYSTEMCREATEUSER                      AS JOB_CREATED_BY,
+    jh.JH_SYSTEMLASTEDITUSER                    AS JOB_LAST_MODIFIED_BY,
+
+    -- Job context
+    DEPT_JOB.GE_CODE                          AS JOB_DEPARTMENT_CODE,
+    DEPT_JOB.GE_DESC                          AS JOB_DEPARTMENT_DESCRIPTION,
+    
+    BRANCH_JOB.GB_CODE                        AS JOB_BRANCH_CODE,
+    BRANCH_JOB.GB_BRANCHNAME                  AS JOB_BRANCH_NAME,
+    BRANCH_JOB.GB_RN_NKCOUNTRYCODE            AS JOB_BRANCH_COUNTRY_CODE,
+    
+    COMP_JOB.GC_CODE                          AS JOB_COMPANY_CODE,
+    COMP_JOB.GC_NAME                          AS JOB_COMPANY_NAME,
+    COMP_JOB.GC_CITY                          AS JOB_COMPANY_CITY,
+    COMP_JOB.GC_STATE                         AS JOB_COMPANY_STATE,
+
+    -- ── OPERATOR (GLBSTAFF — joined on CODE, not PK!) ────────────────────
+    -- ops.GS_PK                                   AS OPERATOR_PK, --Commented out the hashkey col
+    ops.GS_CODE                                 AS OPERATOR_CODE,
+    ops.GS_FULLNAME                             AS OPERATOR_FULLNAME,
+    ops.GS_FRIENDLYNAME                         AS OPERATOR_FRIENDLY_NAME,
+    ops.GS_GIVENNAME                            AS OPERATOR_GIVEN_NAME,
+    ops.GS_PREFERREDSURNAME                     AS OPERATOR_SURNAME,
+    ops.GS_ISACTIVE                             AS OPERATOR_IS_ACTIVE,
+    
+    -- ── SALES REP (GLBSTAFF — joined on CODE, not PK!) ──────────────────
+    -- sales.GS_PK                                 AS SALES_REP_PK, --Commented out the hashkey col
+    sales.GS_CODE                               AS SALES_REP_CODE,
+    sales.GS_FULLNAME                           AS SALES_REP_FULLNAME,
+    sales.GS_FRIENDLYNAME                       AS SALES_REP_FRIENDLY_NAME,
+    sales.GS_GIVENNAME                          AS SALES_REP_GIVEN_NAME,
+    sales.GS_PREFERREDSURNAME                   AS SALES_REP_SURNAME,
+    sales.GS_ISACTIVE                           AS SALES_REP_IS_ACTIVE,
+
+        -- ── OVERSEAS AGENT (ORGADDRESS → ORGHEADER) ──────────────────────────
+    -- oa_agent.OA_PK                              AS AGENT_ADDR_PK,--Commented out the hashkey col
+    oa_agent.OA_ADDRESS1                        AS AGENT_ADDR,
+    oa_agent.OA_CITY                            AS AGENT_CITY,
+    oa_agent.OA_STATE                           AS AGENT_STATE,
+    oa_agent.OA_POSTCODE                        AS AGENT_POSTCODE,
+    oa_agent.OA_RL_NKRELATEDPORTCODE            AS AGENT_PORT,
+    -- agent_org.OH_PK                             AS AGENT_ORG_PK,--Commented out the hashkey col
+    agent_org.OH_CODE                           AS AGENT_ORG_CODE,
+    agent_org.OH_FULLNAME                       AS AGENT_ORG_NAME,
+    agent_org.OH_ISFORWARDER                    AS AGENT_IS_FORWARDER,
+    agent_org.OH_ISACTIVE                       AS AGENT_ORG_IS_ACTIVE,
+
+    -- ── LOCAL CLIENT (ORGADDRESS → ORGHEADER) ────────────────────────────
+    -- oa_local.OA_PK                              AS LOCAL_CLIENT_ADDR_PK, --Commented out the hashkey col
+    oa_local.OA_ADDRESS1                        AS LOCAL_CLIENT_ADDR,
+    oa_local.OA_CITY                            AS LOCAL_CLIENT_CITY,
+    oa_local.OA_STATE                           AS LOCAL_CLIENT_STATE,
+    oa_local.OA_POSTCODE                        AS LOCAL_CLIENT_POSTCODE,
+    oa_local.OA_RL_NKRELATEDPORTCODE            AS LOCAL_CLIENT_PORT,
+    -- local_org.OH_PK                             AS LOCAL_CLIENT_ORG_PK,--Commented out the hashkey col
+    local_org.OH_CODE                           AS LOCAL_CLIENT_CODE,
+    local_org.OH_FULLNAME                       AS LOCAL_CLIENT_NAME,
+    local_org.OH_ISFORWARDER                    AS LOCAL_CLIENT_IS_FORWARDER,
+    local_org.OH_ISACTIVE                       AS LOCAL_CLIENT_ORG_IS_ACTIVE,
+
+        -- ── PARENT JOB (JOBHEADER self-join) ─────────────────────────────────
+    parent.JH_JOBNUM                            AS PARENT_JOB_NUMBER,
+    parent.JH_NAME                              AS PARENT_JOB_NAME,
+    parent.JH_DESCRIPTION                       AS PARENT_JOB_DESCRIPTION,
+    parent.JH_STATUS                            AS PARENT_JOB_STATUS,
+    parent.JH_DIRECTION                         AS PARENT_JOB_DIRECTION,
+    parent.JH_A_JOP                             AS PARENT_JOB_OPENED_DATE,
+    parent.JH_A_JCL                             AS PARENT_JOB_CLOSED_DATE,
+    parent.JH_LOCALCHARGESCFX                   AS PARENT_JOB_LOCAL_CHARGES_AMT,
+
+    -- Parent job context
+    DEPT_JOB_PAR.GE_CODE                        AS PARENT_JOB_DEPARTMENT_CODE,
+    DEPT_JOB_PAR.GE_DESC                        AS PARENT_JOB_DEPARTMENT_DESCRIPTION,
+    
+    BRANCH_JOB_PAR.GB_CODE                      AS PARENT_JOB_BRANCH_CODE,
+    BRANCH_JOB_PAR.GB_BRANCHNAME                AS PARENT_JOB_BRANCH_NAME,
+    BRANCH_JOB_PAR.GB_RN_NKCOUNTRYCODE          AS PARENT_JOB_BRANCH_COUNTRY_CODE,
+    
+    COMP_JOB_PAR.GC_CODE                        AS PARENT_JOB_COMPANY_CODE,
+    COMP_JOB_PAR.GC_NAME                        AS PARENT_JOB_COMPANY_NAME,
+    COMP_JOB_PAR.GC_CITY                        AS PARENT_JOB_COMPANY_CITY,
+    COMP_JOB_PAR.GC_STATE                       AS PARENT_JOB_COMPANY_STATE,
+
+    -- ── WIP / ACCRUAL RECOGNITION ────────────────────────────────────────
+    -- wrr.D3_PK                                   AS WIP_RECOGNITION_PK,--Commented out the hashkey col
+    wrr.D3_RECOGNITIONTYPE                      AS WIP_RECOGNITION_TYPE,
+    TO_CHAR(wrr.D3_RECOGNITIONDATE, 
+    'DD-MM-YYYY')                               AS WIP_RECOGNITION_DATE,
+    wrr.D3_RECOGNITIONTYPE                      AS ACR_RECOGNITION_TYPE,
+    TO_CHAR(wrr.D3_RECOGNITIONDATE, 
+    'DD-MM-YYYY')                               AS ACR_RECOGNITION_DATE,
+
+    -- ── ROUTING: JOBSHIPMENT ─────────────────────────────────────────────
+    -- ship.JS_PK                                  AS SHIPMENT_PK,--Commented out the hashkey col
+    ship.JS_RL_NKORIGIN                         AS SHIPMENT_ORIGIN,
+    ship.JS_RL_NKDESTINATION                    AS SHIPMENT_DESTINATION,
+    TO_CHAR(ship.JS_E_DEP, 
+    'DD-MM-YYYY')                               AS SHIPMENT_ETD,
+    TO_CHAR(ship.JS_E_ARV, 
+    'DD-MM-YYYY')                               AS SHIPMENT_ETA,
+    ship.JS_TRANSPORTMODE                       AS SHIPMENT_TRANSPORT_MODE,
+    ship.JS_SHIPMENTSTATUS                      AS SHIPMENT_STATUS,
+
+    -- ── ROUTING: JOBDECLARATION ──────────────────────────────────────────
+    -- decl.JE_PK                                  AS DECLARATION_PK,--Commented out the hashkey col
+    decl.JE_JS                                  AS DECLARATION_SHIPMENT_FK,
+    decl.JE_RL_NKORIGIN                         AS DECLARATION_ORIGIN,
+    decl.JE_RL_NKFINALDESTINATION               AS DECLARATION_FINAL_DEST,
+    decl.JE_RL_NKPORTOFLOADING                  AS DECLARATION_PORT_OF_LOADING,
+    decl.JE_RL_NKPORTOFARRIVAL                  AS DECLARATION_PORT_OF_ARRIVAL,
+    TO_CHAR(decl.JE_EXPORTDATE, 
+    'DD-MM-YYYY')                               AS DECLARATION_EXPORT_DATE,
+    TO_CHAR(decl.JE_DATEOFARRIVAL, 
+    'DD-MM-YYYY')                               AS DECLARATION_ARRIVAL_DATE,
+    TO_CHAR(decl.JE_DATEATFINALDESTINATION, 
+    'DD-MM-YYYY')                               AS DECLARATION_FINAL_DEST_DATE,
+    decl.JE_TRANSPORTMODE                       AS DECLARATION_TRANSPORT_MODE,
+    decl.JE_OPERATIONALSTATUS                   AS DECLARATION_OP_STATUS,
+    decl.JE_ENTRYSTATUS                         AS DECLARATION_ENTRY_STATUS,
+    decl.JE_DECLARATIONREFERENCE                AS DECLARATION_REFERENCE,
+    -- Declaration context
+    
+    BRANCH_DECL.GB_CODE                      AS DECLARATION_BRANCH_CODE,
+    BRANCH_DECL.GB_BRANCHNAME                AS DECLARATION_BRANCH_NAME,
+    BRANCH_DECL.GB_RN_NKCOUNTRYCODE          AS DECLARATION_BRANCH_COUNTRY_CODE,
+    
+    COMP_DECL.GC_CODE                        AS DECLARATION_COMPANY_CODE,
+    COMP_DECL.GC_NAME                        AS DECLARATION_COMPANY_NAME,
+    COMP_DECL.GC_CITY                        AS DECLARATION_COMPANY_CITY,
+    COMP_DECL.GC_STATE                       AS DECLARATION_COMPANY_STATE,
+    
+    FROM JR 
+    -- Job master (deduped)
+    INNER JOIN jh ON jr.JR_JH = jh.JH_PK
+
+    --Parent
+    LEFT JOIN jh_all AS parent ON jh.JH_JH_PARENTJOB = parent.JH_PK
+
+    -- Charge code (deduped)
+    LEFT JOIN ac ON jr.JR_AC = ac.AC_PK
+
+    --Staff
+    LEFT JOIN gs   AS ops        ON jh.JH_GS_NKREPOPS   = ops.GS_CODE
+    LEFT JOIN gs   AS sales      ON jh.JH_GS_NKREPSALES = sales.GS_CODE
+
+    -- Local Client (deduped)
+    LEFT JOIN oa   AS oa_local   ON jh.JH_OA_LOCALCHARGESADDR = oa_local.OA_PK
+    LEFT JOIN oh   AS local_org  ON oa_local.OA_OH = local_org.OH_PK
+
+    -- Creditor & Debtor Account
+    LEFT JOIN oh   AS CCA        ON JR.JR_OH_COSTACCOUNT = CCA.OH_PK
+    LEFT JOIN oh   AS SDA        ON JR.JR_OH_SELLACCOUNT = SDA.OH_PK
+    
+    --ACCOUNT TYPE 
+    LEFT JOIN AG AG_REVENUE ON AG_REVENUE.AG_PK = ac.AC_AG_REVENUEACCOUNT
+
+    LEFT JOIN AG AG_COST    ON AG_COST.AG_PK = ac.AC_AG_COSTACCOUNT
+
+    LEFT JOIN AG AG_WIP     ON AG_WIP.AG_PK = ac.AC_AG_WIPACCOUNT
+
+    LEFT JOIN AG AG_ACCRUAL ON AG_ACCRUAL.AG_PK = ac.AC_AG_ACCRUALACCOUNT
+    
+    -- Overseas Agent (deduped)
+    LEFT JOIN oa AS oa_agent ON jh.JH_OA_AGENTCOLLECTADDR = oa_agent.OA_PK
+    LEFT JOIN oh AS agent_org ON oa_agent.OA_OH = agent_org.OH_PK
+
+
+    -- Routing: Shipment (deduped, FK: JH_PARENTID = JS_PK when JH_PARENTTABLECODE = 'JS')
+    LEFT JOIN js AS ship ON ship.JS_PK = jh.JH_PARENTID AND jh.JH_PARENTTABLECODE = 'JS'
+    
+    -- Routing: Declaration (deduped, FK: JH_PARENTID = JE_PK when JH_PARENTTABLECODE = 'JE')
+    LEFT JOIN je AS decl ON decl.JE_PK = jh.JH_PARENTID AND jh.JH_PARENTTABLECODE = 'JE'
+    -- WIP Recognition (latest per job, deduped)
+    LEFT JOIN wrr ON wrr.D3_JH = jh.JH_PK
+
+    --Department
+    left join MART.VW_DIM_DEPARTMENT DEPT_CHARGE ON DEPT_CHARGE.GE_PK = jr.JR_GE
+    left join MART.VW_DIM_DEPARTMENT DEPT_JOB ON DEPT_JOB.GE_PK = jh.JH_GE
+    left join MART.VW_DIM_DEPARTMENT DEPT_JOB_PAR ON DEPT_JOB_PAR.GE_PK = parent.JH_GE
+        
+    --Company
+    left join MART.VW_DIM_COMPANY COMP_CHARGE ON COMP_CHARGE.GC_PK = jr.JR_GC
+    left join MART.VW_DIM_COMPANY COMP_JOB ON COMP_JOB.GC_PK = jh.JH_GC
+    left join MART.VW_DIM_COMPANY COMP_JOB_PAR ON COMP_JOB_PAR.GC_PK = parent.JH_GC
+    left join MART.VW_DIM_COMPANY COMP_DECL ON COMP_DECL.GC_PK = decl.JE_GC
+        
+    --Branch
+    LEFT JOIN MART.VW_DIM_BRANCH BRANCH_CHARGE ON BRANCH_CHARGE.GB_PK = jr.JR_GB
+    LEFT JOIN MART.VW_DIM_BRANCH BRANCH_JOB ON BRANCH_JOB.GB_PK = jh.JH_GB
+    LEFT JOIN MART.VW_DIM_BRANCH BRANCH_JOB_PAR ON BRANCH_JOB_PAR.GB_PK = parent.JH_GB
+    LEFT JOIN MART.VW_DIM_BRANCH BRANCH_DECL ON BRANCH_DECL.GB_PK = decl.JE_GB
+    
+    -- Add acct_transact data
+    LEFT JOIN AT at_cost on at_cost.at_pk = jr.JR_AT_COSTGSTRATE
+    LEFT JOIN AT at_sell on at_sell.at_pk = jr.JR_AT_SELLGSTRATE
+    
+    
+;

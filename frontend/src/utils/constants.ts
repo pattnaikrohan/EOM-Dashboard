@@ -45,7 +45,7 @@ export const FLAG_DESCRIPTIONS: Record<string, string> = {
   'IMPORTS B Jobs pending invoicing':   'Jobs arriving this month requiring invoicing',
   'IMPORTS S Jobs pending invoicing':   'Jobs arriving this month requiring invoicing',
   'IMPORTS Jobs pending invoicing':     'Jobs arriving this month requiring invoicing',
-  'CROSS-TRADE Jobs pending invoicing': 'Jobs arriving this month requiring invoicing',
+  'CROSS-TRADE Jobs pending invoicing': 'Jobs departing this month requiring invoicing',
   'DOMESTIC Jobs pending invoicing':    'Jobs departing this month requiring invoicing',
   'Jobs at INV Status':                 'Jobs to be updated to CMP upon invoice completion and accruals entered',
 };

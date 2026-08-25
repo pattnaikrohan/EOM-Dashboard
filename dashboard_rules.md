@@ -62,11 +62,13 @@ These 4 are evaluated as `if / elif` — a job gets at most ONE pending invoicin
 ---
 
 #### 1. CROSS-TRADE Jobs pending invoicing
+Cross-trade shipments (origin and destination outside AU) departing origin in current or previous months awaiting billing.
+
 | Condition | Rule |
 |---|---|
-| **Direction** | `source_type = "cross_trade"` OR (Origin not `AU*` AND Destination not `AU*`) |
-| **Status** | NOT `CMP` and NOT `CLS` (IHL, WRK, INV etc. are included) |
-| **Date check** | ETD is in current month or any previous month (or no ETD) |
+| **Direction** | `is_cross_trade = TRUE` (`source_type = "cross_trade"` OR Origin not `AU*` AND Destination not `AU*`) |
+| **Status** | `Status NOT IN ('CMP','CLS')` (IHL, WRK, INV etc. are included) |
+| **Date check** | `ETD <= Current Month` (ETD is in current month or any previous month, or no ETD) |
 
 > **Colour:** Violet `#8B5CF6`
 
@@ -201,8 +203,9 @@ These are evaluated independently with `if` (not `elif`). A job can get multiple
 | Path | Condition |
 |---|---|
 | **File-based** | Job appears in the `"Jobs with Aged Accruals (GREATER THAN 3 MONTHS)"` upload |
-| **Computed** | abs(Accrual) > $0 AND Job Age > 90 days |
+| **Computed / Snowflake** | `ABS(Accrual) > 0` AND Age >= 90 days (from `ACR_RECOGNITION_DATE` / `acr_recognised`) |
 
+Jobs carrying unposted vendor accruals where the accrual recognition date (`ACR_RECOGNITION_DATE`) is 90 days or older.
 Either path qualifies. The file-based path exists because CargoWise uses calendar-month logic for "3 months" which doesn't always match a strict 90-day calculation.
 
 > **Colour:** Amber `#F59E0B`
