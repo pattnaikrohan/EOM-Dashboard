@@ -163,13 +163,8 @@ def fetch_jobs_from_snowflake():
     """
 
     update_sync_progress("Querying Snowflake View (charge-level)...", 10)
-    print("Fetching charges from Snowflake View...")
-    try:
-        cur.execute(select_query)
-    except Exception as e:
-        print(f"v2 view query failed ({e}), falling back to PROD.AI_AUTO.VW_EOM_JOB_CHARGES_UPDATED...")
-        select_query = select_query.replace("PROD.AI_AUTO.VW_EOM_JOB_CHARGES_UPDATED_v2", "PROD.AI_AUTO.VW_EOM_JOB_CHARGES_UPDATED")
-        cur.execute(select_query)
+    print("Fetching charges from PROD.AI_AUTO.VW_EOM_JOB_CHARGES_UPDATED_v2 (Live)...")
+    cur.execute(select_query)
 
     cols = [desc[0] for desc in cur.description]
     rows = cur.fetchall()
