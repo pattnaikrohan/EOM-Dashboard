@@ -237,6 +237,8 @@ export default function JobTable({ jobs, compact, hideRevenueProfit, defaultSort
                           <table className="data-table" style={{ margin: 0, fontSize: '0.8rem', background: '#fff', border: '1px solid #e2e8f0', borderRadius: 6 }}>
                             <thead>
                               <tr style={{ background: '#f1f5f9' }}>
+                                <th style={{ textAlign: 'left', padding: '0.4rem 0.6rem' }}>Job Number</th>
+                                <th style={{ textAlign: 'center', padding: '0.4rem 0.6rem' }}>Status</th>
                                 <th style={{ textAlign: 'left', padding: '0.4rem 0.6rem' }}>Charge Code</th>
                                 <th style={{ textAlign: 'left', padding: '0.4rem 0.6rem' }}>Creditor</th>
                                 <th style={{ textAlign: 'center', padding: '0.4rem 0.6rem' }}>OS Cur</th>
@@ -251,15 +253,21 @@ export default function JobTable({ jobs, compact, hideRevenueProfit, defaultSort
                             <tbody>
                               {job.accrual_lines!.map((line, lIdx) => (
                                 <tr key={lIdx}>
+                                  <td className="cell-id" style={{ padding: '0.4rem 0.6rem', fontWeight: 600 }}>{job.job_number}</td>
+                                  <td style={{ textAlign: 'center', padding: '0.4rem 0.6rem' }}>
+                                    <span className={`status-badge ${STATUS_COLOURS[job.job_status] || 'status-badge--default'}`} style={{ fontSize: '0.7rem', padding: '0.1rem 0.35rem' }}>
+                                      {job.job_status}
+                                    </span>
+                                  </td>
                                   <td className="cell-id" style={{ padding: '0.4rem 0.6rem' }}>{line.charge_code || '-'}</td>
                                   <td style={{ padding: '0.4rem 0.6rem' }}>{line.creditor || '-'}</td>
                                   <td style={{ textAlign: 'center', padding: '0.4rem 0.6rem' }}>{line.os_cur || '-'}</td>
                                   <td className="cell-number" style={{ padding: '0.4rem 0.6rem' }}>{line.os_amount ? line.os_amount.toFixed(2) : '0.00'}</td>
                                   <td className="cell-number" style={{ padding: '0.4rem 0.6rem' }}>{line.ex_rate ? line.ex_rate.toFixed(4) : '1.0000'}</td>
                                   <td className="cell-number" style={{ padding: '0.4rem 0.6rem', fontWeight: 600 }}>{formatCurrency(line.cost_local || 0)}</td>
-                                  <td style={{ textAlign: 'center', padding: '0.4rem 0.6rem' }}>{line.has_acr || '-'}</td>
+                                  <td style={{ textAlign: 'center', padding: '0.4rem 0.6rem' }}>{line.has_acr || 'Y'}</td>
                                   <td style={{ padding: '0.4rem 0.6rem', whiteSpace: 'nowrap' }}>{formatDate(line.acr_recognised)}</td>
-                                  <td className="cell-number" style={{ padding: '0.4rem 0.6rem', color: (line.age_days || 0) > 90 ? '#d97706' : undefined, fontWeight: (line.age_days || 0) > 90 ? 700 : 400 }}>
+                                  <td className="cell-number" style={{ padding: '0.4rem 0.6rem', color: (line.age_days || 0) >= 90 ? '#d97706' : undefined, fontWeight: (line.age_days || 0) >= 90 ? 700 : 400 }}>
                                     {line.age_days || 0}
                                   </td>
                                 </tr>
