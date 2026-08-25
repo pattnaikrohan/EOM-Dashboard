@@ -212,7 +212,7 @@ def fetch_jobs_from_snowflake():
                 "open_date":      _fmt_date(open_date),
                 "operator":       op_name,
                 "sales_rep":      row.get("SALES_REP_FULLNAME") or row.get("SALES_REP_CODE") or "",
-                "local_client":   row.get("LOCAL_CLIENT_NAME") or row.get("LOCAL_CLIENT_CODE") or "",
+                "local_client":   row.get("SELL_DEBTOR_ACCOUNT_NAME") or row.get("LOCAL_CLIENT_NAME") or row.get("LOCAL_CLIENT_CODE") or "",
                 "local_charges":  "",
                 "overseas_agent": row.get("AGENT_ORG_NAME") or row.get("AGENT_ORG_CODE") or "",
                 "origin":         origin[:2].upper() if origin else "",
@@ -242,6 +242,11 @@ def fetch_jobs_from_snowflake():
         cost = float(row.get("COST_LOCAL_AMT") or 0.0)
         is_wip = bool(row.get("IS_WIP_COST"))
         is_accrual = bool(row.get("IS_ACCRUED_REVENUE"))
+
+        # Prefer SELL_DEBTOR_ACCOUNT_NAME for client code if available on any charge
+        debtor_name = row.get("SELL_DEBTOR_ACCOUNT_NAME")
+        if debtor_name:
+            j["local_client"] = debtor_name
 
         j["revenue"] += sell
         j["cost"] += cost
