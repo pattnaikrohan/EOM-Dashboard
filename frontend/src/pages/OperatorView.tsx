@@ -31,13 +31,18 @@ const PENDING_INVOICING_FLAGS = [
 ];
 
 // Operator month-end closing checkers
+// NOTE: These MUST exactly match the backend flag names from rules.py / FLAG_PRIORITY
+// so that jobs_by_flag[flag] lookups work correctly.
 const MONTH_END_CLOSING_FLAGS = [
-  'Unbilled Jobs (No Revenue)',
+  'Unbilled Jobs with PROFIT',
+  'Unbilled Jobs with LOSS',
   'Jobs with WIPs',
   'Jobs at INV Status',
   'Jobs with Aged Accruals',
-  'Billed Loss Jobs',
-  'Low Margin Jobs (<15%)',
+  'Billed Jobs with LOSS',
+  'Billed Jobs with LOW MARGIN',
+  'Billed Jobs — EXTREME Profit',
+  'Jobs at CMP — Ready to CLOSE',
 ];
 
 // All 13 checkers in order
