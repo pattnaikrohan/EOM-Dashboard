@@ -90,6 +90,7 @@ export interface Job {
   direction?: string;
   ops_section?: string;
   accrual_lines?: AccrualLine[];
+  accrual_age_days?: number;
 }
 
 export interface KPI {

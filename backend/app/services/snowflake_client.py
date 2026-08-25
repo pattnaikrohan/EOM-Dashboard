@@ -133,6 +133,7 @@ def fetch_jobs_from_snowflake():
             IS_WIP_COST,
             IS_ACCRUED_REVENUE,
             WIP_RECOGNITION_DATE,
+            WIP_AGE_DAYS,
             CHARGE_DESCRIPTION,
             CHARGECODE,
             CHARGECODE_DESC,
@@ -229,9 +230,9 @@ def fetch_jobs_from_snowflake():
                 "eta":            _fmt_date(eta),
                 "job_direction":  direction,
                 "source_type":    "snowflake",
-                # Aged accrual tracking (computed from ACR_RECOGNITION_DATE)
+                # Aged accrual tracking (from WIP_AGE_DAYS, only valid on WIP/accrual rows)
                 "has_aged_accruals": False,
-                "_acr_recognition_age_days": 0,
+                "_acr_age_days": 0,
             }
 
         # ── Accumulate charge-level financials ────────────────────────────
@@ -248,16 +249,13 @@ def fetch_jobs_from_snowflake():
         if is_accrual:
             j["accrual"] += sell
 
-        # Track max ACR recognition age (aged accruals check is done in Step 3
-        # after we know whether the job has outstanding accruals)
-        acr_rec_date = row.get("ACR_RECOGNITION_DATE") or row.get("WIP_RECOGNITION_DATE")
-        if acr_rec_date and hasattr(acr_rec_date, 'year'):
-            try:
-                acr_age_days = (now - acr_rec_date).days
-                if acr_age_days > j["_acr_recognition_age_days"]:
-                    j["_acr_recognition_age_days"] = acr_age_days
-            except TypeError:
-                pass
+        # Track max WIP/accrual age — ONLY from rows that are actual WIP or accrual charges
+        # to avoid sentinel values (46257 days from 1900-01-01 defaults on non-WIP rows)
+        if is_wip or is_accrual:
+            wip_age = int(row.get("WIP_AGE_DAYS") or 0)
+            if wip_age > 0 and wip_age < 36500:  # Filter out sentinel values (>100 years)
+                if wip_age > j["_acr_age_days"]:
+                    j["_acr_age_days"] = wip_age
 
     # ── Step 3: Finalise computed fields ──────────────────────────────────
     update_sync_progress("Finalising job calculations...", 90, current=total_rows, total=total_rows)
@@ -276,12 +274,13 @@ def fetch_jobs_from_snowflake():
             j["margin_pct"] = round((j["profit_loss"] / j["revenue"]) * 100, 2)
 
         # Aged accruals: job must have outstanding accruals AND
-        # accrual recognition (ACR_RECOGNITION_DATE) must be >= 90 days old
-        if abs(j["accrual"]) > 0 and j["_acr_recognition_age_days"] >= 90:
+        # accrual/WIP age (WIP_AGE_DAYS) must be >= 90 days old
+        if abs(j["accrual"]) > 0 and j["_acr_age_days"] >= 90:
             j["has_aged_accruals"] = True
 
-        # Clean up internal tracking field
-        del j["_acr_recognition_age_days"]
+        # Persist accrual age for frontend display, then clean up internal field
+        j["accrual_age_days"] = j["_acr_age_days"]
+        del j["_acr_age_days"]
 
         jobs.append(j)
         if j["branch"]:

@@ -205,7 +205,9 @@ export default function JobTable({ jobs, compact, hideRevenueProfit, defaultSort
                           );
                         }
                         if (col.key === 'job_age_days') {
-                          return <td key={col.key} className="cell-number">{num}</td>;
+                          // Show accrual age instead of job age when available (for Aged Accruals section)
+                          const displayAge = (job as any).accrual_age_days > 0 ? (job as any).accrual_age_days : num;
+                          return <td key={col.key} className="cell-number">{displayAge}</td>;
                         }
                         return (
                           <td
