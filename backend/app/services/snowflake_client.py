@@ -84,7 +84,7 @@ def get_connection():
         encryption_algorithm=serialization.NoEncryption())
     return snowflake.connector.connect(
         account=SF_ACCOUNT, user=SF_USER, private_key=pkb,
-        warehouse=SF_WAREHOUSE, role=SF_ROLE)
+        warehouse=SF_WAREHOUSE, role=SF_ROLE, database="PROD", schema="CORE")
 
 def _fmt_date(val):
     """Convert a Snowflake datetime/date to 'DD-MM-YYYY' string, or return as-is."""
@@ -201,7 +201,7 @@ def fetch_jobs_from_snowflake():
                             END DESC,
                             HASH(OBJECT_CONSTRUCT_KEEP_NULL(*)) DESC
                     ) AS _rn
-                FROM CORE.JOBHEADER_DEDUP
+                FROM PROD.CORE.JOBHEADER_DEDUP
                 WHERE JH_ISVALID = TRUE
             )
             SELECT JH_JOBNUM, JH_STATUS FROM jh_dedup WHERE _rn = 1
@@ -220,27 +220,27 @@ def fetch_jobs_from_snowflake():
             WITH al_dedup AS (
                 SELECT *, ROW_NUMBER() OVER (PARTITION BY AL_PK
                          ORDER BY AL_SYSTEMCREATETIMEUTC DESC, HASH(OBJECT_CONSTRUCT_KEEP_NULL(*)) DESC) AS _rn
-                FROM CORE.ACCTRANSACTIONLINES_DEDUP
+                FROM PROD.CORE.ACCTRANSACTIONLINES_DEDUP
                 WHERE AL_LINETYPE = 'ACR'
             ),
             al AS (SELECT * FROM al_dedup WHERE _rn = 1),
             jh_dedup AS (
                 SELECT *, ROW_NUMBER() OVER (PARTITION BY JH_PK
                          ORDER BY JH_SYSTEMCREATETIMEUTC DESC, HASH(OBJECT_CONSTRUCT_KEEP_NULL(*)) DESC) AS _rn
-                FROM CORE.JOBHEADER_DEDUP
+                FROM PROD.CORE.JOBHEADER_DEDUP
                 WHERE JH_ISVALID = TRUE
             ),
             jh AS (SELECT * FROM jh_dedup WHERE _rn = 1),
             ac_dedup AS (
                 SELECT *, ROW_NUMBER() OVER (PARTITION BY AC_PK 
                          ORDER BY AC_SYSTEMLASTEDITTIMEUTC DESC, HASH(OBJECT_CONSTRUCT_KEEP_NULL(*)) DESC) AS _rn
-                FROM CORE.ACCCHARGECODE_DEDUP
+                FROM PROD.CORE.ACCCHARGECODE_DEDUP
             ),
             ac AS (SELECT * FROM ac_dedup WHERE _rn = 1),
             oh_dedup AS (
                 SELECT *, ROW_NUMBER() OVER (PARTITION BY OH_PK 
                          ORDER BY OH_SYSTEMCREATETIMEUTC DESC, HASH(OBJECT_CONSTRUCT_KEEP_NULL(*)) DESC) AS _rn
-                FROM CORE.ORGHEADER_DEDUP
+                FROM PROD.CORE.ORGHEADER_DEDUP
             ),
             oh AS (SELECT * FROM oh_dedup WHERE _rn = 1)
             SELECT 
