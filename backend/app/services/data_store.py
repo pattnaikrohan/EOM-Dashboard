@@ -10,6 +10,13 @@ from app.services.staff_lookup import normalize_branch_name
 
 
 
+# CargoWise Job Status Lifecycle progression ranking
+STATUS_RANK = {
+    'JRA': 1, 'JRB': 2, 'WRK': 3, 'IHL': 4, 'CUS': 5, 
+    'RDD': 6, 'WHL': 7, 'JFC': 8, 'CMP': 9, 'INV': 10, 
+    'CLS': 11, 'ARC': 12
+}
+
 class DataStore:
     """Singleton-style store holding the current parsed dataset."""
 
@@ -53,19 +60,32 @@ class DataStore:
                     # Smart merge
                     for k, v in j.items():
                         if k in ("revenue", "wip", "cost", "profit_loss", "margin_pct"):
-                            if v != 0.0:
+                            if v != 0.0 or old_j.get(k) is None:
                                 old_j[k] = v
                         elif k == "accrual":
-                            # Accrual from Job Billing (which might be the only one > 0) takes precedence
-                            if v != 0.0:
+                            if v != 0.0 or old_j.get(k) is None:
                                 old_j[k] = v
+                        elif k == "job_status":
+                            # Prioritize higher lifecycle ranking
+                            new_st = str(v).strip().upper()
+                            old_st = str(old_j.get("job_status", "")).strip().upper()
+                            if STATUS_RANK.get(new_st, 0) >= STATUS_RANK.get(old_st, 0):
+                                old_j["job_status"] = v
+                            elif not old_st:
+                                old_j["job_status"] = v
+                        elif k == "local_client":
+                            if v:
+                                old_j["local_client"] = v
+                        elif k == "operator":
+                            if v and v != "Unknown Operator":
+                                old_j["operator"] = v
                         elif k in ("flags", "primary_flag", "ops_section"):
                             continue # we will recompute
                         elif k == "open_date":
                             if v and not old_j.get(k):
                                 old_j[k] = v
                         else:
-                            if v and (not old_j.get(k) or old_j.get(k) == "—"):
+                            if v:
                                 old_j[k] = v
                     
                     # Recompute flags
