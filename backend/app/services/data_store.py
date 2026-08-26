@@ -118,6 +118,9 @@ class DataStore:
             j["primary_flag"] = priority_flag(j["flags"])
             j["ops_section"] = get_ops_section(j)
 
+        # Filter out healthy jobs (keep only jobs that trigger at least 1 exception checker)
+        self.jobs = [j for j in self.jobs if len(j.get("flags", [])) > 0]
+        self.operators = sorted(list(set(j.get("operator") for j in self.jobs if j.get("operator") and j.get("operator") != "Unknown Operator")))
 
         # Re-apply any saved workflow states (EOM Review & Triage status)
         self._reapply_workflow_states()
