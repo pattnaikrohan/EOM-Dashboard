@@ -280,6 +280,45 @@ def fetch_jobs_from_snowflake():
         print(f"Warning: could not fetch job_accruals: {e}")
         job_accruals = {}
 
+    # ── Step 1d: Fetch staff home branches (Option 1: Operator Home Branch) ─────
+    update_sync_progress("Fetching staff home branches...", 28)
+    print("Fetching staff home branches from GLBSTAFF_DEDUP...")
+    staff_home_branch_map = {}
+    try:
+        cur.execute("""
+            WITH gs_dedup AS (
+                SELECT *, ROW_NUMBER() OVER (PARTITION BY GS_CODE
+                         ORDER BY GS_SYSTEMLASTEDITTIMEUTC DESC, HASH(OBJECT_CONSTRUCT_KEEP_NULL(*)) DESC) AS _rn
+                FROM PROD.CORE.GLBSTAFF_DEDUP
+                WHERE GS_ISVALID = TRUE
+            ),
+            gs AS (SELECT * FROM gs_dedup WHERE _rn = 1),
+            gb_dedup AS (
+                SELECT *, ROW_NUMBER() OVER (PARTITION BY GB_PK
+                         ORDER BY GB_SYSTEMLASTEDITTIMEUTC DESC, HASH(OBJECT_CONSTRUCT_KEEP_NULL(*)) DESC) AS _rn
+                FROM PROD.CORE.GLBBRANCH_DEDUP
+            ),
+            gb AS (SELECT * FROM gb_dedup WHERE _rn = 1)
+            SELECT 
+                gs.GS_CODE,
+                gs.GS_FULLNAME,
+                COALESCE(gb.GB_BRANCHNAME, gb.GB_CODE) AS HOME_BRANCH
+            FROM gs
+            LEFT JOIN gb ON gs.GS_GB_HOMEBRANCH = gb.GB_PK OR gs.GS_GB_HOMEBRANCH = gb.GB_CODE
+            WHERE gs.GS_GB_HOMEBRANCH IS NOT NULL
+        """)
+        for code, name, branch in cur.fetchall():
+            if branch:
+                norm_b = normalize_branch_name(branch)
+                if code:
+                    staff_home_branch_map[code.strip().upper()] = norm_b
+                if name:
+                    staff_home_branch_map[name.strip().upper()] = norm_b
+        print(f"Loaded {len(staff_home_branch_map):,} staff home branch mappings.")
+    except Exception as e:
+        print(f"Warning: could not fetch staff_home_branch_map: {e}")
+        staff_home_branch_map = {}
+
     update_sync_progress(f"Grouping {total_rows:,} charges into jobs...", 30, current=0, total=total_rows)
 
     # ── Step 2: Group charge rows by job and aggregate ────────────────────
@@ -320,9 +359,16 @@ def fetch_jobs_from_snowflake():
             op_raw = row.get("OPERATOR_FRIENDLY_NAME") or row.get("OPERATOR_FULLNAME") or row.get("OPERATOR_CODE") or ""
             op_name = OPERATOR_NAMES.get(op_raw, op_raw) or "Unknown Operator"
 
-            # Branch name resolution
-            branch_raw = row.get("JOB_BRANCH_NAME") or row.get("JOB_BRANCH_CODE") or ""
-            branch_name = normalize_branch_name(branch_raw)
+            # Branch name resolution (Option 1: Operator Home Branch takes precedence)
+            op_code_upper = (row.get("OPERATOR_CODE") or "").strip().upper()
+            op_name_upper = op_name.strip().upper()
+            op_home_branch = staff_home_branch_map.get(op_code_upper) or staff_home_branch_map.get(op_name_upper)
+
+            if op_home_branch and op_name != "Unknown Operator":
+                branch_name = op_home_branch
+            else:
+                branch_raw = row.get("JOB_BRANCH_NAME") or row.get("JOB_BRANCH_CODE") or ""
+                branch_name = normalize_branch_name(branch_raw)
 
             # Department: use the department code from the view (not direction)
             dept_code = row.get("JOB_DEPARTMENT_CODE") or direction
