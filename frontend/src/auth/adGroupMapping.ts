@@ -180,6 +180,7 @@ export function resolveEomRole(groupIds: string[], userEmail?: string, userName?
     'semc@', 'stephen.collins',
     'c.brotherton', 'cbrotherton', 'claire.brotherton', 'brotherton',
     'a.murrin', 'amurrin', 'alexa.murrin', 'murrin',
+    'dibyajyoti.parida',
   ];
 
   if (userEmail) {
