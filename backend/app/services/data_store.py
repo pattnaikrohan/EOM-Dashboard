@@ -10,12 +10,6 @@ from app.services.staff_lookup import normalize_branch_name
 
 
 
-# CargoWise Job Status Lifecycle progression ranking
-STATUS_RANK = {
-    'JRA': 1, 'JRB': 2, 'WRK': 3, 'IHL': 4, 'CUS': 5, 
-    'RDD': 6, 'WHL': 7, 'JFC': 8, 'CMP': 9, 'INV': 10, 
-    'CLS': 11, 'ARC': 12
-}
 
 class DataStore:
     """Singleton-style store holding the current parsed dataset."""
@@ -66,12 +60,8 @@ class DataStore:
                             if v != 0.0 or old_j.get(k) is None:
                                 old_j[k] = v
                         elif k == "job_status":
-                            # Prioritize higher lifecycle ranking
-                            new_st = str(v).strip().upper()
-                            old_st = str(old_j.get("job_status", "")).strip().upper()
-                            if STATUS_RANK.get(new_st, 0) >= STATUS_RANK.get(old_st, 0):
-                                old_j["job_status"] = v
-                            elif not old_st:
+                            # Use the status from the newer source directly (V3 view provides correct status)
+                            if v:
                                 old_j["job_status"] = v
                         elif k == "local_client":
                             if v:

@@ -21,21 +21,7 @@ sync_progress = {
     "message": ""
 }
 
-# CargoWise Job Status Lifecycle progression ranking
-STATUS_RANK = {
-    'JRA': 1,   # Job Requested/Authorized
-    'JRB': 2,   # Job Booked
-    'WRK': 3,   # Working
-    'IHL': 4,   # In Handling
-    'CUS': 5,   # Customs
-    'RDD': 6,   # Ready for Delivery/Dispatch
-    'WHL': 7,   # Wheels (in transit)
-    'JFC': 8,   # Job Fully Confirmed/Costed
-    'CMP': 9,   # Complete
-    'INV': 10,  # Invoiced
-    'CLS': 11,  # Closed
-    'ARC': 12,  # Archived
-}
+
 
 def update_sync_progress(stage: str, percent: int, current: int = 0, total: int = 0, status: str = "running", message: str = ""):
     sync_progress["status"] = status
@@ -100,7 +86,7 @@ def _fmt_date(val):
 
 def fetch_jobs_from_snowflake():
     """
-    Fetch charge-level data from VW_EOM_JOB_CHARGES_UPDATED and aggregate
+    Fetch charge-level data from VW_EOM_JOB_CHARGES_UPDATED_V3 and aggregate
     into job-level records for the dashboard rules engine.
     
     This single view replaces both VW_EOM_JOB_CHARGES and VW_EOM_JOBS_SUMMARY.
@@ -159,11 +145,11 @@ def fetch_jobs_from_snowflake():
             SELL_GST,
             COST_AP_POSTING_STATUS,
             SELL_AR_POSTING_STATUS
-        FROM PROD.AI_AUTO.VW_EOM_JOB_CHARGES_UPDATED_v2
+        FROM PROD.AI_AUTO.VW_EOM_JOB_CHARGES_UPDATED_V3
     """
 
     update_sync_progress("Querying Snowflake View (charge-level)...", 10)
-    print("Fetching charges from PROD.AI_AUTO.VW_EOM_JOB_CHARGES_UPDATED_v2 (Live)...")
+    print("Fetching charges from PROD.AI_AUTO.VW_EOM_JOB_CHARGES_UPDATED_V3 (Live)...")
     cur.execute(select_query)
 
     cols = [desc[0] for desc in cur.description]
@@ -171,48 +157,7 @@ def fetch_jobs_from_snowflake():
     total_rows = len(rows)
     print(f"Fetched {total_rows:,} charge rows from Snowflake.")
 
-    # ── Step 1b: Fetch authoritative job statuses (Lifecycle Progression) ─────
-    update_sync_progress("Resolving true job statuses...", 18)
-    print("Resolving true job statuses via lifecycle progression...")
-    try:
-        cur.execute("""
-            WITH jh_dedup AS (
-                SELECT 
-                    JH_JOBNUM,
-                    JH_STATUS,
-                    ROW_NUMBER() OVER (
-                        PARTITION BY JH_JOBNUM
-                        ORDER BY 
-                            JH_SYSTEMCREATETIMEUTC DESC,
-                            CASE UPPER(TRIM(JH_STATUS))
-                                WHEN 'ARC' THEN 12
-                                WHEN 'CLS' THEN 11
-                                WHEN 'INV' THEN 10
-                                WHEN 'CMP' THEN 9
-                                WHEN 'JFC' THEN 8
-                                WHEN 'WHL' THEN 7
-                                WHEN 'RDD' THEN 6
-                                WHEN 'CUS' THEN 5
-                                WHEN 'IHL' THEN 4
-                                WHEN 'WRK' THEN 3
-                                WHEN 'JRB' THEN 2
-                                WHEN 'JRA' THEN 1
-                                ELSE 0
-                            END DESC,
-                            HASH(OBJECT_CONSTRUCT_KEEP_NULL(*)) DESC
-                    ) AS _rn
-                FROM PROD.CORE.JOBHEADER_DEDUP
-                WHERE JH_ISVALID = TRUE
-            )
-            SELECT JH_JOBNUM, JH_STATUS FROM jh_dedup WHERE _rn = 1
-        """)
-        status_map = {r[0]: r[1] for r in cur.fetchall() if r[0]}
-        print(f"Resolved statuses for {len(status_map):,} jobs.")
-    except Exception as e:
-        print(f"Warning: could not fetch status_map: {e}")
-        status_map = {}
-
-    # ── Step 1c: Fetch unposted accruals detail from ACCTRANSACTIONLINES ───────
+    # ── Step 1b: Fetch unposted accruals detail from ACCTRANSACTIONLINES ───────
     update_sync_progress("Fetching unposted accruals detail...", 25)
     print("Fetching unposted accruals detail from ACCTRANSACTIONLINES...")
     try:
@@ -374,11 +319,6 @@ def fetch_jobs_from_snowflake():
         if debtor_name:
             j["local_client"] = debtor_name
 
-        # Resolve job_status to the most progressed lifecycle status (e.g. CLS > INV > CMP > WRK)
-        row_status = (row.get("JOB_STATUS") or "").strip().upper()
-        if row_status and STATUS_RANK.get(row_status, 0) > STATUS_RANK.get(j.get("job_status", "").upper(), 0):
-            j["job_status"] = row_status
-
         j["revenue"] += sell
         j["cost"] += cost
         if is_wip:
@@ -416,10 +356,6 @@ def fetch_jobs_from_snowflake():
     operators = set()
 
     for jnum, j in jobs_map.items():
-        # Authoritative status override from lifecycle ranking
-        if jnum in status_map and status_map[jnum]:
-            j["job_status"] = status_map[jnum]
-
         # Authoritative accrual lines override from ACCTRANSACTIONLINES
         if jnum in job_accruals and job_accruals[jnum]:
             j["accrual_lines"] = job_accruals[jnum]
