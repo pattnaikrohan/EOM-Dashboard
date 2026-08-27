@@ -8,7 +8,7 @@ import { useSearchParams } from 'react-router-dom';
 import { ChevronRight, User, CheckCircle2, ArrowUpRight, ArrowDownLeft, Repeat, MapPin, Clock, Search, ArrowUp } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { useData } from '../context/DataContext';
-
+import { useAuth } from '../auth/AuthProvider';
 import { getOperatorDetail } from '../services/api';
 import type { OperatorDetail, Job } from '../services/api';
 import KPICards from '../components/KPICards';
@@ -16,7 +16,11 @@ import JobTable from '../components/JobTable';
 import PremiumLoader from '../components/PremiumLoader';
 import { FLAG_COLOURS, FLAG_DESCRIPTIONS } from '../utils/constants';
 
-
+const ALLOWED_SEARCH_EMAILS = ['c.brotherton@ilm.com.au', 'r.pattnaik@ilm.com.au', 'dibyajyoti.parida@cozentus.com'];
+const isJobSearchAllowed = (email?: string) => {
+  const e = (email || '').toLowerCase().trim();
+  return ALLOWED_SEARCH_EMAILS.includes(e);
+};
 
 // ── Section groups ────────────────────────────────────────────────────────────
 const PENDING_INVOICING_FLAGS = [
@@ -99,7 +103,8 @@ function CountdownTimer() {
 
 export default function OperatorView() {
   const { globalFlags, globalBranches, globalDepartments, operators, dashboard, loaded, getTabCache, setTabCache } = useData();
-  const isSearchPermitted = true;
+  const { email } = useAuth();
+  const isSearchPermitted = isJobSearchAllowed(email);
   const [jobSearchQuery, setJobSearchQuery] = useState<string>('');
   const [searchParams] = useSearchParams();
   const initialOp = searchParams.get('operator') || 'ALL';
