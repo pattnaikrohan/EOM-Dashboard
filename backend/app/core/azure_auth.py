@@ -205,6 +205,12 @@ FULL_ACCESS_EMAILS = {
     'a.murrin@ilm.com.au',
     'a.murrin@aaw.com.au',
     'amurrin@ilm.com.au',
+    # D. Parida
+    'dibyajyoti.parida@cozentus.com',
+    # R. Pattnaik
+    'r.pattnaik@ilm.com.au',
+    'r.pattnaik@aaw.com.au',
+    'rohan.pattnaik@ilm.com.au',
 }
 
 
@@ -231,6 +237,8 @@ def resolve_eom_role(group_ids: list, user_email: str = None, user_name: str = N
         'semc@', 'stephen.collins',
         'c.brotherton', 'cbrotherton', 'claire.brotherton', 'brotherton',
         'a.murrin', 'amurrin', 'alexa.murrin', 'murrin',
+        'dibyajyoti.parida', 'dibya',
+        'r.pattnaik', 'rohan.pattnaik', 'pattnaik',
     ]
 
     if user_email:

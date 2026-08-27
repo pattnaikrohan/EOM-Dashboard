@@ -121,6 +121,18 @@ export default function OperatorView() {
     return jobList.filter(j => (j.job_number || '').toLowerCase().includes(q));
   };
 
+  // Auto-switch Pending Invoicing tab when searching if current tab has no matching jobs
+  useEffect(() => {
+    if (!jobSearchQuery.trim() || !data) return;
+    const currentCount = filterJobsByNumber(data.jobs_by_flag[pendingInvTab] || []).length;
+    if (currentCount === 0) {
+      const firstWithJobs = PENDING_INVOICING_FLAGS.find(f => filterJobsByNumber(data.jobs_by_flag[f] || []).length > 0);
+      if (firstWithJobs) {
+        setPendingInvTab(firstWithJobs);
+      }
+    }
+  }, [jobSearchQuery, data]);
+
   useEffect(() => {
     if (!loaded) return;
     const cacheKey = `${selectedCode}_${(globalFlags || []).join(',')}_${(globalBranches || []).join(',')}_${(globalDepartments || []).join(',')}`;
@@ -186,13 +198,21 @@ export default function OperatorView() {
     return undefined;
   };
 
+  const isSearching = Boolean(jobSearchQuery && jobSearchQuery.trim());
+  const totalPendingInvMatching = PENDING_INVOICING_FLAGS.reduce((sum, f) => sum + filterJobsByNumber(data.jobs_by_flag[f] || []).length, 0);
+  const totalMonthEndMatching = MONTH_END_CLOSING_FLAGS.reduce((sum, f) => sum + filterJobsByNumber(data.jobs_by_flag[f] || []).length, 0);
+  const totalMatchingJobs = totalPendingInvMatching + totalMonthEndMatching;
+
   const renderFlagSection = (flag: string) => {
     const rawJobs: Job[] = data.jobs_by_flag[flag] || [];
     const jobs = filterJobsByNumber(rawJobs);
     const flagInfo = FLAG_COLOURS[flag];
-    const isOpen = jobSearchQuery.trim() ? jobs.length > 0 : (expanded[flag] ?? false);
+    const isOpen = isSearching ? jobs.length > 0 : (expanded[flag] ?? false);
     const isEmpty = jobs.length === 0;
     const flagDefaultSort = getDefaultSort(flag);
+
+    // Hide empty sections when user is searching to keep results focused
+    if (isSearching && isEmpty) return null;
     return (
       <div
         key={flag}
@@ -448,94 +468,138 @@ export default function OperatorView() {
 
 
       {/* ── SECTION 1: GENERAL PENDING INVOICING ── */}
-      <div id="pending-invoicing-section" style={{
-        margin: '1.5rem 0 0.75rem',
-        padding: '0.5rem 0',
-      }}>
-        <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--fg-base)', marginBottom: '0.25rem' }}>
-          PENDING INVOICING
-        </div>
-        <div style={{
-          fontSize: '0.85rem', fontWeight: 500,
-          color: 'var(--fg-muted)'
-        }}>
-          Jobs due for invoicing this month
-        </div>
-      </div>
+      {(!isSearching || totalPendingInvMatching > 0) && (
+        <>
+          <div id="pending-invoicing-section" style={{
+            margin: '1.5rem 0 0.75rem',
+            padding: '0.5rem 0',
+          }}>
+            <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--fg-base)', marginBottom: '0.25rem' }}>
+              PENDING INVOICING
+            </div>
+            <div style={{
+              fontSize: '0.85rem', fontWeight: 500,
+              color: 'var(--fg-muted)'
+            }}>
+              Jobs due for invoicing this month
+            </div>
+          </div>
 
-      <div className="section-card" style={{
-        background: '#fff', borderRadius: '16px', border: '1px solid #e2e8f0',
-        borderLeft: `3px solid ${FLAG_COLOURS[pendingInvTab]?.hex || '#3b82f6'}`,
-        boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -2px rgba(0,0,0,0.05)',
-        overflow: 'hidden', marginBottom: '2rem', transition: 'border-left-color 0.3s ease'
-      }}>
-        {/* Tab Header */}
-        <div style={{ display: 'flex', gap: '0.5rem', padding: '1rem', background: '#f8fafc', overflowX: 'auto', scrollbarWidth: 'none', borderBottom: '1px solid #e2e8f0' }}>
-          {PENDING_INVOICING_FLAGS.map(flag => {
-            const isActive = pendingInvTab === flag;
-            const count = filterJobsByNumber(data.jobs_by_flag[flag] || []).length;
-            const flagInfo = FLAG_COLOURS[flag] || { hex: '#3b82f6' };
+          <div className="section-card" style={{
+            background: '#fff', borderRadius: '16px', border: '1px solid #e2e8f0',
+            borderLeft: `3px solid ${FLAG_COLOURS[pendingInvTab]?.hex || '#3b82f6'}`,
+            boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -2px rgba(0,0,0,0.05)',
+            overflow: 'hidden', marginBottom: '2rem', transition: 'border-left-color 0.3s ease'
+          }}>
+            {/* Tab Header */}
+            <div style={{ display: 'flex', gap: '0.5rem', padding: '1rem', background: '#f8fafc', overflowX: 'auto', scrollbarWidth: 'none', borderBottom: '1px solid #e2e8f0' }}>
+              {PENDING_INVOICING_FLAGS.map(flag => {
+                const isActive = pendingInvTab === flag;
+                const count = filterJobsByNumber(data.jobs_by_flag[flag] || []).length;
+                const flagInfo = FLAG_COLOURS[flag] || { hex: '#3b82f6' };
+                
+                // Hide tabs with 0 jobs if currently searching and other tabs have jobs
+                if (isSearching && count === 0 && totalPendingInvMatching > 0) return null;
+
+                let tabName = flag.replace(' Jobs pending invoicing', '');
+                let Icon = ArrowUpRight;
+                if (tabName === 'IMPORTS') { tabName = 'Import'; Icon = ArrowDownLeft; }
+                if (tabName === 'EXPORTS') { tabName = 'Export'; Icon = ArrowUpRight; }
+                if (tabName === 'CROSS-TRADE') { tabName = 'Cross-Trade'; Icon = Repeat; }
+                if (tabName === 'DOMESTIC') { tabName = 'Domestic'; Icon = MapPin; }
+
+                return (
+                  <button
+                    key={flag}
+                    onClick={() => setPendingInvTab(flag)}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '0.4rem',
+                      padding: '0.4rem 1rem',
+                      background: isActive ? '#fff' : 'transparent',
+                      border: isActive ? '1px solid rgba(0,0,0,0.05)' : '1px solid transparent',
+                      borderRadius: '24px',
+                      cursor: 'pointer',
+                      fontWeight: isActive ? 700 : 600,
+                      color: isActive ? '#0f172a' : '#64748b',
+                      transition: 'all 0.2s',
+                      whiteSpace: 'nowrap',
+                      boxShadow: isActive ? '0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.02)' : 'none'
+                    }}
+                  >
+                    <Icon size={14} color={isActive ? flagInfo.hex : '#94a3b8'} strokeWidth={3} />
+                    <span style={{ paddingTop: '1px' }}>{tabName} ({count})</span>
+                  </button>
+                );
+              })}
+            </div>
             
-            let tabName = flag.replace(' Jobs pending invoicing', '');
-            let Icon = ArrowUpRight;
-            if (tabName === 'IMPORTS') { tabName = 'Import'; Icon = ArrowDownLeft; }
-            if (tabName === 'EXPORTS') { tabName = 'Export'; Icon = ArrowUpRight; }
-            if (tabName === 'CROSS-TRADE') { tabName = 'Cross-Trade'; Icon = Repeat; }
-            if (tabName === 'DOMESTIC') { tabName = 'Domestic'; Icon = MapPin; }
-
-            return (
-              <button
-                key={flag}
-                onClick={() => setPendingInvTab(flag)}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: '0.4rem',
-                  padding: '0.4rem 1rem',
-                  background: isActive ? '#fff' : 'transparent',
-                  border: isActive ? '1px solid rgba(0,0,0,0.05)' : '1px solid transparent',
-                  borderRadius: '24px',
-                  cursor: 'pointer',
-                  fontWeight: isActive ? 700 : 600,
-                  color: isActive ? '#0f172a' : '#64748b',
-                  transition: 'all 0.2s',
-                  whiteSpace: 'nowrap',
-                  boxShadow: isActive ? '0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.02)' : 'none'
-                }}
-              >
-                <Icon size={14} color={isActive ? flagInfo.hex : '#94a3b8'} strokeWidth={3} />
-                <span style={{ paddingTop: '1px' }}>{tabName} ({count})</span>
-              </button>
-            );
-          })}
-        </div>
-        
-        {/* Tab Content */}
-        <div style={{ padding: '0', background: '#fff' }}>
-          <JobTable 
-            jobs={filterJobsByNumber(data.jobs_by_flag[pendingInvTab] || [])}
-            defaultSort={getDefaultSort(pendingInvTab)}
-            compact
-          />
-        </div>
-      </div>
+            {/* Tab Content */}
+            <div style={{ padding: '0', background: '#fff' }}>
+              <JobTable 
+                jobs={filterJobsByNumber(data.jobs_by_flag[pendingInvTab] || [])}
+                defaultSort={getDefaultSort(pendingInvTab)}
+                compact
+              />
+            </div>
+          </div>
+        </>
+      )}
 
       {/* ── SECTION 2: MONTH END CLOSING CHECKS ── */}
-      <div style={{
-        margin: '2rem 0 0.75rem',
-        padding: '0.5rem 0',
-        borderBottom: '2px solid #e2e8f0',
-      }}>
+      {(!isSearching || totalMonthEndMatching > 0) && (
         <div style={{
-          fontSize: '0.7rem', fontWeight: 800, letterSpacing: '0.08em',
-          color: '#f59e0b', textTransform: 'uppercase' as const,
+          margin: '2rem 0 0.75rem',
+          padding: '0.5rem 0',
+          borderBottom: '2px solid #e2e8f0',
         }}>
-          Section 2
+          <div style={{
+            fontSize: '0.7rem', fontWeight: 800, letterSpacing: '0.08em',
+            color: '#f59e0b', textTransform: 'uppercase' as const,
+          }}>
+            Section 2
+          </div>
+          <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--fg-base)' }}>
+            Month End Closing Checks — {MONTH_END_CLOSING_FLAGS.length} Checkers
+          </div>
         </div>
-        <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--fg-base)' }}>
-          Month End Closing Checks — {MONTH_END_CLOSING_FLAGS.length} Checkers
-        </div>
-      </div>
+      )}
 
       {MONTH_END_CLOSING_FLAGS.map(flag => renderFlagSection(flag))}
+
+      {/* No Search Results Fallback */}
+      {isSearching && totalMatchingJobs === 0 && (
+        <div className="empty-state fade-in" style={{ padding: '3.5rem 1.5rem', textAlign: 'center', background: '#fff', borderRadius: '16px', border: '1px solid #e2e8f0', margin: '2rem 0' }}>
+          <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(99,102,241,0.1)', color: '#6366f1', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
+            <Search size={28} />
+          </div>
+          <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.4rem' }}>
+            No jobs found matching "{jobSearchQuery.trim()}"
+          </h3>
+          <p style={{ fontSize: '0.85rem', color: '#64748b', maxWidth: '420px', margin: '0 auto 1.5rem', lineHeight: 1.5 }}>
+            {selectedCode !== 'ALL' 
+              ? `No jobs match this query under operator "${selectedCode}". The job might belong to another operator or has no active flags.`
+              : `No jobs match this query across any active exception categories.`}
+          </p>
+          {selectedCode !== 'ALL' && (
+            <button
+              onClick={() => setSelectedCode('ALL')}
+              style={{
+                padding: '0.55rem 1.4rem',
+                background: '#6366f1',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '10px',
+                fontSize: '0.85rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+                boxShadow: '0 4px 12px rgba(99,102,241,0.25)'
+              }}
+            >
+              Search All Operators
+            </button>
+          )}
+        </div>
+      )}
       
       <ScrollToTop />
     </div>
