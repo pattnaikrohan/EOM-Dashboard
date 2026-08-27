@@ -258,6 +258,35 @@ def get_jobs():
         "jobs": jobs,
     })
 
+@blueprint.route("/jobs/search", methods=["GET"])
+@require_auth
+def search_jobs():
+    """Global search across the entire loaded dataset for matching job numbers."""
+    if not data_store.is_loaded:
+        return jsonify({"error": "No data loaded.", "jobs": []}), 400
+
+    q = (request.args.get("q") or "").strip().upper()
+    if not q:
+        return jsonify({"total": 0, "jobs": []})
+
+    limit = min(int(request.args.get("limit", 100)), 500)
+    branches = get_scoped_branches(g.current_user, None)
+    
+    matching = []
+    for job in data_store.jobs:
+        job_num = str(job.get("job_number", "")).upper()
+        if q in job_num:
+            if branches is None or job.get("branch") in branches:
+                matching.append(job)
+                if len(matching) >= limit:
+                    break
+
+    return jsonify({
+        "query": q,
+        "total": len(matching),
+        "jobs": matching,
+    })
+
 @blueprint.route("/ops-review", methods=["GET"])
 @require_bu_manager
 def get_ops_review():

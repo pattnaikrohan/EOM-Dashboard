@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { useAuth } from '../auth/AuthProvider';
-import { getOpsReview } from '../services/api';
+import { getOpsReview, searchJobs } from '../services/api';
 import type { Job, KPI } from '../services/api';
 import KPICards from '../components/KPICards';
 import JobTable from '../components/JobTable';
@@ -221,6 +221,8 @@ export default function OpsReview() {
   const { email } = useAuth();
   const isSearchPermitted = isJobSearchAllowed(email);
   const [jobSearchQuery, setJobSearchQuery] = useState<string>('');
+  const [globalSearchResults, setGlobalSearchResults] = useState<Job[]>([]);
+  const [isSearchingGlobal, setIsSearchingGlobal] = useState<boolean>(false);
 
   const [sections, setSections] = useState<Record<string, Job[]>>({});
   const [kpi, setKpi] = useState<KPI | null>(null);
@@ -234,6 +236,32 @@ export default function OpsReview() {
     const q = jobSearchQuery.toLowerCase().trim();
     return jobList.filter(j => (j.job_number || '').toLowerCase().includes(q));
   };
+
+  // Perform backend global search across entire dataset
+  useEffect(() => {
+    const q = jobSearchQuery.trim();
+    if (!q) {
+      setGlobalSearchResults([]);
+      setIsSearchingGlobal(false);
+      return;
+    }
+
+    setIsSearchingGlobal(true);
+    const timer = setTimeout(() => {
+      searchJobs(q, 100)
+        .then(res => {
+          setGlobalSearchResults(res.jobs || []);
+        })
+        .catch(err => {
+          console.error('Global search failed:', err);
+        })
+        .finally(() => {
+          setIsSearchingGlobal(false);
+        });
+    }, 250);
+
+    return () => clearTimeout(timer);
+  }, [jobSearchQuery]);
 
   // Auto-switch Pending Invoicing tab when searching if current tab has no matching jobs
   useEffect(() => {
@@ -488,6 +516,78 @@ export default function OpsReview() {
           )}
         </div>
       </div>
+
+      {/* ── GLOBAL SEARCH RESULTS CARD (Searches entire dataset) ── */}
+      {isSearching && (
+        <div className="card fade-in" style={{
+          marginBottom: '2rem',
+          border: '2px solid #f59e0b',
+          boxShadow: '0 8px 24px rgba(245,158,11,0.12)',
+          borderRadius: '16px',
+          overflow: 'hidden'
+        }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '1rem 1.25rem',
+            background: 'linear-gradient(135deg, rgba(245,158,11,0.08) 0%, rgba(217,119,6,0.04) 100%)',
+            borderBottom: '1px solid rgba(245,158,11,0.15)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <div style={{
+                width: 32, height: 32, borderRadius: '8px',
+                background: '#f59e0b', color: '#fff',
+                display: 'flex', alignItems: 'center', justifyContent: 'center'
+              }}>
+                <Search size={16} />
+              </div>
+              <div>
+                <h2 style={{ margin: 0, fontSize: '1rem', fontWeight: 800, color: '#0f172a' }}>
+                  Global Search Results
+                </h2>
+                <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>
+                  {isSearchingGlobal ? 'Searching entire database...' : `Found ${globalSearchResults.length} ${globalSearchResults.length === 1 ? 'job' : 'jobs'} across all operators & categories for "${jobSearchQuery.trim()}"`}
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={() => setJobSearchQuery('')}
+              style={{
+                padding: '0.35rem 0.8rem',
+                background: 'rgba(239, 68, 68, 0.1)',
+                color: '#ef4444',
+                border: 'none',
+                borderRadius: '6px',
+                fontSize: '0.75rem',
+                fontWeight: 700,
+                cursor: 'pointer'
+              }}
+            >
+              Clear Search
+            </button>
+          </div>
+
+          <div style={{ padding: '0' }}>
+            {isSearchingGlobal ? (
+              <div style={{ padding: '2rem', textAlign: 'center', color: '#64748b', fontSize: '0.85rem' }}>
+                Searching all records in database...
+              </div>
+            ) : globalSearchResults.length > 0 ? (
+              <JobTable jobs={globalSearchResults} compact pageSize={25} />
+            ) : (
+              <div style={{ padding: '2.5rem 1rem', textAlign: 'center', color: '#64748b' }}>
+                <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#0f172a', marginBottom: '0.25rem' }}>
+                  No jobs found across entire dataset
+                </div>
+                <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>
+                  No job numbers match "{jobSearchQuery.trim()}" in the system.
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* KPI Cards */}
       {kpi && <KPICards kpi={kpi} />}
