@@ -16,11 +16,7 @@ import JobTable from '../components/JobTable';
 import PremiumLoader from '../components/PremiumLoader';
 import { FLAG_COLOURS, FLAG_DESCRIPTIONS } from '../utils/constants';
 
-const ALLOWED_SEARCH_EMAILS = ['c.brotherton@ilm.com.au', 'r.pattnaik@ilm.com.au'];
-const isJobSearchAllowed = (email?: string) => {
-  const e = (email || '').toLowerCase().trim();
-  return ALLOWED_SEARCH_EMAILS.includes(e);
-};
+
 
 // ── Section groups ────────────────────────────────────────────────────────────
 const PENDING_INVOICING_FLAGS = [
@@ -104,7 +100,7 @@ function CountdownTimer() {
 export default function OperatorView() {
   const { globalFlags, globalBranches, globalDepartments, operators, dashboard, loaded, getTabCache, setTabCache } = useData();
   const { email } = useAuth();
-  const isSearchPermitted = isJobSearchAllowed(email);
+  const isSearchPermitted = true;
   const [jobSearchQuery, setJobSearchQuery] = useState<string>('');
   const [searchParams] = useSearchParams();
   const initialOp = searchParams.get('operator') || 'ALL';
