@@ -15,7 +15,7 @@ import {
   ArrowUpRight, ArrowDownLeft, Repeat, MapPin, Clock, ArrowUp, Search,
 } from 'lucide-react';
 import { useData } from '../context/DataContext';
-import { useAuth } from '../auth/AuthProvider';
+
 import { getOpsReview } from '../services/api';
 import type { Job, KPI } from '../services/api';
 import KPICards from '../components/KPICards';
@@ -214,7 +214,6 @@ function DirectionTabView({ jobs, defaultSort, flag }: {
 // ── Main Component ────────────────────────────────────────────────────────────
 export default function OpsReview() {
   const { globalFlags, globalBranches, globalDepartments, dashboard, loaded, getTabCache, setTabCache } = useData();
-  const { email } = useAuth();
   const isSearchPermitted = true;
   const [jobSearchQuery, setJobSearchQuery] = useState<string>('');
 

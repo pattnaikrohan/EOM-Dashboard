@@ -8,7 +8,7 @@ import { useSearchParams } from 'react-router-dom';
 import { ChevronRight, User, CheckCircle2, ArrowUpRight, ArrowDownLeft, Repeat, MapPin, Clock, Search, ArrowUp } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { useData } from '../context/DataContext';
-import { useAuth } from '../auth/AuthProvider';
+
 import { getOperatorDetail } from '../services/api';
 import type { OperatorDetail, Job } from '../services/api';
 import KPICards from '../components/KPICards';
@@ -99,7 +99,6 @@ function CountdownTimer() {
 
 export default function OperatorView() {
   const { globalFlags, globalBranches, globalDepartments, operators, dashboard, loaded, getTabCache, setTabCache } = useData();
-  const { email } = useAuth();
   const isSearchPermitted = true;
   const [jobSearchQuery, setJobSearchQuery] = useState<string>('');
   const [searchParams] = useSearchParams();
