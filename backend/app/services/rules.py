@@ -117,11 +117,14 @@ def is_current_or_past_month(date_str: str, report_period: str = "") -> bool:
     return False
 
 def get_flags(job: dict, report_period: str = "") -> list[str]:
-    """Compute all applicable V3 flags for a job."""
+    """Compute all applicable V3 flags for a job. CLS (Closed) jobs are excluded from all flags."""
+    status = str(job.get("job_status", "")).strip().upper()
+    if status in ("CLS", "CLOSED"):
+        return []
+
     flags = []
     pl     = float(job.get("profit_loss", 0) or 0)
     wip    = float(job.get("wip", 0) or 0)
-    status = str(job.get("job_status", "")).strip().upper()
     margin = float(job.get("margin_pct", 0) or 0)
     rev    = float(job.get("revenue", 0) or 0)
     age    = int(job.get("job_age_days", 0) or 0)
