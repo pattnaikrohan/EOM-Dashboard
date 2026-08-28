@@ -21,9 +21,11 @@ def init_data():
         print("Attempting to fetch parsed dashboard data from Azure Blob Storage...")
         persisted_data = download_parsed_data()
         if persisted_data:
-            data_store.load(persisted_data)
+            # Respect the persisted data source so Snowflake mode survives server restarts
+            persisted_source = persisted_data.get("data_source", "excel")
+            data_store.load(persisted_data, source=persisted_source)
             neg_movement_store.populate_from_snowflake(data_store.jobs, data_store.branch, data_store.period)
-            print(f"Successfully loaded {len(data_store.jobs)} live jobs from Snowflake into Negative Movement.")
+            print(f"Successfully loaded {len(data_store.jobs)} jobs from blob (source: {persisted_source}).")
         else:
             print("No existing data found in blob storage.")
     except Exception as e:
