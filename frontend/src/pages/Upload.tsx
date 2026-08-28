@@ -8,7 +8,7 @@ import { useData } from '../context/DataContext';
 import { useNavigate } from 'react-router-dom';
 
 export default function UploadPage() {
-  const { handleUpload, handleSyncSnowflake, loading, error, loaded, branch, period } = useData();
+  const { handleUpload, handleSyncSnowflake, loading, error, loaded, dataSource, branch, period } = useData();
   const navigate = useNavigate();
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
@@ -29,10 +29,10 @@ export default function UploadPage() {
   return (
     <div className="fade-in">
       <div className="page-header">
-        <div className="page-header__overline">Data Management</div>
-        <h1 className="page-header__title">Upload & Merge CargoWise Exports</h1>
+        <div className="page-header__overline">Data Source Management</div>
+        <h1 className="page-header__title">Switch Data Source: Excel or Snowflake</h1>
         <p className="page-header__subtitle">
-          Upload weekly CargoWise exports or WIP Review files. New files will automatically merge with and update existing loaded data.
+          Connect exclusively to <strong>Live Snowflake Data</strong> or upload <strong>CargoWise Excel Exports</strong>. Modes are strictly isolated—switching sources automatically replaces all data from the other source.
         </p>
       </div>
 
@@ -118,11 +118,27 @@ export default function UploadPage() {
 
       {/* Success status */}
       {loaded && (
-        <div className="card fade-in" style={{ maxWidth: 640, margin: '1.5rem auto 0', borderColor: 'rgba(16,185,129,0.2)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#059669' }}>
-            <CheckCircle size={20} />
-            <div>
-              <div style={{ fontWeight: 700, fontSize: '0.875rem' }}>Data Loaded Successfully</div>
+        <div className="card fade-in" style={{ maxWidth: 640, margin: '1.5rem auto 0', borderColor: dataSource === 'snowflake' ? 'rgba(56, 189, 248, 0.3)' : 'rgba(16, 185, 129, 0.3)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: dataSource === 'snowflake' ? '#0284c7' : '#059669' }}>
+            {dataSource === 'snowflake' ? <Database size={20} /> : <CheckCircle size={20} />}
+            <div style={{ flex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span style={{ fontWeight: 700, fontSize: '0.875rem' }}>
+                  {dataSource === 'snowflake' ? 'Live Snowflake Mode Active' : 'CargoWise Excel Mode Active'}
+                </span>
+                <span style={{
+                  fontSize: '0.65rem',
+                  fontWeight: 800,
+                  textTransform: 'uppercase',
+                  padding: '2px 6px',
+                  borderRadius: '4px',
+                  background: dataSource === 'snowflake' ? 'rgba(14, 165, 233, 0.15)' : 'rgba(16, 185, 129, 0.15)',
+                  color: dataSource === 'snowflake' ? '#0284c7' : '#059669',
+                  border: `1px solid ${dataSource === 'snowflake' ? 'rgba(14, 165, 233, 0.3)' : 'rgba(16, 185, 129, 0.3)'}`,
+                }}>
+                  {dataSource === 'snowflake' ? 'Snowflake Only' : 'Excel Only'}
+                </span>
+              </div>
               <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '0.25rem' }}>
                 Branch: {branch} · Period: {period}
               </div>

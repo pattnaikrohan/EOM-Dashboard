@@ -133,6 +133,7 @@ export interface OperatorSummary {
 }
 
 export interface DashboardData {
+  data_source?: 'snowflake' | 'excel' | string;
   branch: string;
   period: string;
   kpi: KPI;
@@ -153,6 +154,7 @@ export interface OperatorDetail {
 
 export interface UploadResponse {
   success: boolean;
+  data_source?: 'snowflake' | 'excel' | string;
   message: string;
   branch: string;
   period: string;
@@ -162,6 +164,7 @@ export interface UploadResponse {
 
 export interface StatusResponse {
   loaded: boolean;
+  data_source?: 'snowflake' | 'excel' | string;
   branch: string;
   period: string;
   total_jobs: number;

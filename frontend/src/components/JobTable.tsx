@@ -34,11 +34,11 @@ const columns = [
   { key: 'accrual',       label: 'Accrual',        align: 'right' as const },
   { key: 'profit_loss',   label: 'Profit/Loss',    align: 'right' as const },
   { key: 'margin_pct',    label: 'Margin%',        align: 'right' as const },
-  { key: 'job_age_days',  label: 'Age',            align: 'right' as const },
+  { key: 'accrual_age_days', label: 'Acc Age',     align: 'right' as const },
   { key: 'flags',         label: 'Flags',          align: 'left'  as const },
 ];
 
-const numericKeys = new Set(['revenue', 'wip', 'cost', 'accrual', 'profit_loss', 'margin_pct', 'job_age_days']);
+const numericKeys = new Set(['revenue', 'wip', 'cost', 'accrual', 'profit_loss', 'margin_pct', 'job_age_days', 'accrual_age_days']);
 const dateKeys = new Set(['etd', 'eta']);
 
 /** Parse a date string (YYYY-MM-DD or DD/MM/YYYY) to a sortable timestamp */
@@ -147,7 +147,9 @@ export default function JobTable({ jobs, compact, hideRevenueProfit, defaultSort
           ) : (
             visibleJobs.map((job, idx) => {
               const globalIdx = startIndex + idx;
-              const hasSubLines = job.accrual_lines && job.accrual_lines.length > 0;
+              const hasSubLines = (Math.abs(job.accrual || 0) > 0 || ((job.accrual_age_days || 0) > 0)) && 
+                                  Array.isArray(job.accrual_lines) && 
+                                  job.accrual_lines.length > 0;
               const isExpanded = !!expandedRows[globalIdx];
 
               return (
@@ -204,10 +206,21 @@ export default function JobTable({ jobs, compact, hideRevenueProfit, defaultSort
                             </td>
                           );
                         }
-                        if (col.key === 'job_age_days') {
-                          // Show accrual age instead of job age when available (for Aged Accruals section)
-                          const displayAge = (job as any).accrual_age_days > 0 ? (job as any).accrual_age_days : num;
-                          return <td key={col.key} className="cell-number">{displayAge}</td>;
+                        if (col.key === 'accrual_age_days' || col.key === 'job_age_days') {
+                          const hasAccrual = Math.abs(job.accrual || 0) > 0 || ((job.accrual_lines?.length || 0) > 0);
+                          const acrAge = (job as any).accrual_age_days;
+                          if (hasAccrual && typeof acrAge === 'number' && acrAge > 0) {
+                            return (
+                              <td key={col.key} className="cell-number" title={`Accrual age: ${acrAge} days`}>
+                                {acrAge}
+                              </td>
+                            );
+                          }
+                          return (
+                            <td key={col.key} className="cell-number" style={{ color: 'var(--fg-muted)', opacity: 0.6 }}>
+                              N/A
+                            </td>
+                          );
                         }
                         return (
                           <td

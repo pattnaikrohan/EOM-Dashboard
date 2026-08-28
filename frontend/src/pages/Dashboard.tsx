@@ -98,7 +98,7 @@ const DirectionTooltip = ({ active, payload }: any) => {
 const DIR_COLORS = ['#3b82f6', '#f59e0b', '#10b981', '#8b5cf6'];
 
 export default function Dashboard() {
-  const { loaded, dashboard, loading } = useData();
+  const { loaded, dashboard, loading, dataSource } = useData();
   const navigate = useNavigate();
 
   if (loading && !loaded) {
@@ -197,7 +197,12 @@ export default function Dashboard() {
           EOM Review — Analytics Dashboard
         </h1>
         <p className="page-header__subtitle">
-          {kpi.total_jobs.toLocaleString()} active jobs across {operators.length} operators
+          {kpi.total_jobs.toLocaleString()} active exception jobs across {operators.length} operators
+          {dataSource && (
+            <span style={{ marginLeft: '8px', opacity: 0.85 }}>
+              · Source: <strong style={{ color: dataSource === 'snowflake' ? '#0ea5e9' : '#10b981' }}>{dataSource === 'snowflake' ? 'Live Snowflake' : 'Excel Export'}</strong>
+            </span>
+          )}
         </p>
       </div>
 

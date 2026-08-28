@@ -164,29 +164,32 @@ def fetch_jobs_from_snowflake():
         cur.execute("""
             WITH al_dedup AS (
                 SELECT *, ROW_NUMBER() OVER (PARTITION BY AL_PK
-                         ORDER BY AL_SYSTEMCREATETIMEUTC DESC, HASH(OBJECT_CONSTRUCT_KEEP_NULL(*)) DESC) AS _rn
+                         ORDER BY CDC_LSN DESC NULLS LAST, CDC_SEQVAL DESC NULLS LAST) AS _rn
                 FROM PROD.CORE.ACCTRANSACTIONLINES_DEDUP
-                WHERE AL_LINETYPE = 'ACR'
+            ),
+            al AS (
+                SELECT * FROM al_dedup 
+                WHERE _rn = 1
+                  AND AL_LINETYPE = 'ACR'
                   AND (AL_REVERSEDATE IS NULL OR AL_REVERSEDATE = '1900-01-01 00:00:00')
                   AND (AL_REVERSETOGL IS NULL OR AL_REVERSETOGL = 'N')
             ),
-            al AS (SELECT * FROM al_dedup WHERE _rn = 1),
             jh_dedup AS (
                 SELECT *, ROW_NUMBER() OVER (PARTITION BY JH_PK
-                         ORDER BY JH_SYSTEMCREATETIMEUTC DESC, HASH(OBJECT_CONSTRUCT_KEEP_NULL(*)) DESC) AS _rn
+                         ORDER BY CDC_LSN DESC NULLS LAST, CDC_SEQVAL DESC NULLS LAST) AS _rn
                 FROM PROD.CORE.JOBHEADER_DEDUP
-                WHERE JH_ISVALID = TRUE
+                WHERE JH_PARENTTABLECODE IN ('JS','JE')
             ),
             jh AS (SELECT * FROM jh_dedup WHERE _rn = 1),
             ac_dedup AS (
                 SELECT *, ROW_NUMBER() OVER (PARTITION BY AC_PK 
-                         ORDER BY AC_SYSTEMLASTEDITTIMEUTC DESC, HASH(OBJECT_CONSTRUCT_KEEP_NULL(*)) DESC) AS _rn
+                         ORDER BY CDC_LSN DESC NULLS LAST, CDC_SEQVAL DESC NULLS LAST) AS _rn
                 FROM PROD.CORE.ACCCHARGECODE_DEDUP
             ),
             ac AS (SELECT * FROM ac_dedup WHERE _rn = 1),
             oh_dedup AS (
                 SELECT *, ROW_NUMBER() OVER (PARTITION BY OH_PK 
-                         ORDER BY OH_SYSTEMCREATETIMEUTC DESC, HASH(OBJECT_CONSTRUCT_KEEP_NULL(*)) DESC) AS _rn
+                         ORDER BY CDC_LSN DESC NULLS LAST, CDC_SEQVAL DESC NULLS LAST) AS _rn
                 FROM PROD.CORE.ORGHEADER_DEDUP
             ),
             oh AS (SELECT * FROM oh_dedup WHERE _rn = 1)
@@ -311,6 +314,13 @@ def fetch_jobs_from_snowflake():
 
         # ── Accumulate charge-level financials ────────────────────────────
         j = jobs_map[job_num]
+        charge_desc = str(row.get("CHARGE_DESCRIPTION") or "").strip().upper()
+
+        # In CargoWise, REV/WIP ADJUSTMENT lines are internal accounting WIP/revenue journal revaluations,
+        # not operating job billing charges. Excluding them aligns Job Profit and Cost with CargoWise Job Costing totals.
+        if charge_desc.startswith("REV/WIP ADJUSTMENT"):
+            continue
+
         sell = float(row.get("SELL_LOCAL_AMT") or 0.0)
         cost = float(row.get("COST_LOCAL_AMT") or 0.0)
         is_wip = bool(row.get("IS_WIP_COST"))
@@ -358,14 +368,20 @@ def fetch_jobs_from_snowflake():
     operators = set()
 
     for jnum, j in jobs_map.items():
-        # Authoritative accrual lines override from ACCTRANSACTIONLINES
-        if jnum in job_accruals and job_accruals[jnum]:
+        is_closed = str(j.get("job_status", "")).strip().upper() in ("CLS", "CLOSED")
+        
+        # Authoritative accrual lines override from ACCTRANSACTIONLINES (only for non-closed jobs)
+        if not is_closed and jnum in job_accruals and job_accruals[jnum]:
             j["accrual_lines"] = job_accruals[jnum]
             total_acr = sum(item["cost_local"] for item in job_accruals[jnum])
             max_acr_age = max((item["age_days"] for item in job_accruals[jnum]), default=0)
             if j["accrual"] == 0:
                 j["accrual"] = round(total_acr, 2)
             j["_acr_age_days"] = max_acr_age
+        elif is_closed:
+            j["accrual_lines"] = []
+            j["accrual"] = 0.0
+            j["_acr_age_days"] = 0
 
         j["revenue"] = round(j["revenue"], 2)
         j["cost"] = round(j["cost"], 2)
@@ -376,9 +392,11 @@ def fetch_jobs_from_snowflake():
             j["margin_pct"] = round((j["profit_loss"] / j["revenue"]) * 100, 2)
 
         # Aged accruals: job must have outstanding accruals AND
-        # accrual/WIP age must be >= 90 days old
-        if (abs(j["accrual"]) > 0 or len(j.get("accrual_lines", [])) > 0) and j["_acr_age_days"] >= 90:
+        # accrual/WIP age must be >= 90 days old (never for closed jobs)
+        if not is_closed and (abs(j["accrual"]) > 0 or len(j.get("accrual_lines", [])) > 0) and j["_acr_age_days"] >= 90:
             j["has_aged_accruals"] = True
+        else:
+            j["has_aged_accruals"] = False
 
         # Persist accrual age for frontend display, then clean up internal field
         j["accrual_age_days"] = j["_acr_age_days"]

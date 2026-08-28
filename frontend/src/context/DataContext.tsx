@@ -18,6 +18,7 @@ interface DataState {
   loaded: boolean;
   loading: boolean;
   syncing: boolean;
+  dataSource: 'snowflake' | 'excel' | '';
   branch: string;
   period: string;
   operators: OperatorSummary[];
@@ -59,6 +60,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     loaded: false,
     loading: true,
     syncing: false,
+    dataSource: '',
     branch: '',
     period: '',
     operators: [],
@@ -119,6 +121,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
           ...prev,
           loaded: true,
           loading: false,
+          dataSource: 'excel',
           branch: result.branch,
           period: result.period,
           operators: dash.operators,
@@ -148,6 +151,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         loaded: true,
         loading: false,
         syncing: false,
+        dataSource: 'snowflake',
         dashboard: dash,
         operators: dash.operators,
         branch: dash.branch || prev.branch,
@@ -171,6 +175,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       setState(prev => ({
         ...prev,
         dashboard: dash,
+        dataSource: (dash.data_source as any) || prev.dataSource,
         operators: dash.operators,
         availableBranches: dash.available_branches || prev.availableBranches,
         availableDepartments: dash.available_departments || prev.availableDepartments,
@@ -186,6 +191,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       setState(prev => ({
         ...prev,
         dashboard: dash,
+        dataSource: 'snowflake',
         operators: dash.operators,
         branch: dash.branch || prev.branch,
         period: dash.period || prev.period,
@@ -198,12 +204,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, [state.globalFlags, state.globalBranches, state.globalDepartments, clearTabCaches]);
 
   useEffect(() => {
-    if (!state.loaded) return;
+    // Only auto-sync Snowflake in the background if the user is in live Snowflake mode
+    if (!state.loaded || state.dataSource !== 'snowflake') return;
     const interval = setInterval(() => {
       handleSyncSnowflakeBackground();
     }, 10 * 60 * 1000); // 10 minutes
     return () => clearInterval(interval);
-  }, [state.loaded, handleSyncSnowflakeBackground]);
+  }, [state.loaded, state.dataSource, handleSyncSnowflakeBackground]);
 
   const checkStatus = useCallback(async () => {
     try {
@@ -214,6 +221,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
           ...prev,
           loaded: true,
           loading: false,
+          dataSource: (status.data_source as any) || (dash.data_source as any) || '',
           branch: status.branch,
           period: status.period,
           operators: dash.operators,

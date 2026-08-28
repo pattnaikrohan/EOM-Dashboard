@@ -34,6 +34,7 @@ def upload_file():
     if not uploaded_files or len(uploaded_files) == 0:
         return jsonify({"error": "No files selected"}), 400
         
+    first_excel = True
     for file in uploaded_files:
         if not file.filename or not file.filename.lower().endswith((".xlsx", ".xls")):
             continue
@@ -56,26 +57,28 @@ def upload_file():
                 continue
 
             parsed = parse_excel(contents, file.filename)
-            data_store.load(parsed, merge=True)
+            data_store.load_excel(parsed, is_first_file=first_excel)
+            first_excel = False
         except Exception as e:
             print(f"Failed to parse {file.filename}: {e}")
             # Continue processing other files even if one fails
 
-    
-    # We must construct a dictionary representing the merged state to upload to blob storage!
+    # Construct dictionary representing the Excel state to upload to blob storage
     merged_parsed = {
+        "data_source": "excel",
         "branch": data_store.branch,
         "period": data_store.period,
         "operators": data_store.operators,
         "jobs": data_store.jobs
     }
     
-    # Persist the merged data to Azure Blob Storage
+    # Persist the Excel data to Azure Blob Storage
     upload_parsed_data(merged_parsed)
 
     return jsonify({
         "success": True,
-        "message": f"Loaded {len(data_store.jobs)} jobs from {len(data_store.operators)} operators",
+        "data_source": "excel",
+        "message": f"Loaded {len(data_store.jobs)} jobs from {len(data_store.operators)} operators (Excel Mode)",
         "branch": data_store.branch,
         "period": data_store.period,
         "total_jobs": len(data_store.jobs),
@@ -89,13 +92,15 @@ def sync_snowflake():
         from app.services.snowflake_client import fetch_jobs_from_snowflake
         parsed = fetch_jobs_from_snowflake()
         
-        data_store.load(parsed, merge=True)
+        # Load strictly into Snowflake mode, completely replacing any previous Excel data
+        data_store.load_snowflake(parsed)
         from app.services.neg_movement_store import neg_movement_store
         neg_movement_store.populate_from_snowflake(data_store.jobs, data_store.branch, data_store.period)
         
         operators_list = list(data_store.operators) if isinstance(data_store.operators, (set, list)) else []
         
         merged_parsed = {
+            "data_source": "snowflake",
             "branch": data_store.branch,
             "period": data_store.period,
             "operators": operators_list,
@@ -109,7 +114,8 @@ def sync_snowflake():
 
         return jsonify({
             "success": True,
-            "message": f"Synced {len(parsed['jobs'])} live jobs from Snowflake! Total in system: {len(data_store.jobs)}",
+            "data_source": "snowflake",
+            "message": f"Synced {len(parsed['jobs'])} live jobs from Snowflake! Total in system: {len(data_store.jobs)} (Snowflake Mode)",
             "branch": data_store.branch,
             "period": data_store.period,
             "total_jobs": len(data_store.jobs),
@@ -152,6 +158,7 @@ def get_dashboard():
     departments = depts_param.split(',') if depts_param else None
 
     return jsonify({
+        "data_source": data_store.data_source,
         "branch": data_store.branch,
         "period": data_store.period,
         "kpi": data_store.get_kpi(flags=flags, branches=branches, departments=departments),
@@ -338,6 +345,7 @@ def get_legend():
 def get_status():
     return jsonify({
         "loaded": data_store.is_loaded,
+        "data_source": data_store.data_source,
         "branch": data_store.branch,
         "period": data_store.period,
         "total_jobs": len(data_store.jobs),

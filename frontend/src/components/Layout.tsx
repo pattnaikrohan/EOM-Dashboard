@@ -17,7 +17,7 @@ import SnowflakeSyncOverlay from './SnowflakeSyncOverlay';
 export default function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const { 
-    loaded, operators, period, 
+    loaded, operators, period, dataSource,
     globalFlags, setGlobalFlags,
     globalBranches, setGlobalBranches, availableBranches,
     globalDepartments, setGlobalDepartments, availableDepartments,
@@ -241,8 +241,33 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <div className="main-area">
         {/* Topbar */}
         <header className="topbar">
-          <div className="topbar__left">
+          <div className="topbar__left" style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
             <h1 className="topbar__title" style={{ margin: 0 }}>EOM Dashboard</h1>
+            {loaded && dataSource && (
+              <div style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '3px 10px',
+                borderRadius: '20px',
+                fontSize: '0.72rem',
+                fontWeight: 700,
+                letterSpacing: '0.02em',
+                background: dataSource === 'snowflake' ? 'rgba(14, 165, 233, 0.12)' : 'rgba(16, 185, 129, 0.12)',
+                color: dataSource === 'snowflake' ? '#0284c7' : '#059669',
+                border: `1px solid ${dataSource === 'snowflake' ? 'rgba(14, 165, 233, 0.3)' : 'rgba(16, 185, 129, 0.3)'}`,
+                boxShadow: dataSource === 'snowflake' ? '0 2px 8px rgba(14, 165, 233, 0.15)' : '0 2px 8px rgba(16, 185, 129, 0.15)'
+              }}>
+                <div style={{
+                  width: 7,
+                  height: 7,
+                  borderRadius: '50%',
+                  background: dataSource === 'snowflake' ? '#0ea5e9' : '#10b981',
+                  boxShadow: dataSource === 'snowflake' ? '0 0 6px #0ea5e9' : '0 0 6px #10b981'
+                }} />
+                {dataSource === 'snowflake' ? 'Live Snowflake' : 'Excel Export'}
+              </div>
+            )}
           </div>
           <div className="topbar__right">
             {loaded && (

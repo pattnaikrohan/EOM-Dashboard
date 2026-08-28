@@ -15,6 +15,7 @@ class DataStore:
     """Singleton-style store holding the current parsed dataset."""
 
     def __init__(self):
+        self.data_source: str = ""  # "snowflake" | "excel" | ""
         self.branch: str = ""
         self.period: str = ""
         self.operators: list[str] = []
@@ -27,9 +28,47 @@ class DataStore:
     def is_loaded(self) -> bool:
         return self._loaded
 
-    def load(self, parsed: dict, merge: bool = False):
-        """Load parsed data from the Excel parser. If merge is True, combine with existing data."""
-        if merge and self._loaded:
+    def load_snowflake(self, parsed: dict):
+        """
+        Load live data exclusively from Snowflake.
+        Completely replaces any existing data (including any prior Excel uploads).
+        """
+        self.data_source = "snowflake"
+        self.branch = parsed.get("branch", "")
+        self.period = parsed.get("period", "")
+        self.operators = parsed.get("operators", [])
+        self.jobs = [j for j in parsed.get("jobs", []) if j.get("department") or j.get("flags") or j.get("source_type") or j.get("revenue", 0) != 0 or j.get("cost", 0) != 0 or j.get("accrual", 0) != 0]
+
+        # Always recompute flags and direction, and normalize operator branches for all jobs
+        from app.services.rules import get_flags, priority_flag, get_ops_section
+        for j in self.jobs:
+            j["branch"] = normalize_branch_name(j.get("branch"))
+            j["flags"] = get_flags(j, self.period)
+            j["primary_flag"] = priority_flag(j["flags"])
+            j["ops_section"] = get_ops_section(j)
+
+        # Filter out healthy jobs (keep only jobs that trigger at least 1 exception checker)
+        self.jobs = [j for j in self.jobs if len(j.get("flags", [])) > 0]
+        self.operators = sorted(list(set(j.get("operator") for j in self.jobs if j.get("operator") and j.get("operator") != "Unknown Operator")))
+
+        # Re-apply any saved workflow states (EOM Review & Triage status)
+        self._reapply_workflow_states()
+
+        self.available_branches = sorted(list(set(j.get("branch", "") for j in self.jobs if j.get("branch"))))
+        self.available_departments = sorted(list(set(j.get("department", "") for j in self.jobs if j.get("department"))))
+        self._get_all_jobs_cached.cache_clear()
+        self._loaded = True
+
+    def load_excel(self, parsed: dict, is_first_file: bool = False):
+        """
+        Load data from uploaded Excel export file(s).
+        If switching from Snowflake or is_first_file=True, replaces existing data.
+        Subsequent Excel files in the same batch will merge only with other Excel files.
+        """
+        is_fresh = is_first_file or (self.data_source != "excel") or (not self._loaded)
+        self.data_source = "excel"
+
+        if not is_fresh and self._loaded:
             # Combine branches and periods by taking unique comma-separated values
             existing_branches = set(b.strip() for b in self.branch.split(",") if b.strip())
             new_branch = parsed.get("branch", "")
@@ -43,7 +82,7 @@ class DataStore:
                 
             self.operators = list(set(self.operators + parsed.get("operators", [])))
             
-            # Deduplicate jobs by job_number
+            # Deduplicate jobs by job_number within the Excel dataset
             existing_jobs = {j["job_number"]: j for j in self.jobs}
             for j in parsed.get("jobs", []):
                 if not j.get("department") and j.get("revenue", 0) == 0 and j.get("cost", 0) == 0 and j.get("accrual", 0) == 0 and not j.get("flags") and not j.get("source_type"):
@@ -51,7 +90,7 @@ class DataStore:
                 job_id = j["job_number"]
                 if job_id in existing_jobs:
                     old_j = existing_jobs[job_id]
-                    # Smart merge
+                    # Smart merge between Excel files
                     for k, v in j.items():
                         if k in ("revenue", "wip", "cost", "profit_loss", "margin_pct"):
                             if v != 0.0 or old_j.get(k) is None:
@@ -60,7 +99,6 @@ class DataStore:
                             if v != 0.0 or old_j.get(k) is None:
                                 old_j[k] = v
                         elif k == "job_status":
-                            # Use the status from the newer source directly (V3 view provides correct status)
                             if v:
                                 old_j["job_status"] = v
                         elif k == "local_client":
@@ -70,7 +108,7 @@ class DataStore:
                             if v and v != "Unknown Operator":
                                 old_j["operator"] = v
                         elif k in ("flags", "primary_flag", "ops_section"):
-                            continue # we will recompute
+                            continue
                         elif k == "open_date":
                             if v and not old_j.get(k):
                                 old_j[k] = v
@@ -78,15 +116,12 @@ class DataStore:
                             if v:
                                 old_j[k] = v
                     
-                    # Recompute flags
                     from app.services.rules import get_flags, priority_flag, get_ops_section
-                    # Preserve aged accrual markers during merge
                     if j.get("has_aged_accruals"):
                         old_j["has_aged_accruals"] = True
                     if j.get("accrual_lines") and not old_j.get("accrual_lines"):
                         old_j["accrual_lines"] = j["accrual_lines"]
                     old_j["job_age_days"] = max(old_j.get("job_age_days", 0), j.get("job_age_days", 0))
-                    # Pass the full merged period string to check against all uploaded periods
                     old_j["flags"] = get_flags(old_j, self.period)
                     old_j["primary_flag"] = priority_flag(old_j["flags"])
                     old_j["ops_section"] = get_ops_section(old_j)
@@ -118,14 +153,20 @@ class DataStore:
         self.available_branches = sorted(list(set(j.get("branch", "") for j in self.jobs if j.get("branch"))))
         self.available_departments = sorted(list(set(j.get("department", "") for j in self.jobs if j.get("department"))))
         self._get_all_jobs_cached.cache_clear()
-        
         self._loaded = True
 
+    def load(self, parsed: dict, merge: bool = False, source: str = "excel"):
+        """Convenience wrapper for load_snowflake or load_excel."""
+        if source == "snowflake":
+            self.load_snowflake(parsed)
+        else:
+            self.load_excel(parsed, is_first_file=not merge)
 
     def _reapply_workflow_states(self):
         pass
 
     def clear(self):
+        self.data_source = ""
         self.branch = ""
         self.period = ""
         self.operators = []
@@ -133,6 +174,7 @@ class DataStore:
         self.available_branches = []
         self.available_departments = []
         self._loaded = False
+        self._get_all_jobs_cached.cache_clear()
         self._get_all_jobs_cached.cache_clear()
 
     # ── Query helpers ──────────────────────────────────────────────────────
