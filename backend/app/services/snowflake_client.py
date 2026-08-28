@@ -167,6 +167,8 @@ def fetch_jobs_from_snowflake():
                          ORDER BY AL_SYSTEMCREATETIMEUTC DESC, HASH(OBJECT_CONSTRUCT_KEEP_NULL(*)) DESC) AS _rn
                 FROM PROD.CORE.ACCTRANSACTIONLINES_DEDUP
                 WHERE AL_LINETYPE = 'ACR'
+                  AND (AL_REVERSEDATE IS NULL OR AL_REVERSEDATE = '1900-01-01 00:00:00')
+                  AND (AL_REVERSETOGL IS NULL OR AL_REVERSETOGL = 'N')
             ),
             al AS (SELECT * FROM al_dedup WHERE _rn = 1),
             jh_dedup AS (
@@ -220,10 +222,53 @@ def fetch_jobs_from_snowflake():
                 "acr_recognised": _fmt_date(postdate),
                 "age_days": int(age or 0)
             })
-        print(f"Loaded accrual details for {len(job_accruals):,} jobs.")
+        print(f"Loaded active accrual details for {len(job_accruals):,} jobs.")
     except Exception as e:
         print(f"Warning: could not fetch job_accruals: {e}")
         job_accruals = {}
+
+    # ── Step 1c: Fetch direct routing & shipment dates (bypasses ISVALID=TRUE restrictions) ──
+    update_sync_progress("Fetching direct routing & shipment dates...", 28)
+    job_routing_dates = {}
+    try:
+        cur.execute("""
+            WITH jh AS (
+                SELECT *, ROW_NUMBER() OVER (PARTITION BY JH_PK ORDER BY JH_SYSTEMCREATETIMEUTC DESC) AS _rn
+                FROM PROD.CORE.JOBHEADER_DEDUP
+                WHERE JH_ISVALID = TRUE
+            ),
+            decl AS (
+                SELECT *, ROW_NUMBER() OVER (PARTITION BY JE_PK ORDER BY JE_SYSTEMLASTEDITTIMEUTC DESC) AS _rn
+                FROM PROD.CORE.JOBDECLARATION_DEDUP
+            ),
+            ship AS (
+                SELECT *, ROW_NUMBER() OVER (PARTITION BY JS_PK ORDER BY JS_SYSTEMLASTEDITTIMEUTC DESC) AS _rn
+                FROM PROD.CORE.JOBSHIPMENT_DEDUP
+            )
+            SELECT 
+                jh.JH_JOBNUM,
+                COALESCE(TO_CHAR(ship.JS_E_DEP, 'DD-MM-YYYY'), TO_CHAR(decl.JE_EXPORTDATE, 'DD-MM-YYYY'), TO_CHAR(decl.JE_DATEATORIGIN, 'DD-MM-YYYY')) AS ETD,
+                COALESCE(TO_CHAR(ship.JS_E_ARV, 'DD-MM-YYYY'), TO_CHAR(decl.JE_DATEOFARRIVAL, 'DD-MM-YYYY'), TO_CHAR(decl.JE_DATEOFFIRSTARRIVAL, 'DD-MM-YYYY'), TO_CHAR(decl.JE_DATEATFINALDESTINATION, 'DD-MM-YYYY')) AS ETA,
+                COALESCE(ship.JS_RL_NKORIGIN, decl.JE_RL_NKORIGIN, decl.JE_RL_NKPORTOFLOADING) AS ORIGIN,
+                COALESCE(ship.JS_RL_NKDESTINATION, decl.JE_RL_NKFINALDESTINATION, decl.JE_RL_NKPORTOFARRIVAL) AS DEST
+            FROM jh
+            LEFT JOIN decl ON decl.JE_PK = jh.JH_PARENTID AND jh.JH_PARENTTABLECODE = 'JE' AND decl._rn = 1
+            LEFT JOIN ship ON ship.JS_PK = jh.JH_PARENTID AND jh.JH_PARENTTABLECODE = 'JS' AND ship._rn = 1
+            WHERE jh._rn = 1
+              AND (ship.JS_PK IS NOT NULL OR decl.JE_PK IS NOT NULL)
+        """)
+        for jnum, etd_val, eta_val, orig_val, dest_val in cur.fetchall():
+            if jnum:
+                job_routing_dates[jnum] = {
+                    "etd": etd_val,
+                    "eta": eta_val,
+                    "origin": (orig_val or "")[:2].upper() if orig_val else "",
+                    "destination": (dest_val or "")[:2].upper() if dest_val else ""
+                }
+        print(f"Loaded direct routing dates for {len(job_routing_dates):,} jobs.")
+    except Exception as e:
+        print(f"Warning: could not fetch job_routing_dates: {e}")
+        job_routing_dates = {}
 
     update_sync_progress(f"Grouping {total_rows:,} charges into jobs...", 30, current=0, total=total_rows)
 
@@ -252,6 +297,17 @@ def fetch_jobs_from_snowflake():
             dest = row.get("SHIPMENT_DESTINATION") or row.get("DECLARATION_FINAL_DEST") or ""
             etd = row.get("SHIPMENT_ETD") or row.get("DECLARATION_EXPORT_DATE")
             eta = row.get("SHIPMENT_ETA") or row.get("DECLARATION_ARRIVAL_DATE")
+
+            # Fallback to direct routing dates if missing from the view
+            r_dates = job_routing_dates.get(job_num, {})
+            if not etd and r_dates.get("etd"):
+                etd = r_dates["etd"]
+            if not eta and r_dates.get("eta"):
+                eta = r_dates["eta"]
+            if not origin and r_dates.get("origin"):
+                origin = r_dates["origin"]
+            if not dest and r_dates.get("destination"):
+                dest = r_dates["destination"]
 
             # Cross-trade: both origin & dest are non-AU
             is_cross_trade = False
