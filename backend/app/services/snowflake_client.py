@@ -226,9 +226,47 @@ def fetch_jobs_from_snowflake():
                 "age_days": int(age or 0)
             })
         print(f"Loaded active accrual details for {len(job_accruals):,} jobs.")
+
+        # Also fetch confirmed ledger financials (REV & CST) from CargoWise General Ledger (ACCTRANSACTIONLINES)
+        cur.execute("""
+            WITH al_dedup AS (
+                SELECT *, ROW_NUMBER() OVER (PARTITION BY AL_PK
+                         ORDER BY CDC_LSN DESC NULLS LAST, CDC_SEQVAL DESC NULLS LAST) AS _rn
+                FROM PROD.CORE.ACCTRANSACTIONLINES_DEDUP
+            ),
+            al AS (SELECT * FROM al_dedup WHERE _rn = 1),
+            jh_dedup AS (
+                SELECT *, ROW_NUMBER() OVER (PARTITION BY JH_PK
+                         ORDER BY CDC_LSN DESC NULLS LAST, CDC_SEQVAL DESC NULLS LAST) AS _rn
+                FROM PROD.CORE.JOBHEADER_DEDUP
+                WHERE JH_PARENTTABLECODE IN ('JS','JE')
+            ),
+            jh AS (SELECT * FROM jh_dedup WHERE _rn = 1)
+            SELECT 
+                jh.JH_JOBNUM,
+                SUM(CASE WHEN al.AL_LINETYPE = 'REV' THEN al.AL_LINEAMOUNT ELSE 0 END) AS CONFIRMED_REV,
+                SUM(CASE WHEN al.AL_LINETYPE = 'CST' THEN ABS(al.AL_LINEAMOUNT) ELSE 0 END) AS CONFIRMED_COST,
+                COUNT(CASE WHEN al.AL_LINETYPE = 'REV' THEN 1 END) AS REV_COUNT,
+                COUNT(CASE WHEN al.AL_LINETYPE = 'CST' THEN 1 END) AS CST_COUNT
+            FROM al
+            JOIN jh ON al.AL_JH = jh.JH_PK
+            WHERE al.AL_LINETYPE IN ('REV', 'CST')
+            GROUP BY jh.JH_JOBNUM
+        """)
+        job_confirmed_ledger = {}
+        for jnum, c_rev, c_cost, r_cnt, c_cnt in cur.fetchall():
+            if jnum:
+                job_confirmed_ledger[jnum] = {
+                    "rev": float(c_rev or 0),
+                    "cost": float(c_cost or 0),
+                    "rev_count": r_cnt,
+                    "cst_count": c_cnt
+                }
+        print(f"Loaded confirmed ledger financials for {len(job_confirmed_ledger):,} jobs.")
     except Exception as e:
-        print(f"Warning: could not fetch job_accruals: {e}")
+        print(f"Warning: could not fetch job_accruals or confirmed ledger: {e}")
         job_accruals = {}
+        job_confirmed_ledger = {}
 
     update_sync_progress(f"Grouping {total_rows:,} charges into jobs...", 30, current=0, total=total_rows)
 
@@ -382,6 +420,15 @@ def fetch_jobs_from_snowflake():
             j["accrual_lines"] = []
             j["accrual"] = 0.0
             j["_acr_age_days"] = 0
+
+        # Apply confirmed accounting ledger transactions from ACCTRANSACTIONLINES
+        # when confirmed revenue/cost exist (prevents re-rated/deleted ghost charges in JOBCHARGE from corrupting P&L)
+        if jnum in job_confirmed_ledger:
+            c_ledger = job_confirmed_ledger[jnum]
+            if c_ledger["rev_count"] > 0:
+                j["revenue"] = c_ledger["rev"]
+            if c_ledger["cst_count"] > 0 and (is_closed or str(j.get("job_status", "")).strip().upper() in ("CMP", "CLS", "CLOSED")):
+                j["cost"] = c_ledger["cost"]
 
         j["revenue"] = round(j["revenue"], 2)
         j["cost"] = round(j["cost"], 2)
