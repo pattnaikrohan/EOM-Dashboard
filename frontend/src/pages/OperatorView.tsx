@@ -1,7 +1,9 @@
 /**
  * OperatorView — Individual operator's dashboard with flag-grouped sections.
- * All 13 checkers are always visible, grouped under PENDING INVOICING
+ * 7 checkers are visible, grouped under PENDING INVOICING
  * and MONTH END CLOSING CHECKS, even when a section has 0 jobs.
+ * Financial analysis checks (Unbilled Profit/Loss, Billed Loss/Low Margin/Extreme Profit,
+ * CMP Ready to Close) are excluded — those are only shown in the Ops Manager view.
  */
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
@@ -34,18 +36,12 @@ const PENDING_INVOICING_FLAGS = [
 // NOTE: These MUST exactly match the backend flag names from rules.py / FLAG_PRIORITY
 // so that jobs_by_flag[flag] lookups work correctly.
 const MONTH_END_CLOSING_FLAGS = [
-  'Unbilled Jobs with PROFIT',
-  'Unbilled Jobs with LOSS',
   'Jobs with WIPs',
   'Jobs at INV Status',
   'Jobs with Aged Accruals',
-  'Billed Jobs with LOSS',
-  'Billed Jobs with LOW MARGIN',
-  'Billed Jobs — EXTREME Profit',
-  'Jobs at CMP — Ready to CLOSE',
 ];
 
-// All 13 checkers in order
+// All 7 operator-visible checkers in order
 const ALL_CHECKERS = [...PENDING_INVOICING_FLAGS, ...MONTH_END_CLOSING_FLAGS];
 
 function CountdownTimer() {
