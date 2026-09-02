@@ -41,13 +41,21 @@ export const FLAG_PRIORITY = [
 ];
 
 export const FLAG_DESCRIPTIONS: Record<string, string> = {
-  'EXPORTS Jobs pending invoicing':     'Jobs departing this month requiring invoicing',
-  'IMPORTS B Jobs pending invoicing':   'Jobs arriving this month requiring invoicing',
-  'IMPORTS S Jobs pending invoicing':   'Jobs arriving this month requiring invoicing',
-  'IMPORTS Jobs pending invoicing':     'Jobs arriving this month requiring invoicing',
-  'CROSS-TRADE Jobs pending invoicing': 'Jobs departing this month requiring invoicing',
-  'DOMESTIC Jobs pending invoicing':    'Jobs departing this month requiring invoicing',
-  'Jobs at INV Status':                 'Jobs to be updated to CMP upon invoice completion and accruals entered',
+  'EXPORTS Jobs pending invoicing':     'ETD ≤ current month, Status ≠ CMP/CLS',
+  'IMPORTS B Jobs pending invoicing':   'ETA ≤ current month, Status ≠ CMP/CLS',
+  'IMPORTS S Jobs pending invoicing':   'ETA ≤ current month, Status ≠ CMP/CLS',
+  'IMPORTS Jobs pending invoicing':     'ETA ≤ current month, Status ≠ CMP/CLS',
+  'CROSS-TRADE Jobs pending invoicing': 'ETD ≤ current month, Status ≠ CMP/CLS',
+  'DOMESTIC Jobs pending invoicing':    'ETD ≤ current month, Status ≠ CMP/CLS',
+  'Unbilled Jobs with PROFIT':          'Revenue = $0 AND Job Profit > $0',
+  'Unbilled Jobs with LOSS':            'Revenue = $0 AND Job Profit < $0',
+  'Jobs with WIPs':                     'WIP > $40 AND (Accrual or Cost > $40)',
+  'Billed Jobs with LOSS':              'Revenue > $0 AND Job Profit < $0 at CMP/IHL',
+  'Billed Jobs with LOW MARGIN':        'Revenue > $0 AND Job Margin < 5% at CMP/IHL',
+  'Billed Jobs — EXTREME Profit':       'Revenue > $0 AND Job Profit ≥ $5,000 at CMP/IHL',
+  'Jobs at INV Status':                 'Revenue > $0 AND Job Status = INV',
+  'Jobs at CMP — Ready to CLOSE':       'Revenue > $0, Profit > $0, Accrual = 0, WIP = 0 at CMP',
+  'Jobs with Aged Accruals':            'ABS(Accrual) > 0 AND Age ≥ 90 days (from ACR_RECOGNITION_DATE)',
 };
 
 export const STATUS_COLOURS: Record<string, string> = {

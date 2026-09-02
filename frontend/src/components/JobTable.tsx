@@ -34,7 +34,7 @@ const columns = [
   { key: 'accrual',       label: 'Accrual',        align: 'right' as const },
   { key: 'profit_loss',   label: 'Profit/Loss',    align: 'right' as const },
   { key: 'margin_pct',    label: 'Margin%',        align: 'right' as const },
-  { key: 'accrual_age_days', label: 'Acc Age',     align: 'right' as const },
+  { key: 'accrual_age_days', label: 'Acr Age',     align: 'right' as const },
   { key: 'flags',         label: 'Flags',          align: 'left'  as const },
 ];
 
